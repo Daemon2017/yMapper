@@ -1,0 +1,7 @@
+.github/
+.ipynb_checkpoints/
+.idea/
+*.csv
+*.html
+ftdna_tree.txt
+*.log
