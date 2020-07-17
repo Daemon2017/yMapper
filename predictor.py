@@ -1,4 +1,3 @@
-import os
 import sys
 import utils
 import pandas as pd
@@ -13,6 +12,10 @@ def get_extended_combined_map_file(str_number, json_tree_rows, child_snps):
     combined_df = pd.read_csv('combined_snp_str_map.csv', engine='python')
     print('В загруженном наборе данных {} строк'.format(len(combined_df.index)))
     print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
+
+    print('Выделяем данные о местоположении в отдельный набор.')
+    combined_map_df = combined_df.filter(['Kit Number', 'lat', 'lng'], axis=1)
+    print('В наборе данных combined_map_df {} строк'.format(len(combined_map_df.index)))
 
     y12_list = ['DYS393', 'DYS390', 'DYS19', 'DYS391', 'DYS385',
                 'DYS426', 'DYS388', 'DYS439', 'DYS389I', 'DYS392', 'DYS389II']
@@ -183,21 +186,6 @@ def get_extended_combined_map_file(str_number, json_tree_rows, child_snps):
         if column not in important_columns_list:
             try:
                 del new_combined_df[column]
-            except KeyError as KE:
-                print(KE)
-
-    print('Загружаем набор с данными о местоположениях.')
-    combined_map_df = pd.read_csv('combined_snp_str_map.csv', engine='python')
-    print('В наборе данных combined_map_df {} строк'.format(len(combined_map_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_map_df['Short Hand'].value_counts()))
-
-    print('Оставляем только полезные столбцы.')
-    important_columns_list = ['Kit Number', 'lat', 'lng']
-
-    for column in combined_map_df:
-        if column not in important_columns_list:
-            try:
-                del combined_map_df[column]
             except KeyError as KE:
                 print(KE)
 
