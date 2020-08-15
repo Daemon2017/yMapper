@@ -4,6 +4,7 @@ import math
 import random
 import utils
 import ftdna_tree_collector_rest
+import datetime
 
 from itertools import product
 from shapely.geometry import Polygon
@@ -34,6 +35,7 @@ h_list = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
 
 if __name__ == '__main__':
     freeze_support()
+    print(datetime.datetime.now())
     combined_df = pd.read_csv('combined_snp_str_map.csv', engine='python')
     print("Количество строк в файле: {}".format(len(combined_df.index)))
 
@@ -83,3 +85,4 @@ if __name__ == '__main__':
         combined_df = utils.get_extended_data(combined_df, str_number, json_tree_rows, child_snps)
         utils.get_map(combined_df, True, polygon_list_list, child_snps, y_center, x_center, zoom,
                       combination_to_color_dict, target_snp, h_list)
+    print(datetime.datetime.now())

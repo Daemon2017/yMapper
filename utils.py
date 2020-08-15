@@ -3,6 +3,7 @@ import numpy as np
 import multiprocessing
 import predictor
 import ftdna_tree_collector_rest
+import datetime
 
 from itertools import compress, repeat
 from folium import FeatureGroup, LayerControl, Map, GeoJson
@@ -10,6 +11,7 @@ from shapely.geometry import Point
 
 
 def get_positive_snps(child_snps, combined_df, json_tree_rows):
+    print(datetime.datetime.now())
     num_processes = multiprocessing.cpu_count()
     unique_values = combined_df['Short Hand'].unique()
     chunks = np.array_split(unique_values, num_processes)
@@ -20,6 +22,7 @@ def get_positive_snps(child_snps, combined_df, json_tree_rows):
     for i in range(len(result)):
         old_to_new_dict.update(result[i])
     combined_df['Short Hand'] = combined_df['Short Hand'].map(old_to_new_dict)
+    print(datetime.datetime.now())
     return combined_df
 
 
@@ -63,6 +66,7 @@ def get_extended_data(combined_df, str_number, json_tree_rows, child_snps):
 
 def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x_center, zoom,
             combination_to_color_dict, target_snp, h_list):
+    print(datetime.datetime.now())
     print('Очищаем набор данных от строк с пустыми координатами...')
     combined_df['lng'] = combined_df['lng'].astype(float)
     combined_df = combined_df[combined_df['lng'].notna()]
@@ -123,3 +127,4 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x
     else:
         m.save('map_{}.html'.format(target_snp))
     print("HTML-файл с картой сохранен!\n")
+    print(datetime.datetime.now())

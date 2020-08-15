@@ -1,6 +1,7 @@
 import sys
 import utils
 import pandas as pd
+import datetime
 
 from xgboost import XGBClassifier
 from sklearn.metrics import f1_score
@@ -8,6 +9,7 @@ from sklearn.model_selection import train_test_split
 
 
 def get_extended_combined_map_file(str_number, json_tree_rows, child_snps):
+    print(datetime.datetime.now())
     print('Загружаем набор данных SNP+STR+Map.')
     combined_df = pd.read_csv('combined_snp_str_map.csv', engine='python')
     print('В загруженном наборе данных {} строк'.format(len(combined_df.index)))
@@ -198,5 +200,6 @@ def get_extended_combined_map_file(str_number, json_tree_rows, child_snps):
     new_combined_df = new_combined_df.drop(new_combined_df[new_combined_df['Short Hand'] == 'Other'].index)
     print('В наборе данных new_combined_df {} строк'.format(len(new_combined_df.index)))
     print('Количество представителей каждого SNP:\n{}'.format(new_combined_df['Short Hand'].value_counts()))
+    print(datetime.datetime.now())
 
     return new_combined_df
