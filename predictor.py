@@ -191,7 +191,6 @@ def get_extended_combined_map_file(str_number, json_tree_rows, child_snps):
 
     print('Склеиваем информацию о SNP с информацией о местоположении.')
     new_combined_df = pd.merge(new_combined_df, combined_map_df, on='Kit Number')
-    del new_combined_df['Kit Number']
     print('В наборе данных new_combined_df {} строк'.format(len(new_combined_df.index)))
     print('Количество представителей каждого SNP:\n{}'.format(new_combined_df['Short Hand'].value_counts()))
 

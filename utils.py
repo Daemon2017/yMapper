@@ -49,13 +49,16 @@ def get_positive_polygons(polygon, child_snps, combined_df):
 
 
 def get_extended_data(combined_df, str_number, json_tree_rows, child_snps):
-    new_combined_df = predictor.get_extended_combined_map_file(str_number, json_tree_rows, child_snps)
-    combined_df = pd.concat([combined_df, new_combined_df], sort=True)
     combined_df['Kit Number'] = combined_df['Kit Number'].astype(str)
-    combined_df = combined_df.drop_duplicates(subset=['Kit Number'])
-    print('В наборе данных combined_df {} строк'.format(len(combined_df.index)))
-    print("Количество представителей каждой подветви: \n{}".format(combined_df['Short Hand'].value_counts()))
-    return combined_df
+    new_combined_df = predictor.get_extended_combined_map_file(str_number, json_tree_rows, child_snps)
+    new_combined_df['Kit Number'] = new_combined_df['Kit Number'].astype(str)
+    print('В наборе new_combined_df оставляем только те строки, которых нет в наборе combined_df.')
+    new_combined_df = new_combined_df.loc[~new_combined_df['Kit Number'].isin(combined_df['Kit Number'])]
+    print('Присоединяем к набору new_combined_df содержимое набора combined_df.')
+    new_combined_df = pd.concat([combined_df, new_combined_df], sort=True)
+    print('В наборе данных new_combined_df {} строк'.format(len(new_combined_df.index)))
+    print("Количество представителей каждой подветви: \n{}".format(new_combined_df['Short Hand'].value_counts()))
+    return new_combined_df
 
 
 def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x_center, zoom,
@@ -94,8 +97,7 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x
     is_display_enabled = True
     for polygon_list, current_snps_list, h, max_snps_sum in zip(polygon_list_list, current_snps_list_list, h_list,
                                                                 max_snps_sum_list):
-        fg = FeatureGroup(name='{} Сетка'.format(
-            str(h)), show=is_display_enabled)
+        fg = FeatureGroup(name='{} Сетка'.format(str(h)), show=is_display_enabled)
         for polygon, current_snp in zip(polygon_list, current_snps_list):
             fillColor = combination_to_color_dict[tuple(current_snp)]
             fillOpacity = sum(current_snp) / max_snps_sum
@@ -105,7 +107,8 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x
                     'fillOpacity': fillOpacity,
                     'weight': 0.1,
                     'fillColor': fillColor,
-                    'color': '#000000'}
+                    'color': '#000000'
+                }
 
             gj = GeoJson(polygon, style_function=style_function, tooltip=list(compress(child_snps, current_snp)))
             gj.add_to(fg)
