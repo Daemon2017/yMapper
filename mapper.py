@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 import math
 import random
-import utils
 import ftdna_tree_collector_rest
 import datetime
 
+from utils import Utils
 from itertools import product
 from shapely.geometry import Polygon
 from multiprocessing import freeze_support
@@ -50,6 +50,8 @@ if __name__ == '__main__':
     combination_to_color_dict = {}
     for snp in [tuple(i) for i in product([True, False], repeat=len(child_snps))]:
         combination_to_color_dict[snp] = "#%06x" % random.randint(0, 0xFFFFFF)
+
+    utils = Utils()
 
     print("Среди всех строк ищем те, что имеют положительный SNP, восходящий к одному из дочерних SNP целевого SNP.")
     combined_df = utils.get_positive_snps(child_snps, combined_df, json_tree_rows)
