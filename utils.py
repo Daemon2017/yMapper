@@ -1,16 +1,19 @@
-import pandas as pd
-import numpy as np
-import multiprocessing
-import ftdna_tree_collector_rest
 import datetime
+import math
+import multiprocessing
 import sys
+import numpy as np
+import pandas as pd
+import ftdna_tree_collector_rest
+import random
 
-from xgboost import XGBClassifier
-from sklearn.metrics import f1_score
-from sklearn.model_selection import train_test_split
-from itertools import compress, repeat
+from itertools import compress, repeat, product
 from folium import FeatureGroup, LayerControl, Map, GeoJson
 from shapely.geometry import Point
+from shapely.geometry import Polygon
+from sklearn.metrics import f1_score
+from sklearn.model_selection import train_test_split
+from xgboost import XGBClassifier
 
 
 def get_dict(snps, json_tree_rows, child_snps):
@@ -39,14 +42,32 @@ def get_positive_polygons(polygon, child_snps, combined_df):
 
 
 class Utils(object):
-    def get_positive_snps(self, child_snps, combined_df, json_tree_rows):
+    polygon_list_list = []
+    json_tree_rows = ''
+    child_snps = ''
+    combination_to_color_dict = {}
+
+    def __init__(self, is_extended, target_snp, str_number, x_0, y_0, x_1, y_1, x_center, y_center, zoom, h_list):
+        self.is_extended = is_extended
+        self.target_snp = target_snp
+        self.str_number = str_number
+        self.x_0 = x_0
+        self.y_0 = y_0
+        self.x_1 = x_1
+        self.y_1 = y_1
+        self.x_center = x_center
+        self.y_center = y_center
+        self.zoom = zoom
+        self.h_list = h_list
+
+    def get_positive_snps(self, combined_df):
         print(datetime.datetime.now())
         num_processes = multiprocessing.cpu_count()
         unique_values = combined_df['Short Hand'].unique()
         chunks = np.array_split(unique_values, num_processes)
         pool = multiprocessing.Pool(processes=num_processes)
         result = pool.starmap(get_dict,
-                              zip(chunks, repeat(json_tree_rows), repeat(child_snps)))
+                              zip(chunks, repeat(self.json_tree_rows), repeat(self.child_snps)))
         old_to_new_dict = {}
         for i in range(len(result)):
             old_to_new_dict.update(result[i])
@@ -54,10 +75,10 @@ class Utils(object):
         print(datetime.datetime.now())
         return combined_df
 
-    def get_extended_data(self, combined_df, str_number, json_tree_rows, child_snps):
+    def get_extended_data(self, combined_df):
         print(datetime.datetime.now())
         combined_df['Kit Number'] = combined_df['Kit Number'].astype(str)
-        new_combined_df = self.get_extended_combined_map_file(str_number, json_tree_rows, child_snps)
+        new_combined_df = self.get_extended_combined_map_file(self.str_number)
         new_combined_df['Kit Number'] = new_combined_df['Kit Number'].astype(str)
         print('В наборе new_combined_df оставляем только те строки, которых нет в наборе combined_df.')
         new_combined_df = new_combined_df.loc[~new_combined_df['Kit Number'].isin(combined_df['Kit Number'])]
@@ -68,8 +89,7 @@ class Utils(object):
         print(datetime.datetime.now())
         return new_combined_df
 
-    def get_map(self, combined_df, is_extended, polygon_list_list, child_snps, y_center, x_center, zoom,
-                combination_to_color_dict, target_snp, h_list):
+    def get_map(self, combined_df):
         print(datetime.datetime.now())
         print('Очищаем набор данных от строк с пустыми координатами...')
         combined_df['lng'] = combined_df['lng'].astype(float)
@@ -82,13 +102,13 @@ class Utils(object):
         print("Проверяем наличие каждого целевого SNP в каждом шестиугольнике.")
         max_snps_sum_list = []
         current_snps_list_list = []
-        for polygon_list in polygon_list_list:
+        for polygon_list in self.polygon_list_list:
             max_snps_sum = 0
             current_snps_list = []
 
             pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
             result = pool.starmap(get_positive_polygons,
-                                  zip(polygon_list, repeat(child_snps), repeat(combined_df)))
+                                  zip(polygon_list, repeat(self.child_snps), repeat(combined_df)))
 
             for r in result:
                 current_snps_sum = sum(r)
@@ -100,16 +120,16 @@ class Utils(object):
             current_snps_list_list.append(current_snps_list)
 
         print("Создаем карту и центрируем ее на Русских воротах.")
-        m = Map([y_center, x_center], zoom_start=zoom, tiles='Stamen Terrain', crs='EPSG3857')
+        m = Map([self.y_center, self.x_center], zoom_start=self.zoom, tiles='Stamen Terrain', crs='EPSG3857')
 
         print("Раскрашиваем шестиугольники, присоединяем их к слоям, а слои прикрепляем к карте.")
         is_display_enabled = True
         for polygon_list, current_snps_list, h, max_snps_sum in \
-                zip(polygon_list_list, current_snps_list_list, h_list, max_snps_sum_list):
+                zip(self.polygon_list_list, current_snps_list_list, self.h_list, max_snps_sum_list):
             fg = FeatureGroup(name='{} Сетка'.format(str(h)), show=is_display_enabled)
             for polygon, current_snp in \
                     zip(polygon_list, current_snps_list):
-                fillColor = combination_to_color_dict[tuple(current_snp)]
+                fillColor = self.combination_to_color_dict[tuple(current_snp)]
                 fillOpacity = sum(current_snp) / max_snps_sum
 
                 def style_function(feature, fillColor=fillColor, fillOpacity=fillOpacity):
@@ -120,7 +140,8 @@ class Utils(object):
                         'color': '#000000'
                     }
 
-                gj = GeoJson(polygon, style_function=style_function, tooltip=list(compress(child_snps, current_snp)))
+                gj = GeoJson(polygon, style_function=style_function,
+                             tooltip=list(compress(self.child_snps, current_snp)))
                 gj.add_to(fg)
             fg.add_to(m)
             if is_display_enabled:
@@ -128,14 +149,14 @@ class Utils(object):
         LayerControl().add_to(m)
 
         print("Сохраняем карту.")
-        if is_extended:
-            m.save('map_{}_extended.html'.format(target_snp))
+        if self.is_extended:
+            m.save('map_{}_extended.html'.format(self.target_snp))
         else:
-            m.save('map_{}.html'.format(target_snp))
+            m.save('map_{}.html'.format(self.target_snp))
         print("HTML-файл с картой сохранен!\n")
         print(datetime.datetime.now())
 
-    def get_extended_combined_map_file(self, str_number, json_tree_rows, child_snps):
+    def get_extended_combined_map_file(self, str_number):
         print(datetime.datetime.now())
         print('Загружаем набор данных SNP+STR+Map.')
         combined_df = pd.read_csv('combined_snp_str_map.csv', engine='python')
@@ -242,9 +263,9 @@ class Utils(object):
         print('В наборе данных combined_df {} строк'.format(len(combined_df.index)))
         print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
 
-        print(
-            'Среди всех строк ищем те, что имеют положительный SNP, восходящий к одному из дочерних SNP целевого SNP.')
-        combined_df = self.get_positive_snps(child_snps, combined_df, json_tree_rows)
+        print('Среди всех строк ищем те, что имеют положительный SNP, '
+              'восходящий к одному из дочерних SNP целевого SNP.')
+        combined_df = self.get_positive_snps(combined_df)
         print('В наборе данных combined_df {} строк'.format(len(combined_df.index)))
         print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
 
@@ -252,7 +273,7 @@ class Utils(object):
               'Удаляем те строки, для которых не сделан BigY, '
               'а также те, для которых не является положительным ни один из дочерних SNP целевого SNP.')
         combined_df = combined_df.drop(combined_df[(combined_df['NGS'] == False) &
-                                                   (~combined_df['Short Hand'].isin(child_snps))].index)
+                                                   (~combined_df['Short Hand'].isin(self.child_snps))].index)
         del combined_df['NGS']
         print('В наборе данных combined_df {} строк'.format(len(combined_df.index)))
         print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
@@ -336,3 +357,41 @@ class Utils(object):
         print(datetime.datetime.now())
 
         return new_combined_df
+
+    def get_grid(self):
+        print("Создаем столько сеток из шестиугольников, сколько размеров было задано на 1-м шаге.")
+        for h in self.h_list:
+            polygon_list = []
+            is_even = False
+            for lat in np.arange(self.y_0,
+                                 self.y_0 + self.y_1,
+                                 (math.sin(math.radians(30)) * h - math.sin(math.radians(270)) * h)):
+                if is_even:
+                    is_even = False
+                    self.x_0 = self.x_0 + (math.cos(math.radians(30)) * h -
+                                           math.cos(math.radians(150)) * h) / 2
+                else:
+                    is_even = True
+                    self.x_0 = self.x_0 - (math.cos(math.radians(30)) * h -
+                                           math.cos(math.radians(150)) * h) / 2
+                for lon in np.arange(self.x_0,
+                                     self.x_0 + self.x_1,
+                                     (math.cos(math.radians(30)) * h - math.cos(math.radians(150)) * h)):
+                    polygon_list.append(Polygon([[lon + math.cos(math.radians(angle)) * h,
+                                                  lat + math.sin(math.radians(angle)) * h]
+                                                 for angle in range(30, 360, 60)]))
+            self.polygon_list_list.append(polygon_list)
+
+    def get_json_tree_rows(self):
+        print("Открываем древо Y-SNP от FTDNA.")
+        self.json_tree_rows = ftdna_tree_collector_rest.get_json_tree_rows()
+
+    def get_child_snps(self):
+        print("Получаем список дочерних SNP целевого SNP.")
+        self.child_snps = ftdna_tree_collector_rest.get_children_list(self.json_tree_rows, self.target_snp)
+        print(self.child_snps)
+
+    def get_combination_to_color_dict(self):
+        print("Создаем словарь 'Набор SNP: Цвет'.")
+        for snp in [tuple(i) for i in product([True, False], repeat=len(self.child_snps))]:
+            self.combination_to_color_dict[snp] = "#%06x" % random.randint(0, 0xFFFFFF)
