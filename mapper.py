@@ -31,10 +31,16 @@ if __name__ == '__main__':
     print(datetime.datetime.now())
 
     utils = Utils(is_extended, target_snp, str_number, x_0, y_0, x_1, y_1, x_center, y_center, zoom, h_list)
+    utils.get_combined_df()
+    utils.get_json_tree_rows()
+    utils.get_child_snps()
+    utils.get_combination_to_color_dict()
+    utils.get_polygon_list_list()
+
     combined_df = utils.get_positive_snps(utils.combined_df.copy())
     combined_df = utils.get_combined_df_without_other(combined_df)
     utils.get_map(combined_df)
     if is_extended:
-        combined_df = utils.get_extended_data(combined_df)
-        utils.get_map(combined_df)
+        combined_extended_df = utils.get_extended_data(utils.combined_df.copy())
+        utils.get_map(combined_extended_df)
     print(datetime.datetime.now())

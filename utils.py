@@ -1,4 +1,5 @@
 import datetime
+import gc
 import math
 import multiprocessing
 import sys
@@ -42,12 +43,6 @@ def get_positive_polygons(polygon, child_snps, combined_df):
 
 
 class Utils(object):
-    polygon_list_list = []
-    json_tree_rows = ''
-    child_snps = ''
-    combination_to_color_dict = {}
-    combined_df = ''
-
     def __init__(self, is_extended, target_snp, str_number, x_0, y_0, x_1, y_1, x_center, y_center, zoom, h_list):
         self.is_extended = is_extended
         self.target_snp = target_snp
@@ -60,12 +55,11 @@ class Utils(object):
         self.y_center = y_center
         self.zoom = zoom
         self.h_list = h_list
-
-        self.get_combined_df()
-        self.get_json_tree_rows()
-        self.get_child_snps()
-        self.get_combination_to_color_dict()
-        self.get_grid()
+        self.combined_df = None
+        self.json_tree_rows = None
+        self.child_snps = None
+        self.combination_to_color_dict = None
+        self.polygon_list_list = None
 
     def get_combined_df(self):
         print('Загружаем набор данных SNP+STR+Map.')
@@ -84,11 +78,14 @@ class Utils(object):
 
     def get_combination_to_color_dict(self):
         print("Создаем словарь 'Набор SNP: Цвет'.")
+        combination_to_color_dict = {}
         for snp in [tuple(i) for i in product([True, False], repeat=len(self.child_snps))]:
-            self.combination_to_color_dict[snp] = "#%06x" % random.randint(0, 0xFFFFFF)
+            combination_to_color_dict[snp] = "#%06x" % random.randint(0, 0xFFFFFF)
+        self.combination_to_color_dict = combination_to_color_dict
 
-    def get_grid(self):
+    def get_polygon_list_list(self):
         print("Создаем столько сеток из шестиугольников, сколько размеров было задано на 1-м шаге.")
+        polygon_list_list = []
         for h in self.h_list:
             polygon_list = []
             is_even = False
@@ -109,7 +106,8 @@ class Utils(object):
                     polygon_list.append(Polygon([[lon + math.cos(math.radians(angle)) * h,
                                                   lat + math.sin(math.radians(angle)) * h]
                                                  for angle in range(30, 360, 60)]))
-            self.polygon_list_list.append(polygon_list)
+            polygon_list_list.append(polygon_list)
+        self.polygon_list_list = polygon_list_list
 
     def get_positive_snps(self, combined_df):
         print(datetime.datetime.now())
@@ -131,16 +129,18 @@ class Utils(object):
     def get_extended_data(self, combined_df):
         print(datetime.datetime.now())
         combined_df['Kit Number'] = combined_df['Kit Number'].astype(str)
-        new_combined_df = self.get_extended_combined_map_file(self.str_number)
-        new_combined_df['Kit Number'] = new_combined_df['Kit Number'].astype(str)
-        print('В наборе new_combined_df оставляем только те строки, которых нет в наборе combined_df.')
-        new_combined_df = new_combined_df.loc[~new_combined_df['Kit Number'].isin(combined_df['Kit Number'])]
-        print('Присоединяем к набору new_combined_df содержимое набора combined_df.')
-        new_combined_df = pd.concat([combined_df, new_combined_df], sort=True)
-        print('В наборе данных new_combined_df {} строк'.format(len(new_combined_df.index)))
-        print("Количество представителей каждой подветви: \n{}".format(new_combined_df['Short Hand'].value_counts()))
+        combined_extended_df = self.get_extended_combined_map_file(self.str_number)
+        combined_extended_df['Kit Number'] = combined_extended_df['Kit Number'].astype(str)
+        print('В наборе combined_extended_df оставляем только те строки, которых нет в наборе combined_df.')
+        combined_extended_df = combined_extended_df.loc[
+            ~combined_extended_df['Kit Number'].isin(combined_df['Kit Number'])]
+        print('Присоединяем к набору combined_extended_df содержимое набора combined_df.')
+        combined_extended_df = pd.concat([combined_df, combined_extended_df], sort=True)
+        print('В наборе данных combined_extended_df {} строк'.format(len(combined_extended_df.index)))
+        print(
+            "Количество представителей каждой подветви: \n{}".format(combined_extended_df['Short Hand'].value_counts()))
         print(datetime.datetime.now())
-        return new_combined_df
+        return combined_extended_df
 
     def get_map(self, combined_df):
         print(datetime.datetime.now())
@@ -207,6 +207,7 @@ class Utils(object):
         else:
             m.save('map_{}.html'.format(self.target_snp))
         print("HTML-файл с картой сохранен!\n")
+        gc.collect()
         print(datetime.datetime.now())
 
     def get_extended_combined_map_file(self, str_number):
@@ -329,7 +330,7 @@ class Utils(object):
         Y = combined_df['Short Hand']
         del combined_df['Short Hand']
 
-        X = combined_df.copy()
+        X = combined_df
 
         print('Расчленяем набор данных на обучающую и испытательную выборки.')
         X_train, X_test, Y_train, Y_test = train_test_split(X.drop(columns=['Kit Number']), Y, random_state=123,
@@ -372,38 +373,38 @@ class Utils(object):
         print('В наборе данных unused_for_train_df {} строк'.format(len(unused_for_train_df.index)))
         print('Количество представителей каждого SNP:\n{}'.format(unused_for_train_df['Short Hand'].value_counts()))
 
-        used_for_train_df = X.copy()
+        used_for_train_df = X
         used_for_train_df['Short Hand'] = Y
         print('В наборе данных used_for_train_df {} строк'.format(len(used_for_train_df.index)))
         print('Количество представителей каждого SNP:\n{}'.format(used_for_train_df['Short Hand'].value_counts()))
 
-        new_combined_df = pd.concat([unused_for_train_df, used_for_train_df])
+        combined_extended_df = pd.concat([unused_for_train_df, used_for_train_df])
 
-        print('В наборе данных new_combined_df {} строк'.format(len(new_combined_df.index)))
-        print('Количество представителей каждого SNP:\n{}'.format(new_combined_df['Short Hand'].value_counts()))
+        print('В наборе данных combined_extended_df {} строк'.format(len(combined_extended_df.index)))
+        print('Количество представителей каждого SNP:\n{}'.format(combined_extended_df['Short Hand'].value_counts()))
 
         print('Оставляем только полезные столбцы.')
         important_columns_list = ['Kit Number', 'Short Hand']
 
-        for column in new_combined_df:
+        for column in combined_extended_df:
             if column not in important_columns_list:
                 try:
-                    del new_combined_df[column]
+                    del combined_extended_df[column]
                 except KeyError as KE:
                     print(KE)
 
         print('Склеиваем информацию о SNP с информацией о местоположении.')
-        new_combined_df = pd.merge(new_combined_df, combined_map_df, on='Kit Number')
-        print('В наборе данных new_combined_df {} строк'.format(len(new_combined_df.index)))
-        print('Количество представителей каждого SNP:\n{}'.format(new_combined_df['Short Hand'].value_counts()))
+        combined_extended_df = pd.merge(combined_extended_df, combined_map_df, on='Kit Number')
+        print('В наборе данных combined_extended_df {} строк'.format(len(combined_extended_df.index)))
+        print('Количество представителей каждого SNP:\n{}'.format(combined_extended_df['Short Hand'].value_counts()))
 
-        new_combined_df = self.get_combined_df_without_other(new_combined_df)
+        combined_extended_df = self.get_combined_df_without_other(combined_extended_df)
         print(datetime.datetime.now())
-        return new_combined_df
+        return combined_extended_df
 
     def get_combined_df_without_other(self, combined_df):
         print('Отбрасываем строки, содержащие "Other" в столбце "Short Hand".')
         combined_df = combined_df.drop(combined_df[combined_df['Short Hand'] == 'Other'].index)
-        print('В наборе данных new_combined_df {} строк'.format(len(combined_df.index)))
+        print('В наборе данных combined_df {} строк'.format(len(combined_df.index)))
         print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
         return combined_df
