@@ -46,6 +46,7 @@ class Utils(object):
     json_tree_rows = ''
     child_snps = ''
     combination_to_color_dict = {}
+    combined_df = ''
 
     def __init__(self, is_extended, target_snp, str_number, x_0, y_0, x_1, y_1, x_center, y_center, zoom, h_list):
         self.is_extended = is_extended
@@ -60,8 +61,60 @@ class Utils(object):
         self.zoom = zoom
         self.h_list = h_list
 
+        self.get_combined_df()
+        self.get_json_tree_rows()
+        self.get_child_snps()
+        self.get_combination_to_color_dict()
+        self.get_grid()
+
+    def get_combined_df(self):
+        print('Загружаем набор данных SNP+STR+Map.')
+        self.combined_df = pd.read_csv('combined_snp_str_map.csv', engine='python')
+        print('В загруженном наборе данных {} строк'.format(len(self.combined_df.index)))
+        print('Количество представителей каждого SNP:\n{}'.format(self.combined_df['Short Hand'].value_counts()))
+
+    def get_json_tree_rows(self):
+        print("Открываем древо Y-SNP от FTDNA.")
+        self.json_tree_rows = ftdna_tree_collector_rest.get_json_tree_rows()
+
+    def get_child_snps(self):
+        print("Получаем список дочерних SNP целевого SNP.")
+        self.child_snps = ftdna_tree_collector_rest.get_children_list(self.json_tree_rows, self.target_snp)
+        print(self.child_snps)
+
+    def get_combination_to_color_dict(self):
+        print("Создаем словарь 'Набор SNP: Цвет'.")
+        for snp in [tuple(i) for i in product([True, False], repeat=len(self.child_snps))]:
+            self.combination_to_color_dict[snp] = "#%06x" % random.randint(0, 0xFFFFFF)
+
+    def get_grid(self):
+        print("Создаем столько сеток из шестиугольников, сколько размеров было задано на 1-м шаге.")
+        for h in self.h_list:
+            polygon_list = []
+            is_even = False
+            for lat in np.arange(self.y_0,
+                                 self.y_0 + self.y_1,
+                                 (math.sin(math.radians(30)) * h - math.sin(math.radians(270)) * h)):
+                if is_even:
+                    is_even = False
+                    self.x_0 = self.x_0 + (math.cos(math.radians(30)) * h -
+                                           math.cos(math.radians(150)) * h) / 2
+                else:
+                    is_even = True
+                    self.x_0 = self.x_0 - (math.cos(math.radians(30)) * h -
+                                           math.cos(math.radians(150)) * h) / 2
+                for lon in np.arange(self.x_0,
+                                     self.x_0 + self.x_1,
+                                     (math.cos(math.radians(30)) * h - math.cos(math.radians(150)) * h)):
+                    polygon_list.append(Polygon([[lon + math.cos(math.radians(angle)) * h,
+                                                  lat + math.sin(math.radians(angle)) * h]
+                                                 for angle in range(30, 360, 60)]))
+            self.polygon_list_list.append(polygon_list)
+
     def get_positive_snps(self, combined_df):
         print(datetime.datetime.now())
+        print('Среди всех строк ищем те, что имеют положительный SNP, '
+              'восходящий к одному из дочерних SNP целевого SNP.')
         num_processes = multiprocessing.cpu_count()
         unique_values = combined_df['Short Hand'].unique()
         chunks = np.array_split(unique_values, num_processes)
@@ -157,11 +210,7 @@ class Utils(object):
         print(datetime.datetime.now())
 
     def get_extended_combined_map_file(self, str_number):
-        print(datetime.datetime.now())
-        print('Загружаем набор данных SNP+STR+Map.')
-        combined_df = pd.read_csv('combined_snp_str_map.csv', engine='python')
-        print('В загруженном наборе данных {} строк'.format(len(combined_df.index)))
-        print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
+        combined_df = self.combined_df.copy()
 
         print('Выделяем данные о местоположении в отдельный набор.')
         combined_map_df = combined_df.filter(['Kit Number', 'lat', 'lng'], axis=1)
@@ -263,8 +312,6 @@ class Utils(object):
         print('В наборе данных combined_df {} строк'.format(len(combined_df.index)))
         print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
 
-        print('Среди всех строк ищем те, что имеют положительный SNP, '
-              'восходящий к одному из дочерних SNP целевого SNP.')
         combined_df = self.get_positive_snps(combined_df)
         print('В наборе данных combined_df {} строк'.format(len(combined_df.index)))
         print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
@@ -350,48 +397,13 @@ class Utils(object):
         print('В наборе данных new_combined_df {} строк'.format(len(new_combined_df.index)))
         print('Количество представителей каждого SNP:\n{}'.format(new_combined_df['Short Hand'].value_counts()))
 
-        print('Отбрасываем строки, содержащие "Other" в столбце "Short Hand".')
-        new_combined_df = new_combined_df.drop(new_combined_df[new_combined_df['Short Hand'] == 'Other'].index)
-        print('В наборе данных new_combined_df {} строк'.format(len(new_combined_df.index)))
-        print('Количество представителей каждого SNP:\n{}'.format(new_combined_df['Short Hand'].value_counts()))
+        new_combined_df = self.get_combined_df_without_other(new_combined_df)
         print(datetime.datetime.now())
-
         return new_combined_df
 
-    def get_grid(self):
-        print("Создаем столько сеток из шестиугольников, сколько размеров было задано на 1-м шаге.")
-        for h in self.h_list:
-            polygon_list = []
-            is_even = False
-            for lat in np.arange(self.y_0,
-                                 self.y_0 + self.y_1,
-                                 (math.sin(math.radians(30)) * h - math.sin(math.radians(270)) * h)):
-                if is_even:
-                    is_even = False
-                    self.x_0 = self.x_0 + (math.cos(math.radians(30)) * h -
-                                           math.cos(math.radians(150)) * h) / 2
-                else:
-                    is_even = True
-                    self.x_0 = self.x_0 - (math.cos(math.radians(30)) * h -
-                                           math.cos(math.radians(150)) * h) / 2
-                for lon in np.arange(self.x_0,
-                                     self.x_0 + self.x_1,
-                                     (math.cos(math.radians(30)) * h - math.cos(math.radians(150)) * h)):
-                    polygon_list.append(Polygon([[lon + math.cos(math.radians(angle)) * h,
-                                                  lat + math.sin(math.radians(angle)) * h]
-                                                 for angle in range(30, 360, 60)]))
-            self.polygon_list_list.append(polygon_list)
-
-    def get_json_tree_rows(self):
-        print("Открываем древо Y-SNP от FTDNA.")
-        self.json_tree_rows = ftdna_tree_collector_rest.get_json_tree_rows()
-
-    def get_child_snps(self):
-        print("Получаем список дочерних SNP целевого SNP.")
-        self.child_snps = ftdna_tree_collector_rest.get_children_list(self.json_tree_rows, self.target_snp)
-        print(self.child_snps)
-
-    def get_combination_to_color_dict(self):
-        print("Создаем словарь 'Набор SNP: Цвет'.")
-        for snp in [tuple(i) for i in product([True, False], repeat=len(self.child_snps))]:
-            self.combination_to_color_dict[snp] = "#%06x" % random.randint(0, 0xFFFFFF)
+    def get_combined_df_without_other(self, combined_df):
+        print('Отбрасываем строки, содержащие "Other" в столбце "Short Hand".')
+        combined_df = combined_df.drop(combined_df[combined_df['Short Hand'] == 'Other'].index)
+        print('В наборе данных new_combined_df {} строк'.format(len(combined_df.index)))
+        print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
+        return combined_df

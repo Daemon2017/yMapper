@@ -1,5 +1,4 @@
 import datetime
-import pandas as pd
 
 from multiprocessing import freeze_support
 from utils import Utils
@@ -30,23 +29,10 @@ h_list = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
 if __name__ == '__main__':
     freeze_support()
     print(datetime.datetime.now())
-    combined_df = pd.read_csv('combined_snp_str_map.csv', engine='python')
-    print("Количество строк в файле: {}".format(len(combined_df.index)))
 
     utils = Utils(is_extended, target_snp, str_number, x_0, y_0, x_1, y_1, x_center, y_center, zoom, h_list)
-    utils.get_json_tree_rows()
-    utils.get_child_snps()
-    utils.get_combination_to_color_dict()
-
-    print("Среди всех строк ищем те, что имеют положительный SNP, восходящий к одному из дочерних SNP целевого SNP.")
-    combined_df = utils.get_positive_snps(combined_df)
-    print("Отбрасываем строки, содержащие 'Other' в столбце 'Short Hand'.")
-    combined_df = combined_df.drop(combined_df[combined_df['Short Hand'] == 'Other'].index)
-    print("Количество представителей выбранной ветви: {}".format(len(combined_df.index)))
-    print("Количество представителей каждой подветви: \n{}".format(combined_df['Short Hand'].value_counts()))
-
-    utils.get_grid()
-
+    combined_df = utils.get_positive_snps(utils.combined_df.copy())
+    combined_df = utils.get_combined_df_without_other(combined_df)
     utils.get_map(combined_df)
     if is_extended:
         combined_df = utils.get_extended_data(combined_df)
