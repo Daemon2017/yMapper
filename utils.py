@@ -1,5 +1,4 @@
 import datetime
-import gc
 import math
 import multiprocessing
 import sys
@@ -87,6 +86,7 @@ class Utils(object):
         print("Создаем столько сеток из шестиугольников, сколько размеров было задано на 1-м шаге.")
         polygon_list_list = []
         for h in self.h_list:
+            print('Создаем сетку размером {}'.format(h))
             polygon_list = []
             is_even = False
             for lat in np.arange(self.y_0,
@@ -152,10 +152,11 @@ class Utils(object):
         print('В наборе данных combined_df {} строк'.format(len(combined_df.index)))
         print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
 
-        print("Проверяем наличие каждого целевого SNP в каждом шестиугольнике.")
+        print("Проверяем наличие каждого целевого SNP в каждом шестиугольнике каждой сетки.")
         max_snps_sum_list = []
         current_snps_list_list = []
         for polygon_list in self.polygon_list_list:
+            print('Проверяем сетку')
             max_snps_sum = 0
             current_snps_list = []
 
@@ -207,7 +208,6 @@ class Utils(object):
         else:
             m.save('map_{}.html'.format(self.target_snp))
         print("HTML-файл с картой сохранен!\n")
-        gc.collect()
         print(datetime.datetime.now())
 
     def get_extended_combined_map_file(self, str_number):
