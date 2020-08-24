@@ -1,7 +1,7 @@
 import datetime
 
 from multiprocessing import freeze_support
-from utils import Utils
+import utils
 
 # Выбираем стратегию работы с данными:
 # * False - если хотим работать только с теми данными, что 100% подтверждены BigY500/BigY700/SNP;
@@ -29,18 +29,19 @@ h_list = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
 if __name__ == '__main__':
     freeze_support()
     print(datetime.datetime.now())
+    combined_original_df = utils.get_combined_df()
+    json_tree_rows = utils.get_json_tree_rows()
+    child_snps = utils.get_child_snps(json_tree_rows, target_snp)
+    combination_to_color_dict = utils.get_combination_to_color_dict(child_snps)
+    polygon_list_list = utils.get_polygon_list_list(h_list, y_0, y_1, x_0, x_1)
 
-    utils = Utils(is_extended, target_snp, str_number, x_0, y_0, x_1, y_1, x_center, y_center, zoom, h_list)
-    utils.get_combined_df()
-    utils.get_json_tree_rows()
-    utils.get_child_snps()
-    utils.get_combination_to_color_dict()
-    utils.get_polygon_list_list()
-
-    combined_df = utils.get_positive_snps(utils.combined_df.copy())
-    combined_df = utils.get_combined_df_without_other(combined_df)
-    utils.get_map(combined_df)
+    combined_normal_df_positive_snps = utils.get_df_positive_snps(child_snps, combined_original_df, json_tree_rows)
+    combined_normal_df_without_other = utils.get_df_without_other(combined_normal_df_positive_snps)
+    utils.get_map(combined_normal_df_without_other, False, polygon_list_list, child_snps, y_center, x_center, zoom,
+                  combination_to_color_dict, target_snp, h_list)
     if is_extended:
-        combined_extended_df = utils.get_extended_data(utils.combined_df.copy())
-        utils.get_map(combined_extended_df)
+        combined_extended_df = utils.get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows,
+                                                     child_snps, combined_original_df)
+        utils.get_map(combined_extended_df, True, polygon_list_list, child_snps, y_center, x_center, zoom,
+                      combination_to_color_dict, target_snp, h_list)
     print(datetime.datetime.now())
