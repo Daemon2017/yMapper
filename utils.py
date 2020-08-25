@@ -28,8 +28,11 @@ def get_dict(snps, json_tree_rows, child_snps):
     return old_to_new_dict
 
 
-def get_positive_polygons(polygon, child_snps, combined_df):
+def get_positive_snps(polygon, child_snps, combined_df):
     snps_list = [False] * len(child_snps)
+    bounds = polygon.bounds
+    combined_df = combined_df.loc[(combined_df['lng'] >= bounds[0]) & (combined_df['lng'] <= bounds[2]) &
+                                  (combined_df['lat'] >= bounds[1]) & (combined_df['lat'] <= bounds[3])]
     for i, row in combined_df.iterrows():
         if polygon.contains(Point(combined_df.at[i, 'lng'], combined_df.at[i, 'lat'])):
             n = 0
@@ -154,7 +157,7 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x
         current_snps_list = []
 
         pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-        result = pool.starmap(get_positive_polygons,
+        result = pool.starmap(get_positive_snps,
                               zip(polygon_list, repeat(child_snps), repeat(combined_df)))
 
         for r in result:
