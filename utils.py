@@ -13,7 +13,7 @@ from shapely.geometry import Point
 from shapely.geometry import Polygon
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
-from xgboost import XGBClassifier
+from catboost import CatBoostClassifier, Pool
 
 
 def get_dict(snps, json_tree_rows, child_snps):
@@ -329,27 +329,34 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     print('Обучаем градиентный бустинг при разном количестве оценщиков, '
           'а затем выбираем и сохраняем то количество оценщиков, '
           'при котором достигается наивысшая точность предсказаний SNP.')
-    n_estimators_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+    n_estimators_list = [400, 500, 600]
+    depth_list = [5, 6, 7]
     accuracy_best = 0
     n_estimators_best = 0
+    depth_best = 0
     for n_estimators in n_estimators_list:
-        model = XGBClassifier(n_estimators=n_estimators, random_state=123, n_jobs=-1)
-        model.fit(X_train, Y_train, verbose=True)
-        predictions = model.predict(X_test)
-        accuracy = f1_score(Y_test, predictions, average='macro')
-        if accuracy > accuracy_best:
-            accuracy_best = accuracy
-            n_estimators_best = n_estimators
-        print('При {} оценщиков достигается точность {}.'.format(n_estimators, accuracy))
+        for depth in depth_list:
+            model = CatBoostClassifier(iterations=n_estimators, random_seed=123, thread_count=-1, depth=depth)
+            model.fit(X_train, Y_train, verbose=100, eval_set=Pool(X_test, Y_test))
+            predictions = model.predict(X_test)
+            accuracy = f1_score(Y_test, predictions, average='macro')
+            if accuracy > accuracy_best:
+                accuracy_best = accuracy
+                n_estimators_best = n_estimators
+                depth_best = depth
+            print('При {} оценщиков и глубине {} достигается точность {}.'.format(n_estimators, depth, accuracy))
 
-    print('Наивысшая точность, равная {}, достигается при {} оценщиков.'.format(accuracy_best, n_estimators_best))
+    print('Наивысшая точность, равная {}, достигается при {} оценщиков и глубине {}.'.format(accuracy_best,
+                                                                                             n_estimators_best,
+                                                                                             depth_best))
     if accuracy_best < 0.75:
         print('Наивысшая точность предсказания ниже допустимых 0.75: завершаем работу программы.')
         sys.exit(0)
 
     print('Обучаем градиентный бустинг для предсказания SNP.')
-    model = XGBClassifier(n_estimators=n_estimators_best, random_state=123, n_jobs=-1)
-    model.fit(X.drop(columns=['Kit Number']), Y, verbose=True)
+    model = CatBoostClassifier(iterations=n_estimators_best, random_seed=123, thread_count=-1, verbose=100,
+                               depth=depth_best)
+    model.fit(X.drop(columns=['Kit Number']), Y, verbose=100)
 
     print('Оставляем в копии исходного набора данных только те строки, которые не были задействованы при обучении.')
     unused_for_train_df = unused_for_train_df.loc[~unused_for_train_df['Kit Number'].isin(X['Kit Number'])]
