@@ -140,6 +140,15 @@ def get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows
 def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x_center, zoom,
             combination_to_color_dict, target_snp, h_list):
     print(datetime.datetime.now())
+    print('Оставляем только полезные столбцы.')
+    important_columns_list = ['Short Hand', 'lng', 'lat']
+    for column in combined_df:
+        if column not in important_columns_list:
+            try:
+                del combined_df[column]
+            except KeyError as KE:
+                print(KE)
+
     print('Очищаем набор данных от строк с пустыми координатами...')
     combined_df['lng'] = combined_df['lng'].astype(float)
     combined_df = combined_df[combined_df['lng'].notna()].copy()
@@ -371,16 +380,6 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     combined_extended_df = pd.concat([unused_for_train_df, used_for_train_df])
     print('В наборе данных combined_extended_df {} строк'.format(len(combined_extended_df.index)))
     print('Количество представителей каждого SNP:\n{}'.format(combined_extended_df['Short Hand'].value_counts()))
-
-    print('Оставляем только полезные столбцы.')
-    important_columns_list = ['Kit Number', 'Short Hand']
-
-    for column in combined_extended_df:
-        if column not in important_columns_list:
-            try:
-                del combined_extended_df[column]
-            except KeyError as KE:
-                print(KE)
 
     print('Склеиваем информацию о SNP с информацией о местоположении.')
     combined_extended_map_df = pd.merge(combined_extended_df, map_df, on='Kit Number')
