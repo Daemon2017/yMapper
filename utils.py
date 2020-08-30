@@ -108,13 +108,13 @@ def get_df_positive_snps(child_snps, combined_df, json_tree_rows):
     num_processes = multiprocessing.cpu_count()
     unique_values = combined_df['Short Hand'].unique()
     chunks = np.array_split(unique_values, num_processes)
-    pool = multiprocessing.Pool(processes=num_processes)
-    result = pool.starmap(get_dict,
-                          zip(chunks, repeat(json_tree_rows), repeat(child_snps)))
-    old_to_new_dict = {}
-    for i in range(len(result)):
-        old_to_new_dict.update(result[i])
-    combined_df['Short Hand'] = combined_df['Short Hand'].map(old_to_new_dict)
+    with multiprocessing.Pool(processes=num_processes) as pool:
+        result = pool.starmap(get_dict,
+                              zip(chunks, repeat(json_tree_rows), repeat(child_snps)))
+        old_to_new_dict = {}
+        for i in range(len(result)):
+            old_to_new_dict.update(result[i])
+        combined_df['Short Hand'] = combined_df['Short Hand'].map(old_to_new_dict)
     print(datetime.datetime.now())
     return combined_df
 
@@ -165,18 +165,18 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x
         max_snps_sum = 0
         current_snps_list = []
 
-        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-        result = pool.starmap(get_positive_snps,
-                              zip(polygon_list, repeat(child_snps), repeat(combined_df)))
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            result = pool.starmap(get_positive_snps,
+                                  zip(polygon_list, repeat(child_snps), repeat(combined_df)))
 
-        for r in result:
-            current_snps_sum = sum(r)
-            if current_snps_sum > max_snps_sum:
-                max_snps_sum = current_snps_sum
-            current_snps_list.append(r)
+            for r in result:
+                current_snps_sum = sum(r)
+                if current_snps_sum > max_snps_sum:
+                    max_snps_sum = current_snps_sum
+                current_snps_list.append(r)
 
-        max_snps_sum_list.append(max_snps_sum)
-        current_snps_list_list.append(current_snps_list)
+            max_snps_sum_list.append(max_snps_sum)
+            current_snps_list_list.append(current_snps_list)
 
     print("Создаем карту и центрируем ее на Русских воротах.")
     m = Map([y_center, x_center], zoom_start=zoom, tiles='Stamen Terrain', crs='EPSG3857')
