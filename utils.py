@@ -339,7 +339,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
           'а затем выбираем и сохраняем то количество оценщиков, '
           'при котором достигается наивысшая точность предсказаний SNP.')
     n_estimators_list = [400, 500, 600]
-    depth_list = [5, 6, 7]
+    depth_list = [4, 5, 6, 7, 8]
     accuracy_best = 0
     n_estimators_best = 0
     depth_best = 0
