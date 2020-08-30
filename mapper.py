@@ -1,7 +1,7 @@
 import datetime
+import utils
 
 from multiprocessing import freeze_support
-import utils
 
 # Выбираем стратегию работы с данными:
 # * False - если хотим работать только с теми данными, что 100% подтверждены BigY500/BigY700/SNP;
@@ -37,7 +37,8 @@ if __name__ == '__main__':
 
     combined_normal_df_positive_snps = utils.get_df_positive_snps(child_snps, combined_original_df, json_tree_rows)
     combined_normal_df_without_other = utils.get_df_without_other(combined_normal_df_positive_snps)
-    utils.get_map(combined_normal_df_without_other.copy(), False, polygon_list_list, child_snps, y_center, x_center, zoom,
+    utils.get_map(combined_normal_df_without_other.copy(), False, polygon_list_list, child_snps, y_center, x_center,
+                  zoom,
                   combination_to_color_dict, target_snp, h_list)
     if is_extended:
         combined_extended_df = utils.get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows,
