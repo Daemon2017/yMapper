@@ -15,6 +15,12 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 from catboost import CatBoostClassifier, Pool
 
+LNG = 'lng'
+LAT = 'lat'
+KIT_NUMBER = 'Kit Number'
+SHORT_HAND = 'Short Hand'
+NGS = 'NGS'
+
 
 def get_dict(snps, json_tree_rows, child_snps):
     old_to_new_dict = {}
@@ -31,13 +37,13 @@ def get_dict(snps, json_tree_rows, child_snps):
 def get_positive_snps(polygon, child_snps, combined_df):
     snps_list = [False] * len(child_snps)
     bounds = polygon.bounds
-    combined_df = combined_df.loc[(combined_df['lng'] >= bounds[0]) & (combined_df['lng'] <= bounds[2]) &
-                                  (combined_df['lat'] >= bounds[1]) & (combined_df['lat'] <= bounds[3])]
+    combined_df = combined_df.loc[(combined_df[LNG] >= bounds[0]) & (combined_df[LNG] <= bounds[2]) &
+                                  (combined_df[LAT] >= bounds[1]) & (combined_df[LAT] <= bounds[3])]
     for i, row in combined_df.iterrows():
-        if polygon.contains(Point(combined_df.at[i, 'lng'], combined_df.at[i, 'lat'])):
+        if polygon.contains(Point(combined_df.at[i, LNG], combined_df.at[i, LAT])):
             n = 0
             for snp in child_snps:
-                if combined_df.at[i, 'Short Hand'] == snp:
+                if combined_df.at[i, SHORT_HAND] == snp:
                     snps_list[n] = True
                     break
                 n = n + 1
@@ -48,7 +54,7 @@ def get_combined_df():
     print('Загружаем набор данных SNP+STR+Map.')
     combined_df = pd.read_csv('combined_snp_str_map.csv', engine='python')
     print('В загруженном наборе данных {} строк'.format(len(combined_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(combined_df[SHORT_HAND].value_counts()))
     return combined_df
 
 
@@ -106,7 +112,7 @@ def get_df_positive_snps(child_snps, combined_df, json_tree_rows):
     print('Среди всех строк ищем те, что имеют положительный SNP, '
           'восходящий к одному из дочерних SNP целевого SNP.')
     num_processes = multiprocessing.cpu_count()
-    unique_values = combined_df['Short Hand'].unique()
+    unique_values = combined_df[SHORT_HAND].unique()
     chunks = np.array_split(unique_values, num_processes)
     with multiprocessing.Pool(processes=num_processes) as pool:
         result = pool.starmap(get_dict,
@@ -114,25 +120,25 @@ def get_df_positive_snps(child_snps, combined_df, json_tree_rows):
         old_to_new_dict = {}
         for i in range(len(result)):
             old_to_new_dict.update(result[i])
-        combined_df['Short Hand'] = combined_df['Short Hand'].map(old_to_new_dict)
+        combined_df[SHORT_HAND] = combined_df[SHORT_HAND].map(old_to_new_dict)
     print(datetime.datetime.now())
     return combined_df
 
 
 def get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows, child_snps, combined_original_df):
     print(datetime.datetime.now())
-    combined_normal_df_without_other['Kit Number'] = combined_normal_df_without_other['Kit Number'].astype(str)
+    combined_normal_df_without_other[KIT_NUMBER] = combined_normal_df_without_other[KIT_NUMBER].astype(str)
     combined_extended_map_df = get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_snps)
-    combined_extended_map_df['Kit Number'] = combined_extended_map_df['Kit Number'].astype(str)
+    combined_extended_map_df[KIT_NUMBER] = combined_extended_map_df[KIT_NUMBER].astype(str)
     print('В наборе combined_extended_map_df оставляем только те строки, которых нет в наборе combined_df.')
     combined_extended_map_df = \
         combined_extended_map_df.loc[
-            ~combined_extended_map_df['Kit Number'].isin(combined_normal_df_without_other['Kit Number'])]
+            ~combined_extended_map_df[KIT_NUMBER].isin(combined_normal_df_without_other[KIT_NUMBER])]
     print('Присоединяем к набору combined_extended_map_df содержимое набора combined_df.')
     combined_extended_map_df = pd.concat([combined_normal_df_without_other, combined_extended_map_df], sort=True)
     print('В наборе данных combined_extended_map_df {} строк'.format(len(combined_extended_map_df.index)))
     print("Количество представителей каждой подветви: \n{}"
-          .format(combined_extended_map_df['Short Hand'].value_counts()))
+          .format(combined_extended_map_df[SHORT_HAND].value_counts()))
     print(datetime.datetime.now())
     return combined_extended_map_df
 
@@ -141,7 +147,7 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x
             combination_to_color_dict, target_snp, h_list):
     print(datetime.datetime.now())
     print('Оставляем только полезные столбцы.')
-    important_columns_list = ['Short Hand', 'lng', 'lat']
+    important_columns_list = [SHORT_HAND, LNG, LAT]
     for column in combined_df:
         if column not in important_columns_list:
             try:
@@ -150,12 +156,12 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x
                 print(KE)
 
     print('Очищаем набор данных от строк с пустыми координатами...')
-    combined_df['lng'] = combined_df['lng'].astype(float)
-    combined_df = combined_df[combined_df['lng'].notna()].copy()
-    combined_df['lat'] = combined_df['lat'].astype(float)
-    combined_df = combined_df[combined_df['lat'].notna()]
+    combined_df[LNG] = combined_df[LNG].astype(float)
+    combined_df = combined_df[combined_df[LNG].notna()].copy()
+    combined_df[LAT] = combined_df[LAT].astype(float)
+    combined_df = combined_df[combined_df[LAT].notna()]
     print('В наборе данных combined_df {} строк'.format(len(combined_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(combined_df[SHORT_HAND].value_counts()))
 
     print("Проверяем наличие каждого целевого SNP в каждом шестиугольнике каждой сетки.")
     max_snps_sum_list = []
@@ -218,7 +224,7 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x
 
 def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_snps):
     print('Выделяем данные о местоположении в отдельный набор.')
-    map_df = combined_original_df.filter(['Kit Number', 'lat', 'lng'], axis=1)
+    map_df = combined_original_df.filter([KIT_NUMBER, LAT, LNG], axis=1)
     print('В наборе данных map_df {} строк'.format(len(map_df.index)))
 
     y12_list = ['DYS393', 'DYS390', 'DYS19', 'DYS391', 'DYS385', 'DYS426', 'DYS388', 'DYS439', 'DYS389I', 'DYS392',
@@ -247,7 +253,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
         str_columns_list = y111_list
 
     print('Удаляем столбцы, не являющиеся инструментальными и выходящие за границы выбранного числа STR.')
-    utils_columns_list = ['Short Hand', 'NGS', 'Kit Number']
+    utils_columns_list = [SHORT_HAND, NGS, KIT_NUMBER]
     for column in combined_original_df:
         if column not in utils_columns_list:
             if column not in str_columns_list:
@@ -273,7 +279,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
             except KeyError as KE:
                 print(KE)
     print('В наборе данных combined_df {} строк'.format(len(combined_original_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_original_df['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(combined_original_df[SHORT_HAND].value_counts()))
 
     print('Удаляем строки, содержащие палиндромы в тех STR, которым не свойственна палиндромность.')
     for column in combined_original_df:
@@ -284,7 +290,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
             except KeyError as KE:
                 print(KE)
     print('В наборе данных combined_df {} строк'.format(len(combined_original_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_original_df['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(combined_original_df[SHORT_HAND].value_counts()))
 
     print('Меняем тип данных на int для всех столбцов, кроме инструментальных.')
     for column in combined_original_df:
@@ -295,7 +301,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     print('Меняем тип данных на str для всех инструментальных столбцов.')
     for column in combined_original_df:
         if column in utils_columns_list:
-            if column == 'NGS':
+            if column == NGS:
                 combined_original_df[column] = combined_original_df[column].astype(bool)
             else:
                 combined_original_df[column] = combined_original_df[column].astype(str)
@@ -303,36 +309,36 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     print('Создаем копию исходного набора данных, чтобы впоследствии удалить из нее строки, '
           'использовавшиеся в ходе обучения, а затем предсказать SNP для оставшихся строк.')
     unused_for_train_df = combined_original_df.copy()
-    del unused_for_train_df['NGS']
-    del unused_for_train_df['Short Hand']
+    del unused_for_train_df[NGS]
+    del unused_for_train_df[SHORT_HAND]
 
     print('Удаляем строки, для которых FTDNA, в силу каких-то причин, не указало SNP.')
-    combined_original_df = combined_original_df[combined_original_df['Short Hand'].notna()]
+    combined_original_df = combined_original_df[combined_original_df[SHORT_HAND].notna()]
     print('В наборе данных combined_df {} строк'.format(len(combined_original_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_original_df['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(combined_original_df[SHORT_HAND].value_counts()))
 
     combined_df_positive_snps = get_df_positive_snps(child_snps, combined_original_df, json_tree_rows)
     print('В наборе данных combined_df_positive_snps {} строк'.format(len(combined_df_positive_snps.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_df_positive_snps['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(combined_df_positive_snps[SHORT_HAND].value_counts()))
 
     print('Условным признаком сделанного BigY500/700 является количество положительных SNP, превышающее 200. '
           'Удаляем те строки, для которых не сделан BigY, '
           'а также те, для которых не является положительным ни один из дочерних SNP целевого SNP.')
     combined_df_positive_snps = combined_df_positive_snps.drop(
-        combined_df_positive_snps[(combined_df_positive_snps['NGS'] == False) &
-                                  (~combined_df_positive_snps['Short Hand'].isin(child_snps))].index)
-    del combined_df_positive_snps['NGS']
+        combined_df_positive_snps[(combined_df_positive_snps[NGS] == False) &
+                                  (~combined_df_positive_snps[SHORT_HAND].isin(child_snps))].index)
+    del combined_df_positive_snps[NGS]
     print('В наборе данных combined_df_positive_snps {} строк'.format(len(combined_df_positive_snps.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_df_positive_snps['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(combined_df_positive_snps[SHORT_HAND].value_counts()))
 
     print('Делим данные на 2 части: то, что предсказываем (SNP) и то, по чему предсказываем (STR).')
-    Y = combined_df_positive_snps['Short Hand']
-    del combined_df_positive_snps['Short Hand']
+    Y = combined_df_positive_snps[SHORT_HAND]
+    del combined_df_positive_snps[SHORT_HAND]
 
     X = combined_df_positive_snps
 
     print('Расчленяем набор данных на обучающую и испытательную выборки.')
-    X_train, X_test, Y_train, Y_test = train_test_split(X.drop(columns=['Kit Number']), Y, random_state=123,
+    X_train, X_test, Y_train, Y_test = train_test_split(X.drop(columns=[KIT_NUMBER]), Y, random_state=123,
                                                         test_size=0.2)
 
     print('Обучаем градиентный бустинг при разном количестве оценщиков, '
@@ -365,33 +371,33 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     print('Обучаем градиентный бустинг для предсказания SNP.')
     model = CatBoostClassifier(iterations=n_estimators_best, random_seed=123, thread_count=-1, verbose=100,
                                depth=depth_best)
-    model.fit(X.drop(columns=['Kit Number']), Y, verbose=100)
+    model.fit(X.drop(columns=[KIT_NUMBER]), Y, verbose=100)
 
     print('Оставляем в копии исходного набора данных только те строки, которые не были задействованы при обучении.')
-    unused_for_train_df = unused_for_train_df.loc[~unused_for_train_df['Kit Number'].isin(X['Kit Number'])]
+    unused_for_train_df = unused_for_train_df.loc[~unused_for_train_df[KIT_NUMBER].isin(X[KIT_NUMBER])]
     print('В наборе данных unused_for_train_df {} строк'.format(len(unused_for_train_df.index)))
 
     print('Предсказываем SNP.')
-    predictions = model.predict(unused_for_train_df.drop(columns=['Kit Number']))
+    predictions = model.predict(unused_for_train_df.drop(columns=[KIT_NUMBER]))
 
     print('Собираем данные воедино.')
-    unused_for_train_df['Short Hand'] = predictions
+    unused_for_train_df[SHORT_HAND] = predictions
     print('В наборе данных unused_for_train_df {} строк'.format(len(unused_for_train_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(unused_for_train_df['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(unused_for_train_df[SHORT_HAND].value_counts()))
 
     used_for_train_df = X
-    used_for_train_df['Short Hand'] = Y
+    used_for_train_df[SHORT_HAND] = Y
     print('В наборе данных used_for_train_df {} строк'.format(len(used_for_train_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(used_for_train_df['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(used_for_train_df[SHORT_HAND].value_counts()))
 
     combined_extended_df = pd.concat([unused_for_train_df, used_for_train_df])
     print('В наборе данных combined_extended_df {} строк'.format(len(combined_extended_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_extended_df['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(combined_extended_df[SHORT_HAND].value_counts()))
 
     print('Склеиваем информацию о SNP с информацией о местоположении.')
-    combined_extended_map_df = pd.merge(combined_extended_df, map_df, on='Kit Number')
+    combined_extended_map_df = pd.merge(combined_extended_df, map_df, on=KIT_NUMBER)
     print('В наборе данных combined_extended_map_df {} строк'.format(len(combined_extended_map_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_extended_map_df['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(combined_extended_map_df[SHORT_HAND].value_counts()))
 
     combined_extended_map_df_without_other = get_df_without_other(combined_extended_map_df)
     print(datetime.datetime.now())
@@ -400,7 +406,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
 
 def get_df_without_other(combined_df):
     print('Отбрасываем строки, содержащие "Other" в столбце "Short Hand".')
-    combined_df = combined_df.drop(combined_df[combined_df['Short Hand'] == 'Other'].index)
+    combined_df = combined_df.drop(combined_df[combined_df[SHORT_HAND] == 'Other'].index)
     print('В наборе данных combined_df {} строк'.format(len(combined_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_df['Short Hand'].value_counts()))
+    print('Количество представителей каждого SNP:\n{}'.format(combined_df[SHORT_HAND].value_counts()))
     return combined_df
