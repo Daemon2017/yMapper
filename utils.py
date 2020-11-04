@@ -6,7 +6,11 @@ import numpy as np
 import pandas as pd
 import ftdna_tree_collector_rest
 import random
+import json
+import firebase_admin
 
+from firebase_admin import credentials
+from firebase_admin import firestore
 from itertools import compress, repeat, product
 from folium import FeatureGroup, LayerControl, Map, GeoJson
 from shapely.geometry import Point
@@ -144,7 +148,7 @@ def get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows
 
 
 def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x_center, zoom,
-            combination_to_color_dict, target_snp, h_list):
+            combination_to_color_dict, target_snp, h_list, is_web):
     print(datetime.datetime.now())
     print('Оставляем только полезные столбцы.')
     important_columns_list = [SHORT_HAND, LNG, LAT]
@@ -184,6 +188,42 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x
             max_snps_sum_list.append(max_snps_sum)
             current_snps_list_list.append(current_snps_list)
 
+    if is_web:
+        get_online_map(current_snps_list_list, is_extended, polygon_list_list, target_snp)
+    else:
+        get_offline_map(child_snps, combination_to_color_dict, current_snps_list_list, h_list, is_extended,
+                        max_snps_sum_list, polygon_list_list, target_snp, x_center, y_center, zoom)
+
+
+def get_online_map(current_snps_list_list, is_extended, polygon_list_list, target_snp):
+    snp_data_list = []
+    for snps_list, polygon in zip(current_snps_list_list[0], polygon_list_list[0]):
+        count = sum(snps_list)
+        if count > 0:
+            snp_data = {'count': count, 'lat': polygon.centroid.y, 'lng': polygon.centroid.x}
+            snp_data_list.append(snp_data)
+    json_string = json.dumps(snp_data_list)
+
+    if not firebase_admin._apps:
+        cred = credentials.Certificate('serviceAccount.json')
+        firebase_admin.initialize_app(cred)
+
+    db = firestore.client()
+
+    if is_extended:
+        doc_ref = db.collection(u'snps_extended').document(target_snp)
+        doc_ref.set({
+            u'data': json_string
+        })
+    else:
+        doc_ref = db.collection(u'snps').document(target_snp)
+        doc_ref.set({
+            u'data': json_string
+        })
+
+
+def get_offline_map(child_snps, combination_to_color_dict, current_snps_list_list, h_list, is_extended,
+                    max_snps_sum_list, polygon_list_list, target_snp, x_center, y_center, zoom):
     print("Создаем карту и центрируем ее на Русских воротах.")
     m = Map([y_center, x_center], zoom_start=zoom, tiles='Stamen Terrain', crs='EPSG3857')
 
