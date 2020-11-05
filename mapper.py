@@ -36,23 +36,29 @@ if __name__ == '__main__':
         combined_original_df = utils.get_combined_df()
         json_tree_rows = utils.get_json_tree_rows()
         child_snps = utils.get_child_snps(json_tree_rows, target_snp)
-        combination_to_color_dict = utils.get_combination_to_color_dict(child_snps)
+        if len(child_snps) > 0:
+            combination_to_color_dict = utils.get_combination_to_color_dict(child_snps)
 
-        if is_web:
-            x_0 = -180
-            y_0 = -90
-            x_1 = 360
-            y_1 = 180
-            h_list = [1.0]
-        polygon_list_list = utils.get_polygon_list_list(h_list, y_0, y_1, x_0, x_1)
+            if is_web:
+                x_0 = -180
+                y_0 = -90
+                x_1 = 360
+                y_1 = 180
+                h_list = [1.0]
+            polygon_list_list = utils.get_polygon_list_list(h_list, y_0, y_1, x_0, x_1)
 
-        combined_normal_df_positive_snps = utils.get_df_positive_snps(child_snps, combined_original_df, json_tree_rows)
-        combined_normal_df_without_other = utils.get_df_without_other(combined_normal_df_positive_snps)
-        utils.get_map(combined_normal_df_without_other.copy(), False, polygon_list_list, child_snps, y_center, x_center,
-                      zoom, combination_to_color_dict, target_snp, h_list, is_web)
-        if is_extended:
-            combined_extended_df = utils.get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows,
-                                                         child_snps, combined_original_df)
-            utils.get_map(combined_extended_df, True, polygon_list_list, child_snps, y_center, x_center, zoom,
-                          combination_to_color_dict, target_snp, h_list, is_web)
-        print(datetime.datetime.now())
+            combined_normal_df_positive_snps = utils.get_df_positive_snps(child_snps, combined_original_df,
+                                                                          json_tree_rows)
+            combined_normal_df_without_other = utils.get_df_without_other(combined_normal_df_positive_snps)
+            utils.get_map(combined_normal_df_without_other.copy(), False, polygon_list_list, child_snps, y_center,
+                          x_center,
+                          zoom, combination_to_color_dict, target_snp, h_list, is_web)
+            if is_extended:
+                combined_extended_df = utils.get_df_extended(combined_normal_df_without_other, str_number,
+                                                             json_tree_rows,
+                                                             child_snps, combined_original_df)
+                utils.get_map(combined_extended_df, True, polygon_list_list, child_snps, y_center, x_center, zoom,
+                              combination_to_color_dict, target_snp, h_list, is_web)
+            print(datetime.datetime.now())
+        else:
+            print("У выбранного SNP нет дочерних SNP!")
