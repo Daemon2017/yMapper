@@ -50,15 +50,14 @@ if __name__ == '__main__':
             combined_normal_df_positive_snps = utils.get_df_positive_snps(child_snps, combined_original_df,
                                                                           json_tree_rows)
             combined_normal_df_without_other = utils.get_df_without_other(combined_normal_df_positive_snps)
-            utils.get_map(combined_normal_df_without_other.copy(), False, polygon_list_list, child_snps, y_center,
-                          x_center,
-                          zoom, combination_to_color_dict, target_snp, h_list, is_web)
             if is_extended:
                 combined_extended_df = utils.get_df_extended(combined_normal_df_without_other, str_number,
-                                                             json_tree_rows,
-                                                             child_snps, combined_original_df)
+                                                             json_tree_rows, child_snps, combined_original_df)
                 utils.get_map(combined_extended_df, True, polygon_list_list, child_snps, y_center, x_center, zoom,
                               combination_to_color_dict, target_snp, h_list, is_web)
+            else:
+                utils.get_map(combined_normal_df_without_other.copy(), False, polygon_list_list, child_snps, y_center,
+                              x_center, zoom, combination_to_color_dict, target_snp, h_list, is_web)
             print(datetime.datetime.now())
         else:
             print("У выбранного SNP нет дочерних SNP!")
