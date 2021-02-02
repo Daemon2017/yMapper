@@ -1,7 +1,7 @@
 import datetime
-import utils
-
 from multiprocessing import freeze_support
+
+import utils
 
 # Выбираем стратегию работы с данными:
 # * False - если хотим работать только с теми данными, что 100% подтверждены BigY500/BigY700/SNP;

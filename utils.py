@@ -1,23 +1,24 @@
 import datetime
+import json
 import math
 import multiprocessing
+import random
 import sys
+from itertools import compress, repeat, product
+
+import firebase_admin
 import numpy as np
 import pandas as pd
-import ftdna_tree_collector_rest
-import random
-import json
-import firebase_admin
-
+from catboost import CatBoostClassifier, Pool
 from firebase_admin import credentials
 from firebase_admin import firestore
-from itertools import compress, repeat, product
 from folium import FeatureGroup, LayerControl, Map, GeoJson
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
-from catboost import CatBoostClassifier, Pool
+
+import ftdna_tree_collector_rest
 
 LNG = 'lng'
 LAT = 'lat'
@@ -391,7 +392,8 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     depth_best = 0
     for n_estimators in n_estimators_list:
         for depth in depth_list:
-            model = CatBoostClassifier(iterations=n_estimators, random_seed=123, thread_count=-1, depth=depth)
+            model = CatBoostClassifier(iterations=n_estimators, random_seed=123, thread_count=-1, depth=depth,
+                                       nan_mode='Forbidden')
             model.fit(X_train, Y_train, verbose=100, eval_set=Pool(X_test, Y_test))
             predictions = model.predict(X_test)
             accuracy = f1_score(Y_test, predictions, average='macro')
@@ -410,7 +412,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
 
     print('Обучаем градиентный бустинг для предсказания SNP.')
     model = CatBoostClassifier(iterations=n_estimators_best, random_seed=123, thread_count=-1, verbose=100,
-                               depth=depth_best)
+                               depth=depth_best, nan_mode='Forbidden')
     model.fit(X.drop(columns=[KIT_NUMBER]), Y, verbose=100)
 
     print('Оставляем в копии исходного набора данных только те строки, которые не были задействованы при обучении.')
