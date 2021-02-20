@@ -190,18 +190,19 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x
             current_snps_list_list.append(current_snps_list)
 
     if is_web:
-        get_online_map(current_snps_list_list, is_extended, polygon_list_list, target_snp)
+        get_online_map(child_snps, current_snps_list_list, is_extended, polygon_list_list, target_snp)
     else:
         get_offline_map(child_snps, combination_to_color_dict, current_snps_list_list, h_list, is_extended,
                         max_snps_sum_list, polygon_list_list, target_snp, x_center, y_center, zoom)
 
 
-def get_online_map(current_snps_list_list, is_extended, polygon_list_list, target_snp):
+def get_online_map(child_snps, current_snps_list_list, is_extended, polygon_list_list, target_snp):
     snp_data_list = []
     for snps_list, polygon in zip(current_snps_list_list[0], polygon_list_list[0]):
         count = sum(snps_list)
         if count > 0:
-            snp_data = {'count': count, 'lat': polygon.centroid.y, 'lng': polygon.centroid.x}
+            snp_data = {'count': count, 'lat': polygon.centroid.y, 'lng': polygon.centroid.x,
+                        'snpsList': list(compress(child_snps, snps_list))}
             snp_data_list.append(snp_data)
     json_string = json.dumps(snp_data_list)
 
@@ -212,12 +213,12 @@ def get_online_map(current_snps_list_list, is_extended, polygon_list_list, targe
     db = firestore.client()
 
     if is_extended:
-        doc_ref = db.collection(u'snps_extended').document(target_snp)
+        doc_ref = db.collection(u'new_snps_extended').document(target_snp)
         doc_ref.set({
             u'data': json_string
         })
     else:
-        doc_ref = db.collection(u'snps').document(target_snp)
+        doc_ref = db.collection(u'new_snps').document(target_snp)
         doc_ref.set({
             u'data': json_string
         })

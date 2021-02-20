@@ -10,13 +10,14 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
-for c in ['snps', 'snps_extended']:
+for c in ['new_snps', 'new_snps_extended']:
     collection_ref = db.collection(c)
     collection = collection_ref.get()
 
     snps_list = []
     for snp in collection:
-        snps_list.append(snp.id)
+        if snp.id != 'list':
+            snps_list.append(snp.id)
 
     doc_ref = db.collection(c).document('list')
     doc_ref.set({
