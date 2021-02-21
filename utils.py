@@ -3,7 +3,6 @@ import json
 import math
 import multiprocessing
 import random
-import sys
 from itertools import compress, repeat, product
 
 import firebase_admin
@@ -134,18 +133,22 @@ def get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows
     print(datetime.datetime.now())
     combined_normal_df_without_other[KIT_NUMBER] = combined_normal_df_without_other[KIT_NUMBER].astype(str)
     combined_extended_map_df = get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_snps)
-    combined_extended_map_df[KIT_NUMBER] = combined_extended_map_df[KIT_NUMBER].astype(str)
-    print('В наборе combined_extended_map_df оставляем только те строки, которых нет в наборе combined_df.')
-    combined_extended_map_df = \
-        combined_extended_map_df.loc[
-            ~combined_extended_map_df[KIT_NUMBER].isin(combined_normal_df_without_other[KIT_NUMBER])]
-    print('Присоединяем к набору combined_extended_map_df содержимое набора combined_df.')
-    combined_extended_map_df = pd.concat([combined_normal_df_without_other, combined_extended_map_df], sort=True)
-    print('В наборе данных combined_extended_map_df {} строк'.format(len(combined_extended_map_df.index)))
-    print("Количество представителей каждой подветви: \n{}"
-          .format(combined_extended_map_df[SHORT_HAND].value_counts()))
-    print(datetime.datetime.now())
-    return combined_extended_map_df
+
+    if combined_extended_map_df is None:
+        return None
+    else:
+        combined_extended_map_df[KIT_NUMBER] = combined_extended_map_df[KIT_NUMBER].astype(str)
+        print('В наборе combined_extended_map_df оставляем только те строки, которых нет в наборе combined_df.')
+        combined_extended_map_df = \
+            combined_extended_map_df.loc[
+                ~combined_extended_map_df[KIT_NUMBER].isin(combined_normal_df_without_other[KIT_NUMBER])]
+        print('Присоединяем к набору combined_extended_map_df содержимое набора combined_df.')
+        combined_extended_map_df = pd.concat([combined_normal_df_without_other, combined_extended_map_df], sort=True)
+        print('В наборе данных combined_extended_map_df {} строк'.format(len(combined_extended_map_df.index)))
+        print("Количество представителей каждой подветви: \n{}"
+              .format(combined_extended_map_df[SHORT_HAND].value_counts()))
+        print(datetime.datetime.now())
+        return combined_extended_map_df
 
 
 def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x_center, zoom,
@@ -408,43 +411,43 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
                                                                                              n_estimators_best,
                                                                                              depth_best))
     if accuracy_best < 0.75:
-        print('Наивысшая точность предсказания ниже допустимых 0.75: завершаем работу программы.')
-        sys.exit(0)
+        print('Наивысшая точность предсказания ниже допустимых 0.75: пропускаем текущий SNP')
+        return None
+    else:
+        print('Обучаем градиентный бустинг для предсказания SNP.')
+        model = CatBoostClassifier(iterations=n_estimators_best, random_seed=123, thread_count=-1, verbose=100,
+                                   depth=depth_best, nan_mode='Forbidden')
+        model.fit(X.drop(columns=[KIT_NUMBER]), Y, verbose=100)
 
-    print('Обучаем градиентный бустинг для предсказания SNP.')
-    model = CatBoostClassifier(iterations=n_estimators_best, random_seed=123, thread_count=-1, verbose=100,
-                               depth=depth_best, nan_mode='Forbidden')
-    model.fit(X.drop(columns=[KIT_NUMBER]), Y, verbose=100)
+        print('Оставляем в копии исходного набора данных только те строки, которые не были задействованы при обучении.')
+        unused_for_train_df = unused_for_train_df.loc[~unused_for_train_df[KIT_NUMBER].isin(X[KIT_NUMBER])]
+        print('В наборе данных unused_for_train_df {} строк'.format(len(unused_for_train_df.index)))
 
-    print('Оставляем в копии исходного набора данных только те строки, которые не были задействованы при обучении.')
-    unused_for_train_df = unused_for_train_df.loc[~unused_for_train_df[KIT_NUMBER].isin(X[KIT_NUMBER])]
-    print('В наборе данных unused_for_train_df {} строк'.format(len(unused_for_train_df.index)))
+        print('Предсказываем SNP.')
+        predictions = model.predict(unused_for_train_df.drop(columns=[KIT_NUMBER]))
 
-    print('Предсказываем SNP.')
-    predictions = model.predict(unused_for_train_df.drop(columns=[KIT_NUMBER]))
+        print('Собираем данные воедино.')
+        unused_for_train_df[SHORT_HAND] = predictions
+        print('В наборе данных unused_for_train_df {} строк'.format(len(unused_for_train_df.index)))
+        print('Количество представителей каждого SNP:\n{}'.format(unused_for_train_df[SHORT_HAND].value_counts()))
 
-    print('Собираем данные воедино.')
-    unused_for_train_df[SHORT_HAND] = predictions
-    print('В наборе данных unused_for_train_df {} строк'.format(len(unused_for_train_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(unused_for_train_df[SHORT_HAND].value_counts()))
+        used_for_train_df = X
+        used_for_train_df[SHORT_HAND] = Y
+        print('В наборе данных used_for_train_df {} строк'.format(len(used_for_train_df.index)))
+        print('Количество представителей каждого SNP:\n{}'.format(used_for_train_df[SHORT_HAND].value_counts()))
 
-    used_for_train_df = X
-    used_for_train_df[SHORT_HAND] = Y
-    print('В наборе данных used_for_train_df {} строк'.format(len(used_for_train_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(used_for_train_df[SHORT_HAND].value_counts()))
+        combined_extended_df = pd.concat([unused_for_train_df, used_for_train_df])
+        print('В наборе данных combined_extended_df {} строк'.format(len(combined_extended_df.index)))
+        print('Количество представителей каждого SNP:\n{}'.format(combined_extended_df[SHORT_HAND].value_counts()))
 
-    combined_extended_df = pd.concat([unused_for_train_df, used_for_train_df])
-    print('В наборе данных combined_extended_df {} строк'.format(len(combined_extended_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_extended_df[SHORT_HAND].value_counts()))
+        print('Склеиваем информацию о SNP с информацией о местоположении.')
+        combined_extended_map_df = pd.merge(combined_extended_df, map_df, on=KIT_NUMBER)
+        print('В наборе данных combined_extended_map_df {} строк'.format(len(combined_extended_map_df.index)))
+        print('Количество представителей каждого SNP:\n{}'.format(combined_extended_map_df[SHORT_HAND].value_counts()))
 
-    print('Склеиваем информацию о SNP с информацией о местоположении.')
-    combined_extended_map_df = pd.merge(combined_extended_df, map_df, on=KIT_NUMBER)
-    print('В наборе данных combined_extended_map_df {} строк'.format(len(combined_extended_map_df.index)))
-    print('Количество представителей каждого SNP:\n{}'.format(combined_extended_map_df[SHORT_HAND].value_counts()))
-
-    combined_extended_map_df_without_other = get_df_without_other(combined_extended_map_df)
-    print(datetime.datetime.now())
-    return combined_extended_map_df_without_other
+        combined_extended_map_df_without_other = get_df_without_other(combined_extended_map_df)
+        print(datetime.datetime.now())
+        return combined_extended_map_df_without_other
 
 
 def get_df_without_other(combined_df):
