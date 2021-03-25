@@ -31,7 +31,7 @@ if __name__ == '__main__':
     freeze_support()
 
     for target_snp in target_snps:
-        print("Обрабатывается SNP {}...".format(target_snp))
+        print("\nОбрабатывается SNP {}...".format(target_snp))
         print(datetime.datetime.now())
         combined_original_df = utils.get_combined_df()
         json_tree_rows = utils.get_json_tree_rows()
@@ -50,18 +50,22 @@ if __name__ == '__main__':
             combined_normal_df_positive_snps = utils.get_df_positive_snps(child_snps, combined_original_df,
                                                                           json_tree_rows)
             combined_normal_df_without_other = utils.get_df_without_other(combined_normal_df_positive_snps)
-            if is_extended:
-                combined_extended_df = utils.get_df_extended(combined_normal_df_without_other, str_number,
-                                                             json_tree_rows, child_snps, combined_original_df)
+            if len(combined_normal_df_without_other.index) > 0:
+                if is_extended:
+                    combined_extended_df = utils.get_df_extended(combined_normal_df_without_other, str_number,
+                                                                 json_tree_rows, child_snps, combined_original_df)
 
-                if combined_extended_df is None:
-                    continue
+                    if combined_extended_df is None:
+                        continue
+                    else:
+                        utils.get_map(combined_extended_df, True, polygon_list_list, child_snps, y_center, x_center,
+                                      zoom, combination_to_color_dict, target_snp, h_list, is_web)
                 else:
-                    utils.get_map(combined_extended_df, True, polygon_list_list, child_snps, y_center, x_center, zoom,
-                                  combination_to_color_dict, target_snp, h_list, is_web)
+                    utils.get_map(combined_normal_df_without_other.copy(), False, polygon_list_list, child_snps,
+                                  y_center, x_center, zoom, combination_to_color_dict, target_snp, h_list, is_web)
             else:
-                utils.get_map(combined_normal_df_without_other.copy(), False, polygon_list_list, child_snps, y_center,
-                              x_center, zoom, combination_to_color_dict, target_snp, h_list, is_web)
-            print(datetime.datetime.now())
+                print("В наборе данных 0 строк!")
         else:
             print("У выбранного SNP нет дочерних SNP!")
+        print("Завершена обработка SNP {}".format(target_snp))
+        print(datetime.datetime.now())
