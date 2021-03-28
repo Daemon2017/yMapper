@@ -303,12 +303,11 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     print('Удаляем столбцы, не являющиеся инструментальными и выходящие за границы выбранного числа STR.')
     utils_columns_list = [SHORT_HAND, NGS, KIT_NUMBER]
     for column in combined_original_df:
-        if column not in utils_columns_list:
-            if column not in str_columns_list:
-                try:
-                    del combined_original_df[column]
-                except KeyError as KE:
-                    print(KE)
+        if column not in utils_columns_list and column not in str_columns_list:
+            try:
+                del combined_original_df[column]
+            except KeyError as KE:
+                print(KE)
 
     print('Удаляем столбцы, всегда содержащие палиндромы.')
     extra_columns_list = ['DYS385', 'DYS459', 'DYS464', 'YCAII', 'CDY', 'DYF395S1', 'DYS413']
