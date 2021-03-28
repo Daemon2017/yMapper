@@ -67,7 +67,7 @@ if __name__ == '__main__':
                     utils.get_map(combined_normal_df_without_other.copy(), False, polygon_list_list, child_snps,
                                   y_center, x_center, zoom, combination_to_color_dict, target_snp, h_list, is_web)
             else:
-                print("В наборе данных 0 строк!")
+                print("В наборе данных combined_normal_df_without_other 0 строк!")
         else:
             print("У выбранного SNP нет дочерних SNP!")
         print("Завершена обработка SNP {}".format(target_snp))
