@@ -30,11 +30,14 @@ is_web = True
 if __name__ == '__main__':
     freeze_support()
 
+    df = utils.get_combined_df()
+    jtr = utils.get_json_tree_rows()
+
     for target_snp in target_snps:
         print("\nОбрабатывается SNP {}...".format(target_snp))
         print(datetime.datetime.now())
-        combined_original_df = utils.get_combined_df()
-        json_tree_rows = utils.get_json_tree_rows()
+        combined_original_df = df.copy()
+        json_tree_rows = jtr.copy()
         child_snps = utils.get_child_snps(json_tree_rows, target_snp)
         if len(child_snps) > 0:
             combination_to_color_dict = utils.get_combination_to_color_dict(child_snps)
