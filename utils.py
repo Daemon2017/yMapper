@@ -11,7 +11,6 @@ import pandas as pd
 from catboost import CatBoostClassifier, Pool
 from firebase_admin import credentials
 from firebase_admin import firestore
-from folium import FeatureGroup, LayerControl, Map, GeoJson
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 from sklearn.metrics import f1_score
@@ -154,8 +153,7 @@ def get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows
         return combined_extended_map_df
 
 
-def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x_center, zoom,
-            combination_to_color_dict, target_snp, h_list, is_web):
+def get_map(combined_df, is_extended, polygon_list_list, child_snps, target_snp, h_list):
     print(datetime.datetime.now())
     print('Оставляем только полезные столбцы.')
     important_columns_list = [SHORT_HAND, LNG, LAT]
@@ -195,11 +193,7 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, y_center, x
             max_snps_sum_list.append(max_snps_sum)
             current_snps_list_list.append(current_snps_list)
 
-    if is_web:
-        get_online_map(child_snps, current_snps_list_list, is_extended, polygon_list_list, target_snp)
-    else:
-        get_offline_map(child_snps, combination_to_color_dict, current_snps_list_list, h_list, is_extended,
-                        max_snps_sum_list, polygon_list_list, target_snp, x_center, y_center, zoom)
+    get_online_map(child_snps, current_snps_list_list, is_extended, polygon_list_list, target_snp)
 
 
 def get_online_map(child_snps, current_snps_list_list, is_extended, polygon_list_list, target_snp):
@@ -228,46 +222,6 @@ def get_online_map(child_snps, current_snps_list_list, is_extended, polygon_list
         doc_ref.set({
             u'data': json_string
         })
-
-
-def get_offline_map(child_snps, combination_to_color_dict, current_snps_list_list, h_list, is_extended,
-                    max_snps_sum_list, polygon_list_list, target_snp, x_center, y_center, zoom):
-    print("Создаем карту и центрируем ее на Русских воротах.")
-    m = Map([y_center, x_center], zoom_start=zoom, tiles='Stamen Terrain', crs='EPSG3857')
-
-    print("Раскрашиваем шестиугольники, присоединяем их к слоям, а слои прикрепляем к карте.")
-    is_display_enabled = True
-    for polygon_list, current_snps_list, h, max_snps_sum in \
-            zip(polygon_list_list, current_snps_list_list, h_list, max_snps_sum_list):
-        fg = FeatureGroup(name='{} Сетка'.format(str(h)), show=is_display_enabled)
-        for polygon, current_snp in \
-                zip(polygon_list, current_snps_list):
-            fillColor = combination_to_color_dict[tuple(current_snp)]
-            fillOpacity = sum(current_snp) / max_snps_sum
-
-            def style_function(feature, fillColor=fillColor, fillOpacity=fillOpacity):
-                return {
-                    'fillOpacity': fillOpacity,
-                    'weight': 0.1,
-                    'fillColor': fillColor,
-                    'color': '#000000'
-                }
-
-            gj = GeoJson(polygon, style_function=style_function,
-                         tooltip=list(compress(child_snps, current_snp)))
-            gj.add_to(fg)
-        fg.add_to(m)
-        if is_display_enabled:
-            is_display_enabled = False
-    LayerControl().add_to(m)
-
-    print("Сохраняем карту.")
-    if is_extended:
-        m.save('map_{}_extended.html'.format(target_snp))
-    else:
-        m.save('map_{}.html'.format(target_snp))
-    print("HTML-файл с картой сохранен!")
-    print(datetime.datetime.now())
 
 
 def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_snps):
