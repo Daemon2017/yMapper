@@ -173,24 +173,15 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, target_snp,
     print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_df[SHORT_HAND].value_counts()))
 
     print("Проверяем наличие каждого целевого SNP в каждом шестиугольнике каждой сетки.")
-    max_snps_sum_list = []
     current_snps_list_list = []
     for polygon_list, h in zip(polygon_list_list, h_list):
         print('Проверяем сетку размером {}'.format(h))
-        max_snps_sum = 0
         current_snps_list = []
-
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
             result = pool.starmap(get_positive_snps,
                                   zip(polygon_list, repeat(child_snps), repeat(combined_df)))
-
             for r in result:
-                current_snps_sum = sum(r)
-                if current_snps_sum > max_snps_sum:
-                    max_snps_sum = current_snps_sum
                 current_snps_list.append(r)
-
-            max_snps_sum_list.append(max_snps_sum)
             current_snps_list_list.append(current_snps_list)
 
     get_online_map(child_snps, current_snps_list_list, is_extended, polygon_list_list, target_snp)
@@ -205,13 +196,10 @@ def get_online_map(child_snps, current_snps_list_list, is_extended, polygon_list
                         'snpsList': list(compress(child_snps, snps_list))}
             snp_data_list.append(snp_data)
     json_string = json.dumps(snp_data_list)
-
     if not firebase_admin._apps:
         cred = credentials.Certificate('serviceAccount.json')
         firebase_admin.initialize_app(cred)
-
     db = firestore.client()
-
     if is_extended:
         doc_ref = db.collection(u'new_snps_extended').document(target_snp)
         doc_ref.set({
@@ -265,7 +253,6 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
 
     print('Удаляем столбцы, всегда содержащие палиндромы.')
     extra_columns_list = ['DYS385', 'DYS459', 'DYS464', 'YCAII', 'CDY', 'DYF395S1', 'DYS413']
-
     for extra_column in extra_columns_list:
         try:
             del combined_original_df[extra_column]
@@ -335,7 +322,6 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     print('Делим данные на 2 части: то, что предсказываем (SNP) и то, по чему предсказываем (STR).')
     Y = combined_df_positive_snps[SHORT_HAND]
     del combined_df_positive_snps[SHORT_HAND]
-
     X = combined_df_positive_snps
 
     print('Расчленяем набор данных на обучающую и испытательную выборки.')
