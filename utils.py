@@ -217,82 +217,16 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     map_df = combined_original_df.filter([KIT_NUMBER, LAT, LNG], axis=1)
     print(ROWS_IN_DF_COUNT_TEXT.format('map_df', len(map_df.index)))
 
-    y12_list = ['DYS393', 'DYS390', 'DYS19', 'DYS391', 'DYS385', 'DYS426', 'DYS388', 'DYS439', 'DYS389I', 'DYS392',
-                'DYS389II']
-    y37_list = y12_list + ['DYS458', 'DYS459', 'DYS455', 'DYS454', 'DYS447', 'DYS437', 'DYS448', 'DYS449', 'DYS464',
-                           'DYS460', 'Y-GATA-H4', 'YCAII', 'DYS456', 'DYS607', 'DYS576', 'DYS570', 'CDY', 'DYS442',
-                           'DYS438']
-    y67_list = y37_list + ['DYS531', 'DYS578', 'DYF395S1', 'DYS590', 'DYS537', 'DYS641', 'DYS472', 'DYF406S1', 'DYS511',
-                           'DYS425', 'DYS413', 'DYS557', 'DYS594', 'DYS436', 'DYS490', 'DYS534', 'DYS450', 'DYS444',
-                           'DYS481', 'DYS520', 'DYS446', 'DYS617', 'DYS568', 'DYS487', 'DYS572', 'DYS640', 'DYS492',
-                           'DYS565']
-    y111_list = y67_list + ['DYS710', 'DYS485', 'DYS632', 'DYS495', 'DYS540', 'DYS714', 'DYS716', 'DYS717', 'DYS505',
-                            'DYS556', 'DYS549', 'DYS589', 'DYS522', 'DYS494', 'DYS533', 'DYS636', 'DYS575', 'DYS638',
-                            'DYS462', 'DYS452', 'DYS445', 'Y-GATA-A10', 'DYS463', 'DYS441', 'Y-GGAAT-1B07', 'DYS525',
-                            'DYS712', 'DYS593', 'DYS650', 'DYS532', 'DYS715', 'DYS504', 'DYS513', 'DYS561', 'DYS552',
-                            'DYS726', 'DYS635', 'DYS587', 'DYS643', 'DYS497', 'DYS510', 'DYS434', 'DYS461', 'DYS435']
-
-    str_columns_list = []
-    if str_number == 12:
-        str_columns_list = y12_list
-    elif str_number == 37:
-        str_columns_list = y37_list
-    elif str_number == 67:
-        str_columns_list = y67_list
-    elif str_number == 111:
-        str_columns_list = y111_list
-
-    print('Удаляем столбцы, не являющиеся инструментальными и выходящие за границы выбранного числа STR.')
+    str_columns_list = get_str_columns_list(str_number)
     utils_columns_list = [SHORT_HAND, NGS, KIT_NUMBER]
-    for column in combined_original_df:
-        if column not in utils_columns_list and column not in str_columns_list:
-            try:
-                del combined_original_df[column]
-            except KeyError as KE:
-                print(KE)
-
-    print('Удаляем столбцы, всегда содержащие палиндромы.')
+    combined_original_df = get_df_without_nonutils_and_extrastr_columns(combined_original_df, str_columns_list,
+                                                                        utils_columns_list)
     extra_columns_list = ['DYS385', 'DYS459', 'DYS464', 'YCAII', 'CDY', 'DYF395S1', 'DYS413']
-    for extra_column in extra_columns_list:
-        try:
-            del combined_original_df[extra_column]
-        except KeyError as KE:
-            print(KE)
-
-    print('Удаляем все строки, в которых количество STR ниже порога, заданного в начале блокнота.')
-    for column in combined_original_df:
-        if column not in utils_columns_list:
-            try:
-                combined_original_df = combined_original_df[combined_original_df[column].notna()]
-            except KeyError as KE:
-                print(KE)
-    print(ROWS_IN_DF_COUNT_TEXT.format('combined_df', len(combined_original_df.index)))
-    print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_original_df[SHORT_HAND].value_counts()))
-
-    print('Удаляем строки, содержащие палиндромы в тех STR, которым не свойственна палиндромность.')
-    for column in combined_original_df:
-        if column not in utils_columns_list:
-            try:
-                combined_original_df = combined_original_df.drop(
-                    combined_original_df[combined_original_df[column].astype(str).str.contains('-', na=False)].index)
-            except KeyError as KE:
-                print(KE)
-    print(ROWS_IN_DF_COUNT_TEXT.format('combined_df', len(combined_original_df.index)))
-    print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_original_df[SHORT_HAND].value_counts()))
-
-    print('Меняем тип данных на int для всех столбцов, кроме инструментальных.')
-    for column in combined_original_df:
-        if column not in utils_columns_list:
-            combined_original_df[column] = combined_original_df[column].astype(float)
-            combined_original_df[column] = combined_original_df[column].astype(int)
-
-    print('Меняем тип данных на str для всех инструментальных столбцов.')
-    for column in combined_original_df:
-        if column in utils_columns_list:
-            if column == NGS:
-                combined_original_df[column] = combined_original_df[column].astype(bool)
-            else:
-                combined_original_df[column] = combined_original_df[column].astype(str)
+    combined_original_df = get_df_without_palindrome_columns(combined_original_df, extra_columns_list)
+    combined_original_df = get_df_without_shortstr_rows(combined_original_df, utils_columns_list)
+    combined_original_df = get_df_without_palindrome_rows(combined_original_df, utils_columns_list)
+    combined_original_df = get_df_with_int_datatype_of_nonutils_columns(combined_original_df, utils_columns_list)
+    combined_original_df = get_df_with_str_type_of_utils_columns(combined_original_df, utils_columns_list)
 
     print('Создаем копию исходного набора данных, чтобы впоследствии удалить из нее строки, '
           'использовавшиеся в ходе обучения, а затем предсказать SNP для оставшихся строк.')
@@ -320,12 +254,12 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_df_positive_snps[SHORT_HAND].value_counts()))
 
     print('Делим данные на 2 части: то, что предсказываем (SNP) и то, по чему предсказываем (STR).')
-    Y = combined_df_positive_snps[SHORT_HAND]
+    y = combined_df_positive_snps[SHORT_HAND]
     del combined_df_positive_snps[SHORT_HAND]
-    X = combined_df_positive_snps
+    x = combined_df_positive_snps
 
     print('Расчленяем набор данных на обучающую и испытательную выборки.')
-    X_train, X_test, Y_train, Y_test = train_test_split(X.drop(columns=[KIT_NUMBER]), Y, random_state=123,
+    x_train, x_test, y_train, y_test = train_test_split(x.drop(columns=[KIT_NUMBER]), y, random_state=123,
                                                         test_size=0.2)
 
     print('Обучаем градиентный бустинг при разном количестве оценщиков, '
@@ -340,9 +274,9 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
         for depth in depth_list:
             model = CatBoostClassifier(iterations=n_estimators, random_seed=123, thread_count=-1, depth=depth,
                                        nan_mode='Forbidden')
-            model.fit(X_train, Y_train, verbose=100, eval_set=Pool(X_test, Y_test))
-            predictions = model.predict(X_test)
-            accuracy = f1_score(Y_test, predictions, average='macro')
+            model.fit(x_train, y_train, verbose=100, eval_set=Pool(x_test, y_test))
+            predictions = model.predict(x_test)
+            accuracy = f1_score(y_test, predictions, average='macro')
             if accuracy > accuracy_best:
                 accuracy_best = accuracy
                 n_estimators_best = n_estimators
@@ -359,10 +293,10 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
         print('Обучаем градиентный бустинг для предсказания SNP.')
         model = CatBoostClassifier(iterations=n_estimators_best, random_seed=123, thread_count=-1, verbose=100,
                                    depth=depth_best, nan_mode='Forbidden')
-        model.fit(X.drop(columns=[KIT_NUMBER]), Y, verbose=100)
+        model.fit(x.drop(columns=[KIT_NUMBER]), y, verbose=100)
 
         print('Оставляем в копии исходного набора данных только те строки, которые не были задействованы при обучении.')
-        unused_for_train_df = unused_for_train_df.loc[~unused_for_train_df[KIT_NUMBER].isin(X[KIT_NUMBER])]
+        unused_for_train_df = unused_for_train_df.loc[~unused_for_train_df[KIT_NUMBER].isin(x[KIT_NUMBER])]
         print(ROWS_IN_DF_COUNT_TEXT.format('unused_for_train_df', len(unused_for_train_df.index)))
 
         print('Предсказываем SNP.')
@@ -371,10 +305,10 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
         print('Собираем данные воедино.')
         unused_for_train_df[SHORT_HAND] = predictions
         print(ROWS_IN_DF_COUNT_TEXT.format('unused_for_train_df', len(unused_for_train_df.index)))
-        print((NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT).format(unused_for_train_df[SHORT_HAND].value_counts()))
+        print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(unused_for_train_df[SHORT_HAND].value_counts()))
 
-        used_for_train_df = X
-        used_for_train_df[SHORT_HAND] = Y
+        used_for_train_df = x
+        used_for_train_df[SHORT_HAND] = y
         print(ROWS_IN_DF_COUNT_TEXT.format('used_for_train_df', len(used_for_train_df.index)))
         print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(used_for_train_df[SHORT_HAND].value_counts()))
 
@@ -390,6 +324,100 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
         combined_extended_map_df_without_other = get_df_without_other(combined_extended_map_df)
         print(datetime.datetime.now())
         return combined_extended_map_df_without_other
+
+
+def get_df_with_str_type_of_utils_columns(combined_original_df, utils_columns_list):
+    print('Меняем тип данных на str для всех инструментальных столбцов.')
+    for column in combined_original_df:
+        if column in utils_columns_list:
+            if column == NGS:
+                combined_original_df[column] = combined_original_df[column].astype(bool)
+            else:
+                combined_original_df[column] = combined_original_df[column].astype(str)
+    return combined_original_df
+
+
+def get_df_with_int_datatype_of_nonutils_columns(combined_original_df, utils_columns_list):
+    print('Меняем тип данных на int для всех столбцов, кроме инструментальных.')
+    for column in combined_original_df:
+        if column not in utils_columns_list:
+            combined_original_df[column] = combined_original_df[column].astype(float)
+            combined_original_df[column] = combined_original_df[column].astype(int)
+    return combined_original_df
+
+
+def get_df_without_palindrome_rows(combined_original_df, utils_columns_list):
+    print('Удаляем строки, содержащие палиндромы в тех STR, которым не свойственна палиндромность.')
+    for column in combined_original_df:
+        if column not in utils_columns_list:
+            try:
+                combined_original_df = combined_original_df.drop(
+                    combined_original_df[combined_original_df[column].astype(str).str.contains('-', na=False)].index)
+            except KeyError as KE:
+                print(KE)
+    print(ROWS_IN_DF_COUNT_TEXT.format('combined_df', len(combined_original_df.index)))
+    print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_original_df[SHORT_HAND].value_counts()))
+    return combined_original_df
+
+
+def get_df_without_shortstr_rows(combined_original_df, utils_columns_list):
+    print('Удаляем все строки, в которых количество STR ниже порога, заданного в начале блокнота.')
+    for column in combined_original_df:
+        if column not in utils_columns_list:
+            try:
+                combined_original_df = combined_original_df[combined_original_df[column].notna()]
+            except KeyError as KE:
+                print(KE)
+    print(ROWS_IN_DF_COUNT_TEXT.format('combined_df', len(combined_original_df.index)))
+    print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_original_df[SHORT_HAND].value_counts()))
+    return combined_original_df
+
+
+def get_df_without_palindrome_columns(combined_original_df, extra_columns_list):
+    print('Удаляем столбцы, всегда содержащие палиндромы.')
+    for extra_column in extra_columns_list:
+        try:
+            del combined_original_df[extra_column]
+        except KeyError as KE:
+            print(KE)
+    return combined_original_df
+
+
+def get_df_without_nonutils_and_extrastr_columns(combined_original_df, str_columns_list, utils_columns_list):
+    print('Удаляем столбцы, не являющиеся инструментальными и выходящие за границы выбранного числа STR.')
+    for column in combined_original_df:
+        if column not in utils_columns_list and column not in str_columns_list:
+            try:
+                del combined_original_df[column]
+            except KeyError as KE:
+                print(KE)
+    return combined_original_df
+
+
+def get_str_columns_list(str_number):
+    y12_list = ['DYS393', 'DYS390', 'DYS19', 'DYS391', 'DYS385', 'DYS426', 'DYS388', 'DYS439', 'DYS389I', 'DYS392',
+                'DYS389II']
+    y37_list = y12_list + ['DYS458', 'DYS459', 'DYS455', 'DYS454', 'DYS447', 'DYS437', 'DYS448', 'DYS449', 'DYS464',
+                           'DYS460', 'Y-GATA-H4', 'YCAII', 'DYS456', 'DYS607', 'DYS576', 'DYS570', 'CDY', 'DYS442',
+                           'DYS438']
+    y67_list = y37_list + ['DYS531', 'DYS578', 'DYF395S1', 'DYS590', 'DYS537', 'DYS641', 'DYS472', 'DYF406S1', 'DYS511',
+                           'DYS425', 'DYS413', 'DYS557', 'DYS594', 'DYS436', 'DYS490', 'DYS534', 'DYS450', 'DYS444',
+                           'DYS481', 'DYS520', 'DYS446', 'DYS617', 'DYS568', 'DYS487', 'DYS572', 'DYS640', 'DYS492',
+                           'DYS565']
+    y111_list = y67_list + ['DYS710', 'DYS485', 'DYS632', 'DYS495', 'DYS540', 'DYS714', 'DYS716', 'DYS717', 'DYS505',
+                            'DYS556', 'DYS549', 'DYS589', 'DYS522', 'DYS494', 'DYS533', 'DYS636', 'DYS575', 'DYS638',
+                            'DYS462', 'DYS452', 'DYS445', 'Y-GATA-A10', 'DYS463', 'DYS441', 'Y-GGAAT-1B07', 'DYS525',
+                            'DYS712', 'DYS593', 'DYS650', 'DYS532', 'DYS715', 'DYS504', 'DYS513', 'DYS561', 'DYS552',
+                            'DYS726', 'DYS635', 'DYS587', 'DYS643', 'DYS497', 'DYS510', 'DYS434', 'DYS461', 'DYS435']
+
+    if str_number == 12:
+        return y12_list
+    elif str_number == 37:
+        return y37_list
+    elif str_number == 67:
+        return y67_list
+    elif str_number == 111:
+        return y111_list
 
 
 def get_df_without_other(combined_df):
