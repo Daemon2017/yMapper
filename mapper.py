@@ -26,8 +26,6 @@ if __name__ == '__main__':
         json_tree_rows = jtr.copy()
         child_snps = utils.get_child_snps(json_tree_rows, target_snp)
         if len(child_snps) > 0:
-            combination_to_color_dict = utils.get_combination_to_color_dict(child_snps)
-
             x_0 = -180
             y_0 = -90
             x_1 = 360

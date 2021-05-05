@@ -77,14 +77,6 @@ def get_child_snps(json_tree_rows, target_snp):
     return child_snps
 
 
-def get_combination_to_color_dict(child_snps):
-    print("Создаем словарь 'Набор SNP: Цвет'.")
-    combination_to_color_dict = {}
-    for snp in [tuple(i) for i in product([True, False], repeat=len(child_snps))]:
-        combination_to_color_dict[snp] = "#%06x" % random.randint(0, 0xFFFFFF)
-    return combination_to_color_dict
-
-
 def get_polygon_list_list(h_list, y_0, y_1, x_0, x_1):
     print("Создаем столько сеток из шестиугольников, сколько размеров было задано на 1-м шаге.")
     polygon_list_list = []
