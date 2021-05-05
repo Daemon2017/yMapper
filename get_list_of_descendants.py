@@ -1,6 +1,5 @@
 import json
 
-import ftdna_tree_collector_rest
 import utils
 
 
@@ -10,7 +9,7 @@ def get_list_of_descendants(start):
     while stack:
         current_snp = stack.pop()
         snps.append(current_snp)
-        stack.extend(snp for snp in ftdna_tree_collector_rest.get_children_list(json_tree_rows, current_snp))
+        stack.extend(snp for snp in utils.get_children_list(json_tree_rows, current_snp))
     return snps
 
 

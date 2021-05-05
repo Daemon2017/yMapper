@@ -2,8 +2,9 @@ import datetime
 import json
 import math
 import multiprocessing
-import random
-from itertools import compress, repeat, product
+import os
+import urllib
+from itertools import compress, repeat
 
 import firebase_admin
 import numpy as np
@@ -15,8 +16,6 @@ from shapely.geometry import Point
 from shapely.geometry import Polygon
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
-
-import ftdna_tree_collector_rest
 
 ROWS_IN_DF_COUNT_TEXT = 'В наборе данных {} {} строк'
 NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT = 'Количество представителей каждого SNP:\n{}'
@@ -31,7 +30,7 @@ NGS = 'NGS'
 def get_dict(snps, json_tree_rows, child_snps):
     old_to_new_dict = {}
     for snp in snps:
-        parent_list = ftdna_tree_collector_rest.get_parent_list(json_tree_rows, snp)
+        parent_list = get_parent_list(json_tree_rows, snp)
         intersection_list = list(set(parent_list) & set(child_snps))
         if len(intersection_list) == 1:
             old_to_new_dict[snp] = intersection_list[0]
@@ -64,15 +63,9 @@ def get_combined_df():
     return combined_df
 
 
-def get_json_tree_rows():
-    print("Открываем древо Y-SNP от FTDNA.")
-    json_tree_rows = ftdna_tree_collector_rest.get_json_tree_rows()
-    return json_tree_rows
-
-
 def get_child_snps(json_tree_rows, target_snp):
     print("Получаем список дочерних SNP целевого SNP.")
-    child_snps = ftdna_tree_collector_rest.get_children_list(json_tree_rows, target_snp)
+    child_snps = get_children_list(json_tree_rows, target_snp)
     print('Дочерние SNP: {}'.format(child_snps))
     return child_snps
 
@@ -418,3 +411,49 @@ def get_df_without_other(combined_df):
     print(ROWS_IN_DF_COUNT_TEXT.format('combined_df', len(combined_df.index)))
     print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_df[SHORT_HAND].value_counts()))
     return combined_df
+
+
+def get_json_tree_rows():
+    print("Открываем древо Y-SNP от FTDNA.")
+    file_name = 'ftdna_tree.json'
+    if file_name in os.listdir('./'):
+        print('Файл с древом найден!')
+        with open(file_name, 'r', encoding='utf-8') as file:
+            json_tree_rows = json.loads(file.read())
+            print('JSON разобран!')
+            return json_tree_rows
+    else:
+        print('Файл с древом не найден! Загружаю его с сайта FTDNA...')
+        with urllib.request.urlopen('https://www.familytreedna.com/public/y-dna-haplotree/get') as response:
+            decoded_response = response.read().decode()
+            print('Страница загружена!')
+            json_tree_rows = json.loads(decoded_response)
+            print('JSON разобран!')
+            with open(file_name, 'w', encoding='utf-8') as text_file:
+                text_file.write(decoded_response)
+            return json_tree_rows
+
+
+def get_parent_list(json_rows, snp):
+    parent_list = []
+    for haplogroup_id in json_rows['allNodes'].keys():
+        if snp == json_rows['allNodes'][str(haplogroup_id)]['name']:
+            while True:
+                parent_list.append(json_rows['allNodes'][str(haplogroup_id)]['name'])
+                if 'parentId' in json_rows['allNodes'][str(haplogroup_id)]:
+                    haplogroup_id = json_rows['allNodes'][str(haplogroup_id)]['parentId']
+                else:
+                    break
+            break
+    return parent_list
+
+
+def get_children_list(json_rows, snp):
+    children_list = []
+    for haplogroup_id in json_rows['allNodes'].keys():
+        if snp == json_rows['allNodes'][str(haplogroup_id)]['name']:
+            if 'children' in json_rows['allNodes'][str(haplogroup_id)]:
+                for children in json_rows['allNodes'][str(haplogroup_id)]['children']:
+                    children_list.append(json_rows['allNodes'][str(children)]['name'])
+            break
+    return children_list
