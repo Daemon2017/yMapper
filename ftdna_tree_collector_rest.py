@@ -7,7 +7,7 @@ tree_rest = 'https://www.familytreedna.com/public/y-dna-haplotree/get'
 
 
 def get_json_tree_rows():
-    file_name = 'ftdna_tree.txt'
+    file_name = 'ftdna_tree.json'
     if file_name in os.listdir('./'):
         print('Файл с древом найден!')
         with open(file_name, 'r', encoding='utf-8') as file:
