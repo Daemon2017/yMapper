@@ -46,9 +46,11 @@ if __name__ == '__main__':
                     else:
                         utils.get_map(combined_extended_df, True, polygon_list_list, child_snps,
                                       target_snp, h_list)
+                        utils.update_db_list('new_snps_extended')
                 else:
                     utils.get_map(combined_normal_df_without_other.copy(), False, polygon_list_list, child_snps,
                                   target_snp, h_list)
+                    utils.update_db_list('new_snps')
             else:
                 print("В наборе данных combined_normal_df_without_other 0 строк!")
         else:

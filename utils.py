@@ -457,3 +457,20 @@ def get_children_list(json_rows, snp):
                     children_list.append(json_rows['allNodes'][str(children)]['name'])
             break
     return children_list
+
+
+def update_db_list(collection_name):
+    db = firestore.client()
+
+    collection_ref = db.collection(collection_name)
+    collection = collection_ref.get()
+
+    snps_list = []
+    for snp in collection:
+        if snp.id != 'list':
+            snps_list.append(snp.id)
+
+    doc_ref = db.collection(collection_name).document('list')
+    doc_ref.set({
+        u'data': json.dumps(snps_list)
+    })
