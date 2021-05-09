@@ -231,6 +231,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     del combined_df_positive_snps[SHORT_HAND]
     x = combined_df_positive_snps
 
+    # TODO: Если какого-то SNP нет в обучающей выборке, то его не должно быть и в испытательной!
     print('Расчленяем набор данных на обучающую и испытательную выборки.')
     x_train, x_test, y_train, y_test = train_test_split(x.drop(columns=[KIT_NUMBER]), y, random_state=123,
                                                         test_size=0.2)
@@ -247,7 +248,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
         for depth in depth_list:
             model = CatBoostClassifier(iterations=n_estimators, random_seed=123, thread_count=-1, depth=depth,
                                        nan_mode='Forbidden')
-            model.fit(x_train, y_train, verbose=100, eval_set=Pool(x_test, y_test))
+            model.fit(x_train, y_train, verbose=100, eval_set=Pool(x_test, y_test), early_stopping_rounds=10)
             predictions = model.predict(x_test)
             accuracy = f1_score(y_test, predictions, average='macro')
             if accuracy > accuracy_best:
