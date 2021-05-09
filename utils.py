@@ -448,9 +448,7 @@ def get_children_list(json_rows, snp):
     return children_list
 
 
-def update_db_list(collection_name, db):
-    snps_list = get_snps_list(collection_name, db)
-
+def update_db_list(collection_name, db, snps_list):
     doc_ref = db.collection(collection_name).document('list')
     doc_ref.set({
         u'data': json.dumps(snps_list)
