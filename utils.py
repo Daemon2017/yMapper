@@ -6,12 +6,9 @@ import os
 import urllib
 from itertools import compress, repeat
 
-import firebase_admin
 import numpy as np
 import pandas as pd
 from catboost import CatBoostClassifier, Pool
-from firebase_admin import credentials
-from firebase_admin import firestore
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 from sklearn.metrics import f1_score
@@ -138,7 +135,7 @@ def get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows
         return combined_extended_map_df
 
 
-def get_map(combined_df, is_extended, polygon_list_list, child_snps, target_snp, h_list):
+def get_map(combined_df, polygon_list_list, child_snps, target_snp, h_list, db, collection_name):
     print(datetime.datetime.now())
     print('Оставляем только полезные столбцы.')
     important_columns_list = [SHORT_HAND, LNG, LAT]
@@ -169,10 +166,10 @@ def get_map(combined_df, is_extended, polygon_list_list, child_snps, target_snp,
                 current_snps_list.append(r)
             current_snps_list_list.append(current_snps_list)
 
-    get_online_map(child_snps, current_snps_list_list, is_extended, polygon_list_list, target_snp)
+    get_online_map(child_snps, current_snps_list_list, polygon_list_list, target_snp, db, collection_name)
 
 
-def get_online_map(child_snps, current_snps_list_list, is_extended, polygon_list_list, target_snp):
+def get_online_map(child_snps, current_snps_list_list, polygon_list_list, target_snp, db, collection_name):
     snp_data_list = []
     for snps_list, polygon in zip(current_snps_list_list[0], polygon_list_list[0]):
         count = sum(snps_list)
@@ -180,21 +177,12 @@ def get_online_map(child_snps, current_snps_list_list, is_extended, polygon_list
             snp_data = {'count': count, 'lat': polygon.centroid.y, 'lng': polygon.centroid.x,
                         'snpsList': list(compress(child_snps, snps_list))}
             snp_data_list.append(snp_data)
+
     json_string = json.dumps(snp_data_list)
-    if not firebase_admin._apps:
-        cred = credentials.Certificate('serviceAccount.json')
-        firebase_admin.initialize_app(cred)
-    db = firestore.client()
-    if is_extended:
-        doc_ref = db.collection(u'new_snps_extended').document(target_snp)
-        doc_ref.set({
-            u'data': json_string
-        })
-    else:
-        doc_ref = db.collection(u'new_snps').document(target_snp)
-        doc_ref.set({
-            u'data': json_string
-        })
+    doc_ref = db.collection(collection_name).document(target_snp)
+    doc_ref.set({
+        u'data': json_string
+    })
 
 
 def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_snps):
@@ -459,9 +447,16 @@ def get_children_list(json_rows, snp):
     return children_list
 
 
-def update_db_list(collection_name):
-    db = firestore.client()
+def update_db_list(collection_name, db):
+    snps_list = get_snps_list(collection_name, db)
 
+    doc_ref = db.collection(collection_name).document('list')
+    doc_ref.set({
+        u'data': json.dumps(snps_list)
+    })
+
+
+def get_snps_list(collection_name, db):
     collection_ref = db.collection(collection_name)
     collection = collection_ref.get()
 
@@ -469,8 +464,4 @@ def update_db_list(collection_name):
     for snp in collection:
         if snp.id != 'list':
             snps_list.append(snp.id)
-
-    doc_ref = db.collection(collection_name).document('list')
-    doc_ref.set({
-        u'data': json.dumps(snps_list)
-    })
+    return snps_list

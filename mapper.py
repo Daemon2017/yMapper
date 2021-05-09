@@ -1,6 +1,9 @@
 import datetime
 from multiprocessing import freeze_support
 
+import firebase_admin
+from firebase_admin import credentials, firestore
+
 import utils
 
 # Выбираем стратегию работы с данными:
@@ -16,44 +19,53 @@ str_number = 111
 if __name__ == '__main__':
     freeze_support()
 
+    if not firebase_admin._apps:
+        cred = credentials.Certificate('serviceAccount.json')
+        firebase_admin.initialize_app(cred)
+    db = firestore.client()
+
     df = utils.get_combined_df()
     jtr = utils.get_json_tree_rows()
 
+    collection_name = ''
+    if is_extended:
+        collection_name = 'new_snps_extended'
+    else:
+        collection_name = 'new_snps'
+
     for target_snp in target_snps:
-        print("\nОбрабатывается SNP {}...".format(target_snp))
-        print(datetime.datetime.now())
-        combined_original_df = df.copy()
-        json_tree_rows = jtr.copy()
-        child_snps = utils.get_child_snps(json_tree_rows, target_snp)
-        if len(child_snps) > 0:
-            x_0 = -180
-            y_0 = -90
-            x_1 = 360
-            y_1 = 180
-            h_list = [1.0]
-            polygon_list_list = utils.get_polygon_list_list(h_list, y_0, y_1, x_0, x_1)
-
-            combined_normal_df_positive_snps = utils.get_df_positive_snps(child_snps, combined_original_df,
-                                                                          json_tree_rows)
-            combined_normal_df_without_other = utils.get_df_without_other(combined_normal_df_positive_snps)
-            if len(combined_normal_df_without_other.index) > 0:
-                if is_extended:
-                    combined_extended_df = utils.get_df_extended(combined_normal_df_without_other, str_number,
-                                                                 json_tree_rows, child_snps, combined_original_df)
-
-                    if combined_extended_df is None:
-                        continue
-                    else:
-                        utils.get_map(combined_extended_df, True, polygon_list_list, child_snps,
-                                      target_snp, h_list)
-                        utils.update_db_list('new_snps_extended')
-                else:
-                    utils.get_map(combined_normal_df_without_other.copy(), False, polygon_list_list, child_snps,
-                                  target_snp, h_list)
-                    utils.update_db_list('new_snps')
-            else:
-                print("В наборе данных combined_normal_df_without_other 0 строк!")
+        snps_list = utils.get_snps_list(collection_name, db)
+        if target_snp in snps_list:
+            print("\nSNP {} уже присутствует в БД!".format(target_snp))
         else:
-            print("У выбранного SNP нет дочерних SNP!")
-        print("Завершена обработка SNP {}".format(target_snp))
-        print(datetime.datetime.now())
+            print("\nОбрабатывается SNP {}...".format(target_snp))
+            print(datetime.datetime.now())
+            combined_original_df = df.copy()
+            json_tree_rows = jtr.copy()
+            child_snps = utils.get_child_snps(json_tree_rows, target_snp)
+            if len(child_snps) > 0:
+                x_0 = -180
+                y_0 = -90
+                x_1 = 360
+                y_1 = 180
+                h_list = [1.0]
+                polygon_list_list = utils.get_polygon_list_list(h_list, y_0, y_1, x_0, x_1)
+
+                combined_normal_df_positive_snps = utils.get_df_positive_snps(child_snps, combined_original_df,
+                                                                              json_tree_rows)
+                combined_normal_df_without_other = utils.get_df_without_other(combined_normal_df_positive_snps)
+                if len(combined_normal_df_without_other.index) > 0:
+                    final_df = combined_normal_df_without_other.copy()
+                    if is_extended:
+                        final_df = utils.get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows,
+                                                         child_snps, combined_original_df)
+                        if final_df is None:
+                            continue
+                    utils.get_map(final_df, polygon_list_list, child_snps, target_snp, h_list, db, collection_name)
+                    utils.update_db_list(collection_name, db)
+                else:
+                    print("В наборе данных combined_normal_df_without_other 0 строк!")
+            else:
+                print("У выбранного SNP нет дочерних SNP!")
+            print("Завершена обработка SNP {}".format(target_snp))
+            print(datetime.datetime.now())
