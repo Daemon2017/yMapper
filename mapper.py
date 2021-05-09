@@ -15,6 +15,8 @@ is_extended = False
 target_snps = ['R-CTS1211', 'R-Z92']
 # Задаем количество STR (12/37/67/111), которое будет использоваться на шаге предсказания SNP.
 str_number = 111
+# Задаем возможность перезаписи БД, если SNP уже присутствует в ней.
+is_overwrite_allowed = False
 
 if __name__ == '__main__':
     freeze_support()
@@ -35,7 +37,7 @@ if __name__ == '__main__':
 
     for target_snp in target_snps:
         snps_list = utils.get_snps_list(collection_name, db)
-        if target_snp in snps_list:
+        if target_snp in snps_list and not is_overwrite_allowed:
             print("\nSNP {} уже присутствует в БД!".format(target_snp))
         else:
             print("\nОбрабатывается SNP {}...".format(target_snp))
