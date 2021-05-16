@@ -231,10 +231,21 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     del combined_df_positive_snps[SHORT_HAND]
     x = combined_df_positive_snps
 
-    # TODO: Если какого-то SNP нет в обучающей выборке, то его не должно быть и в испытательной!
     print('Расчленяем набор данных на обучающую и испытательную выборки.')
     x_train, x_test, y_train, y_test = train_test_split(x.drop(columns=[KIT_NUMBER]), y, random_state=123,
                                                         test_size=0.2)
+
+    print('Если какого-то SNP нет в обучающей выборке, но есть в испытательной (и наоборот), '
+          'то удаляем строки с ним из обеих выборок.')
+    train_unique = y_train.unique()
+    test_unique = y_test.unique()
+    common_list = list(set(test_unique) & set(train_unique))
+    train_absent_rows = y_train.index[~y_train.isin(common_list)].tolist()
+    x_train = x_train.drop(train_absent_rows)
+    y_train = y_train.drop(train_absent_rows)
+    test_absent_rows = y_test.index[~y_test.isin(common_list)].tolist()
+    x_test = x_test.drop(test_absent_rows)
+    y_test = y_test.drop(test_absent_rows)
 
     print('Обучаем градиентный бустинг при разном количестве оценщиков, '
           'а затем выбираем и сохраняем то количество оценщиков, '
