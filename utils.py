@@ -247,68 +247,74 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
     x_test = x_test.drop(test_absent_rows)
     y_test = y_test.drop(test_absent_rows)
 
-    print('Обучаем градиентный бустинг при разном количестве оценщиков, '
-          'а затем выбираем и сохраняем то количество оценщиков, '
-          'при котором достигается наивысшая точность предсказаний SNP.')
-    n_estimators_list = [400, 500, 600]
-    depth_list = [4, 5, 6, 7, 8]
-    accuracy_best = 0
-    n_estimators_best = 0
-    depth_best = 0
-    for n_estimators in n_estimators_list:
-        for depth in depth_list:
-            model = CatBoostClassifier(iterations=n_estimators, random_seed=123, thread_count=-1, depth=depth,
-                                       nan_mode='Forbidden')
-            model.fit(x_train, y_train, verbose=100, eval_set=Pool(x_test, y_test), early_stopping_rounds=10)
-            predictions = model.predict(x_test)
-            accuracy = f1_score(y_test, predictions, average='macro')
-            if accuracy > accuracy_best:
-                accuracy_best = accuracy
-                n_estimators_best = n_estimators
-                depth_best = depth
-            print('При {} оценщиков и глубине {} достигается точность {}.'.format(n_estimators, depth, accuracy))
+    if len(y_train.unique()) > 1 and len(y_test.unique()) > 1:
+        print('Обучаем градиентный бустинг при разном количестве оценщиков, '
+              'а затем выбираем и сохраняем то количество оценщиков, '
+              'при котором достигается наивысшая точность предсказаний SNP.')
+        n_estimators_list = [400, 500, 600]
+        depth_list = [4, 5, 6, 7, 8]
+        accuracy_best = 0
+        n_estimators_best = 0
+        depth_best = 0
+        for n_estimators in n_estimators_list:
+            for depth in depth_list:
+                model = CatBoostClassifier(iterations=n_estimators, random_seed=123, thread_count=-1, depth=depth,
+                                           nan_mode='Forbidden')
+                model.fit(x_train, y_train, verbose=100, eval_set=Pool(x_test, y_test), early_stopping_rounds=10)
+                predictions = model.predict(x_test)
+                accuracy = f1_score(y_test, predictions, average='macro')
+                if accuracy > accuracy_best:
+                    accuracy_best = accuracy
+                    n_estimators_best = n_estimators
+                    depth_best = depth
+                print('При {} оценщиков и глубине {} достигается точность {}.'.format(n_estimators, depth, accuracy))
 
-    print('Наивысшая точность, равная {}, достигается при {} оценщиков и глубине {}.'.format(accuracy_best,
-                                                                                             n_estimators_best,
-                                                                                             depth_best))
-    if accuracy_best < 0.75:
-        print('Наивысшая точность предсказания ниже допустимых 0.75: пропускаем текущий SNP')
-        return None
+        print('Наивысшая точность, равная {}, достигается при {} оценщиков и глубине {}.'.format(accuracy_best,
+                                                                                                 n_estimators_best,
+                                                                                                 depth_best))
+        if accuracy_best < 0.75:
+            print('Наивысшая точность предсказания ниже допустимых 0.75: пропускаем текущий SNP')
+            return None
+        else:
+            print('Обучаем градиентный бустинг для предсказания SNP.')
+            model = CatBoostClassifier(iterations=n_estimators_best, random_seed=123, thread_count=-1, verbose=100,
+                                       depth=depth_best, nan_mode='Forbidden')
+            model.fit(x.drop(columns=[KIT_NUMBER]), y, verbose=100)
+
+            print('Оставляем в копии исходного набора данных только те строки, '
+                  'которые не были задействованы при обучении.')
+            unused_for_train_df = unused_for_train_df.loc[~unused_for_train_df[KIT_NUMBER].isin(x[KIT_NUMBER])]
+            print(ROWS_IN_DF_COUNT_TEXT.format('unused_for_train_df', len(unused_for_train_df.index)))
+
+            print('Предсказываем SNP.')
+            predictions = model.predict(unused_for_train_df.drop(columns=[KIT_NUMBER]))
+
+            print('Собираем данные воедино.')
+            unused_for_train_df[SHORT_HAND] = predictions
+            print(ROWS_IN_DF_COUNT_TEXT.format('unused_for_train_df', len(unused_for_train_df.index)))
+            print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(unused_for_train_df[SHORT_HAND].value_counts()))
+
+            used_for_train_df = x
+            used_for_train_df[SHORT_HAND] = y
+            print(ROWS_IN_DF_COUNT_TEXT.format('used_for_train_df', len(used_for_train_df.index)))
+            print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(used_for_train_df[SHORT_HAND].value_counts()))
+
+            combined_extended_df = pd.concat([unused_for_train_df, used_for_train_df])
+            print(ROWS_IN_DF_COUNT_TEXT.format('combined_extended_df', len(combined_extended_df.index)))
+            print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_extended_df[SHORT_HAND].value_counts()))
+
+            print('Склеиваем информацию о SNP с информацией о местоположении.')
+            combined_extended_map_df = pd.merge(combined_extended_df, map_df, on=KIT_NUMBER)
+            print(ROWS_IN_DF_COUNT_TEXT.format('combined_extended_map_df', len(combined_extended_map_df.index)))
+            print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(
+                combined_extended_map_df[SHORT_HAND].value_counts()))
+
+            combined_extended_map_df_without_other = get_df_without_other(combined_extended_map_df)
+            print(datetime.datetime.now())
+            return combined_extended_map_df_without_other
     else:
-        print('Обучаем градиентный бустинг для предсказания SNP.')
-        model = CatBoostClassifier(iterations=n_estimators_best, random_seed=123, thread_count=-1, verbose=100,
-                                   depth=depth_best, nan_mode='Forbidden')
-        model.fit(x.drop(columns=[KIT_NUMBER]), y, verbose=100)
-
-        print('Оставляем в копии исходного набора данных только те строки, которые не были задействованы при обучении.')
-        unused_for_train_df = unused_for_train_df.loc[~unused_for_train_df[KIT_NUMBER].isin(x[KIT_NUMBER])]
-        print(ROWS_IN_DF_COUNT_TEXT.format('unused_for_train_df', len(unused_for_train_df.index)))
-
-        print('Предсказываем SNP.')
-        predictions = model.predict(unused_for_train_df.drop(columns=[KIT_NUMBER]))
-
-        print('Собираем данные воедино.')
-        unused_for_train_df[SHORT_HAND] = predictions
-        print(ROWS_IN_DF_COUNT_TEXT.format('unused_for_train_df', len(unused_for_train_df.index)))
-        print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(unused_for_train_df[SHORT_HAND].value_counts()))
-
-        used_for_train_df = x
-        used_for_train_df[SHORT_HAND] = y
-        print(ROWS_IN_DF_COUNT_TEXT.format('used_for_train_df', len(used_for_train_df.index)))
-        print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(used_for_train_df[SHORT_HAND].value_counts()))
-
-        combined_extended_df = pd.concat([unused_for_train_df, used_for_train_df])
-        print(ROWS_IN_DF_COUNT_TEXT.format('combined_extended_df', len(combined_extended_df.index)))
-        print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_extended_df[SHORT_HAND].value_counts()))
-
-        print('Склеиваем информацию о SNP с информацией о местоположении.')
-        combined_extended_map_df = pd.merge(combined_extended_df, map_df, on=KIT_NUMBER)
-        print(ROWS_IN_DF_COUNT_TEXT.format('combined_extended_map_df', len(combined_extended_map_df.index)))
-        print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_extended_map_df[SHORT_HAND].value_counts()))
-
-        combined_extended_map_df_without_other = get_df_without_other(combined_extended_map_df)
-        print(datetime.datetime.now())
-        return combined_extended_map_df_without_other
+        print('В обучающей/испытательной выборке нет SNP кроме Other: пропускаем текущий SNP')
+        return None
 
 
 def get_df_with_str_type_of_utils_columns(combined_original_df, utils_columns_list):
