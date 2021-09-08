@@ -9,11 +9,17 @@ new_all_nodes = {}
 for node in json_tree_rows['allNodes']:
     if json_tree_rows['allNodes'][node]['name'].startswith('{}-'.format(letter)):
         if 'children' in json_tree_rows['allNodes'][node]:
-            new_all_nodes[node] = {
-                'name': json_tree_rows['allNodes'][node]['name'],
-                'parentId': json_tree_rows['allNodes'][node]['parentId'],
-                'children': json_tree_rows['allNodes'][node]['children']
-            }
+            if 'parent' in json_tree_rows['allNodes'][node]:
+                new_all_nodes[node] = {
+                    'name': json_tree_rows['allNodes'][node]['name'],
+                    'parentId': json_tree_rows['allNodes'][node]['parentId'],
+                    'children': json_tree_rows['allNodes'][node]['children']
+                }
+            else:
+                new_all_nodes[node] = {
+                    'name': json_tree_rows['allNodes'][node]['name'],
+                    'children': json_tree_rows['allNodes'][node]['children']
+                }
         else:
             new_all_nodes[node] = {
                 'name': json_tree_rows['allNodes'][node]['name'],
