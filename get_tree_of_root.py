@@ -21,5 +21,5 @@ for node in json_tree_rows['allNodes']:
             }
 
 new_json_tree_rows = {'allNodes': new_all_nodes}
-with open('{}.json'.format(letter), 'w') as fp:
+with open('trees/{}.json'.format(letter), 'w') as fp:
     json.dump(new_json_tree_rows, fp)
