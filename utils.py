@@ -1,8 +1,8 @@
-import datetime
 import json
 import math
 import multiprocessing
 import os
+import time
 import urllib
 from itertools import compress, repeat
 
@@ -68,6 +68,7 @@ def get_child_snps(json_tree_rows, target_snp):
 
 
 def get_polygon_list_list(h_list, y_0, y_1, x_0, x_1):
+    start_time = time.time()
     print("Создаем столько сеток из шестиугольников, сколько размеров было задано на 1-м шаге.")
     polygon_list_list = []
     for h in h_list:
@@ -92,11 +93,12 @@ def get_polygon_list_list(h_list, y_0, y_1, x_0, x_1):
                                               lat + math.sin(math.radians(angle)) * h]
                                              for angle in range(30, 360, 60)]))
         polygon_list_list.append(polygon_list)
+    print("Метод get_polygon_list_list выполнен за {} с".format(time.time() - start_time))
     return polygon_list_list
 
 
 def get_df_positive_snps(child_snps, combined_df, json_tree_rows):
-    print(datetime.datetime.now())
+    start_time = time.time()
     print('Среди всех строк ищем те, что имеют положительный SNP, '
           'восходящий к одному из дочерних SNP целевого SNP.')
     num_processes = multiprocessing.cpu_count()
@@ -109,12 +111,12 @@ def get_df_positive_snps(child_snps, combined_df, json_tree_rows):
         for i in range(len(result)):
             old_to_new_dict.update(result[i])
         combined_df[SHORT_HAND] = combined_df[SHORT_HAND].map(old_to_new_dict)
-    print(datetime.datetime.now())
+    print("Метод get_df_positive_snps выполнен за {} с".format(time.time() - start_time))
     return combined_df
 
 
 def get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows, child_snps, combined_original_df):
-    print(datetime.datetime.now())
+    start_time = time.time()
     combined_normal_df_without_other[KIT_NUMBER] = combined_normal_df_without_other[KIT_NUMBER].astype(str)
     combined_extended_map_df = get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_snps)
 
@@ -131,12 +133,11 @@ def get_df_extended(combined_normal_df_without_other, str_number, json_tree_rows
         print(ROWS_IN_DF_COUNT_TEXT.format('combined_extended_map_df', len(combined_extended_map_df.index)))
         print("Количество представителей каждой подветви: \n{}"
               .format(combined_extended_map_df[SHORT_HAND].value_counts()))
-        print(datetime.datetime.now())
+        print("Метод get_df_extended выполнен за {} с".format(time.time() - start_time))
         return combined_extended_map_df
 
 
 def get_map(combined_df, polygon_list_list, child_snps, target_snp, h_list, db, collection_name):
-    print(datetime.datetime.now())
     print('Оставляем только полезные столбцы.')
     important_columns_list = [SHORT_HAND, LNG, LAT]
     for column in combined_df:
@@ -276,6 +277,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
             print('Наивысшая точность предсказания ниже допустимых 0.75: пропускаем текущий SNP')
             return None
         else:
+            start_time = time.time()
             print('Обучаем градиентный бустинг для предсказания SNP.')
             model = CatBoostClassifier(iterations=n_estimators_best, random_seed=123, thread_count=-1, verbose=100,
                                        depth=depth_best, nan_mode='Forbidden')
@@ -310,7 +312,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
                 combined_extended_map_df[SHORT_HAND].value_counts()))
 
             combined_extended_map_df_without_other = get_df_without_other(combined_extended_map_df)
-            print(datetime.datetime.now())
+            print("Обучение модели выполнено за {} с".format(time.time() - start_time))
             return combined_extended_map_df_without_other
     else:
         print('В обучающей/испытательной выборке нет SNP кроме Other: пропускаем текущий SNP')

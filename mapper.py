@@ -1,4 +1,4 @@
-import datetime
+import time
 from multiprocessing import freeze_support
 
 import firebase_admin
@@ -41,7 +41,7 @@ if __name__ == '__main__':
             print("\nSNP {} уже присутствует в БД!".format(target_snp))
         else:
             print("\nОбрабатывается SNP {}...".format(target_snp))
-            print(datetime.datetime.now())
+            start_time = time.time()
             combined_original_df = combined_df.copy()
             new_json_tree_rows = json_tree_rows.copy()
             child_snps = utils.get_child_snps(new_json_tree_rows, target_snp)
@@ -71,5 +71,4 @@ if __name__ == '__main__':
                     print("В наборе данных combined_normal_df_without_other 0 строк!")
             else:
                 print("У выбранного SNP нет дочерних SNP!")
-            print("Завершена обработка SNP {}".format(target_snp))
-            print(datetime.datetime.now())
+            print("Обработка SNP {} завершена за {} с".format(target_snp, time.time() - start_time))
