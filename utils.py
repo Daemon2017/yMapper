@@ -96,6 +96,13 @@ def get_polygon_list_list(h_list, y_0, y_1, x_0, x_1):
 
 
 def get_df_positive_snps(child_snps, combined_df, json_tree_rows):
+    print('Удаляем строки, для которых FTDNA, в силу каких-то причин, не указало SNP.')
+    combined_df = combined_df[combined_df[SHORT_HAND].notna()]
+    print(ROWS_IN_DF_COUNT_TEXT.format('combined_df', len(combined_df.index)))
+    print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_df[SHORT_HAND].value_counts()))
+
+    combined_df = combined_df[combined_df[SHORT_HAND].str.contains(child_snps[0][:2])]
+
     start_time = time.time()
     print('Среди всех строк ищем те, что имеют положительный SNP, '
           'восходящий к одному из дочерних SNP целевого SNP.')
@@ -219,7 +226,7 @@ def get_df_extended_map(str_number, combined_original_df, json_tree_rows, child_
           'Удаляем те строки, для которых не сделан BigY, '
           'а также те, для которых не является положительным ни один из дочерних SNP целевого SNP.')
     combined_df_positive_snps = combined_df_positive_snps.drop(
-        combined_df_positive_snps[(combined_df_positive_snps[NGS] == False) &
+        combined_df_positive_snps[(combined_df_positive_snps[NGS] is False) &
                                   (~combined_df_positive_snps[SHORT_HAND].isin(child_snps))].index)
     del combined_df_positive_snps[NGS]
     print(ROWS_IN_DF_COUNT_TEXT.format('combined_df_positive_snps', len(combined_df_positive_snps.index)))
