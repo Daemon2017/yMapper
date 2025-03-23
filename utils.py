@@ -68,7 +68,6 @@ def get_child_snps(json_tree_rows, target_snp):
 
 
 def get_polygon_list_list(h_list, y_0, y_1, x_0, x_1):
-    start_time = time.time()
     print("Создаем столько сеток из шестиугольников, сколько размеров было задано на 1-м шаге.")
     polygon_list_list = []
     for h in h_list:
@@ -93,7 +92,6 @@ def get_polygon_list_list(h_list, y_0, y_1, x_0, x_1):
                                               lat + math.sin(math.radians(angle)) * h]
                                              for angle in range(30, 360, 60)]))
         polygon_list_list.append(polygon_list)
-    print("Метод get_polygon_list_list выполнен за {} с".format(time.time() - start_time))
     return polygon_list_list
 
 
