@@ -52,7 +52,7 @@ def get_positive_snps(polygon, child_snps, combined_df):
 def get_combined_df():
     print('Загружаем набор данных SNP+STR+Map.')
     combined_df = pd.read_csv('combined_snp_str_map.csv', engine='python')
-    print('В загруженном наборе данных {} строк'.format(len(combined_df.index)))
+    print(ROWS_IN_DF_COUNT_TEXT.format('combined_df', len(combined_df.index)))
     print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_df[SHORT_HAND].value_counts()))
     return combined_df
 
@@ -60,7 +60,6 @@ def get_combined_df():
 def get_child_snps(json_tree_rows, target_snp):
     print("Получаем список дочерних SNP целевого SNP.")
     child_snps = get_children_list(json_tree_rows, target_snp)
-    print('Дочерние SNP: {}'.format(child_snps))
     return child_snps
 
 
@@ -95,8 +94,6 @@ def get_polygon_list_list(h_list, y_0, y_1, x_0, x_1):
 def get_df_positive_snps(child_snps, combined_df, json_tree_rows):
     print('Удаляем строки, для которых FTDNA, в силу каких-то причин, не указало SNP.')
     combined_df = combined_df[combined_df[SHORT_HAND].notna()]
-    print(ROWS_IN_DF_COUNT_TEXT.format('combined_df', len(combined_df.index)))
-    print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_df[SHORT_HAND].value_counts()))
 
     combined_df = combined_df[combined_df[SHORT_HAND].str.contains(child_snps[0][:2])]
 
@@ -120,20 +117,13 @@ def get_df_positive_snps(child_snps, combined_df, json_tree_rows):
 def get_map(combined_df, polygon_list_list, child_snps, target_snp, h_list, db, collection_name):
     print('Оставляем только полезные столбцы.')
     important_columns_list = [SHORT_HAND, LNG, LAT]
-    for column in combined_df:
-        if column not in important_columns_list:
-            try:
-                del combined_df[column]
-            except KeyError as KE:
-                print(KE)
+    combined_df = combined_df[important_columns_list].copy()
 
-    print('Очищаем набор данных от строк с пустыми координатами...')
+    print('Очищаем набор данных от строк с пустыми координатами.')
     combined_df[LNG] = combined_df[LNG].astype(float)
     combined_df = combined_df[combined_df[LNG].notna()].copy()
     combined_df[LAT] = combined_df[LAT].astype(float)
-    combined_df = combined_df[combined_df[LAT].notna()]
-    print(ROWS_IN_DF_COUNT_TEXT.format('combined_df', len(combined_df.index)))
-    print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_df[SHORT_HAND].value_counts()))
+    combined_df = combined_df[combined_df[LAT].notna()].copy()
 
     print("Проверяем наличие каждого целевого SNP в каждом шестиугольнике каждой сетки.")
     current_snps_list_list = []
@@ -169,8 +159,6 @@ def get_online_map(child_snps, current_snps_list_list, polygon_list_list, target
 def get_df_without_other(combined_df):
     print('Отбрасываем строки, содержащие "Other" в столбце "Short Hand".')
     combined_df = combined_df.drop(combined_df[combined_df[SHORT_HAND] == 'Other'].index)
-    print(ROWS_IN_DF_COUNT_TEXT.format('combined_df', len(combined_df.index)))
-    print(NUMBER_OF_REPRESENTATIVES_OF_EACH_SNP_TEXT.format(combined_df[SHORT_HAND].value_counts()))
     return combined_df
 
 
