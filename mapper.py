@@ -6,11 +6,6 @@ from firebase_admin import credentials, firestore
 
 import utils
 
-# Выбираем стратегию работы с данными:
-# * False - если хотим работать только с теми данными, что 100% подтверждены BigY500/BigY700/SNP;
-# * True - если хотим работать с наибольшим возможным количеством данных, полученным в результате предсказания SNP по
-#  STR с некоторой точностью.
-is_extended = False
 # Задаем целевой SNP, чьи дочерние SNP будут наноситься на карту.
 target_snps = ['R-CTS1211', 'R-Z92']
 # Задаем количество STR (12/37/67/111), которое будет использоваться на шаге предсказания SNP.
@@ -21,11 +16,7 @@ is_overwrite_allowed = False
 if __name__ == '__main__':
     freeze_support()
 
-    collection_name = ''
-    if is_extended:
-        collection_name = 'new_snps_extended'
-    else:
-        collection_name = 'new_snps'
+    collection_name = 'new_snps'
 
     combined_df = utils.get_combined_df()
     json_tree_rows = utils.get_json_tree_rows()
@@ -58,12 +49,6 @@ if __name__ == '__main__':
                 combined_normal_df_without_other = utils.get_df_without_other(combined_normal_df_positive_snps)
                 if len(combined_normal_df_without_other.index) > 0:
                     final_df = combined_normal_df_without_other.copy()
-                    if is_extended:
-                        final_df = utils.get_df_extended(combined_normal_df_without_other, str_number,
-                                                         new_json_tree_rows,
-                                                         child_snps, combined_original_df)
-                        if final_df is None:
-                            continue
                     utils.get_map(final_df, polygon_list_list, child_snps, target_snp, h_list, db, collection_name)
                     snps_list.append(target_snp)
                     utils.update_db_list(collection_name, db, snps_list)
