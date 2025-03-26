@@ -42,7 +42,7 @@ if __name__ == '__main__':
             start_time = time.time()
             combined_original_df = combined_df.copy()
             new_json_tree_rows = json_tree_rows.copy()
-            child_snps = utils.get_child_snps(new_json_tree_rows, target_snp)
+            child_snps = utils.get_children_list(new_json_tree_rows, target_snp)
             if len(child_snps) > 0:
                 print('Дочерние SNP: {}'.format(child_snps))
                 combined_normal_df_positive_snps = utils.get_df_positive_snps(child_snps, combined_original_df,
@@ -50,7 +50,7 @@ if __name__ == '__main__':
                 combined_normal_df_without_other = utils.get_df_without_other(combined_normal_df_positive_snps)
                 if len(combined_normal_df_without_other.index) > 0:
                     print("В наборе данных combined_normal_df_without_other {} строк!"
-                          .format(combined_normal_df_without_other.index))
+                          .format(len(combined_normal_df_without_other.index)))
                     final_df = combined_normal_df_without_other.copy()
                     utils.get_map(final_df, polygon_list_list, child_snps, target_snp, h_list, db, collection_name)
                     snps_list.append(target_snp)

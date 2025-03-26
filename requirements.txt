@@ -1,5 +1,3 @@
-catboost
-numpy
-scikit-learn
-pandas
-shapely
+numpy~=1.23.5
+pandas~=1.5.3
+shapely~=2.0.4

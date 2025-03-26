@@ -57,12 +57,6 @@ def get_combined_df():
     return combined_df
 
 
-def get_child_snps(json_tree_rows, target_snp):
-    print("Получаем список дочерних SNP целевого SNP.")
-    child_snps = get_children_list(json_tree_rows, target_snp)
-    return child_snps
-
-
 def get_polygon_list_list(h_list, y_0, y_1, x_0, x_1):
     print("Создаем столько сеток из шестиугольников, сколько размеров было задано на 1-м шаге.")
     polygon_list_list = []
@@ -95,22 +89,26 @@ def get_df_positive_snps(child_snps, combined_df, json_tree_rows):
     print('Удаляем строки, для которых FTDNA, в силу каких-то причин, не указало SNP.')
     combined_df = combined_df[combined_df[SHORT_HAND].notna()]
 
-    combined_df = combined_df[combined_df[SHORT_HAND].str.contains(child_snps[0][:2])]
+    descendants_list = []
+    for child_snp in child_snps:
+        descendants_list.extend(get_descendants_list(json_tree_rows, child_snp))
+    combined_df = combined_df.loc[combined_df[SHORT_HAND].isin(descendants_list)]
 
-    start_time = time.time()
-    print('Среди всех строк ищем те, что имеют положительный SNP, '
-          'восходящий к одному из дочерних SNP целевого SNP.')
-    num_processes = multiprocessing.cpu_count()
-    unique_values = combined_df[SHORT_HAND].unique()
-    chunks = np.array_split(unique_values, num_processes)
-    with multiprocessing.Pool(processes=num_processes) as pool:
-        result = pool.starmap(get_dict,
-                              zip(chunks, repeat(json_tree_rows), repeat(child_snps)))
-        old_to_new_dict = {}
-        for i in range(len(result)):
-            old_to_new_dict.update(result[i])
-        combined_df[SHORT_HAND] = combined_df[SHORT_HAND].map(old_to_new_dict)
-    print("Метод get_df_positive_snps выполнен за {} с".format(time.time() - start_time))
+    if len(combined_df.index) > 0:
+        start_time = time.time()
+        print('Среди всех строк ищем те, что имеют положительный SNP, '
+              'восходящий к одному из дочерних SNP целевого SNP.')
+        num_processes = multiprocessing.cpu_count()
+        unique_values = combined_df[SHORT_HAND].unique()
+        chunks = np.array_split(unique_values, num_processes)
+        with multiprocessing.Pool(processes=num_processes) as pool:
+            result = pool.starmap(get_dict,
+                                  zip(chunks, repeat(json_tree_rows), repeat(child_snps)))
+            old_to_new_dict = {}
+            for i in range(len(result)):
+                old_to_new_dict.update(result[i])
+            combined_df[SHORT_HAND] = combined_df[SHORT_HAND].map(old_to_new_dict)
+        print("Метод get_df_positive_snps выполнен за {} с".format(time.time() - start_time))
     return combined_df
 
 
@@ -195,6 +193,16 @@ def get_parent_list(json_rows, snp):
                     break
             break
     return parent_list
+
+
+def get_descendants_list(json_rows, snp):
+    stack = [snp]
+    snps = []
+    while stack:
+        current_snp = stack.pop()
+        snps.append(current_snp)
+        stack.extend(snp for snp in get_children_list(json_rows, current_snp))
+    return snps
 
 
 def get_children_list(json_rows, snp):
