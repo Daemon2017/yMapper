@@ -11,7 +11,6 @@ const LNG_FORM_ELEMENT_ID = "lngForm";
 const EXTENDED_CHECKBOX_ELEMENT_ID = "extendedCheckbox";
 const INTENSITY_SLIDER_ELEMENT_ID = "intensitySlider";
 const SEARCH_FORM_ELEMENT_ID = "searchForm";
-const CORRELATION_MATRIX_ELEMENT_ID = "correlationMatrix";
 const STATE_LABEL_ELEMENT_ID = "stateLabel";
 const BOXES_ELEMENT_ID = "boxes";
 
@@ -36,8 +35,6 @@ const Mode = Object.freeze({
     LEVEL: String("levels"),
     DISPERSION: String("dispersion"),
     TRACE: String("trace"),
-    CORRELATION_ALL: String("correlationAll"),
-    CORRELATION_INTERSECT: String("correlationIntersect")
 });
 
 async function main() {
@@ -154,7 +151,6 @@ function clearAll(isClearButtonPressed) {
         document.getElementById(`checkBox${i}`).checked = false;
     }
     uncheckedSnpsList = [];
-    document.getElementById(CORRELATION_MATRIX_ELEMENT_ID).innerHTML = null;
     map = getMapWithoutHeatmapLayers();
     map = getMapWithoutPolylineLayers();
     map = getMapWithoutCircleLayers();
@@ -189,47 +185,6 @@ function getLink() {
 
     window.prompt("Copy to clipboard: Ctrl+C, Enter", myUrl);
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
-}
-
-async function showCorrelation(isAll, snpString) {
-    document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-
-    if (isAll) {
-        mode = Mode.CORRELATION_ALL;
-    } else {
-        mode = Mode.CORRELATION_INTERSECT;
-    }
-
-    clearAll(false);
-    currentSnpList = getSnpListWithChecks(snpString);
-
-    let allSnpPointsList = [];
-    if (currentSnpList !== undefined) {
-        let errorSnpList = [];
-        for (const snp of currentSnpList) {
-            try {
-                let data = await getDocFromDb(document.getElementById(EXTENDED_CHECKBOX_ELEMENT_ID).checked ? "new_snps_extended" : "new_snps", snp);
-                allSnpPointsList.push(data);
-            } catch (e) {
-                errorSnpList.push(snp);
-            }
-        }
-
-        let correlationMatrix = getCorrelationMatrix(allSnpPointsList);
-
-        let successSnpList = currentSnpList.filter(function (snp) {
-            return !errorSnpList.includes(snp);
-        });
-        if (successSnpList.length > 0) {
-            document.getElementById(CORRELATION_MATRIX_ELEMENT_ID).innerHTML = getHtmlTable(correlationMatrix, successSnpList);
-            $("table").tablesort();
-            $("thead th.amount").data("sortBy", function (_th, td, _tablesort) {
-                return parseFloat(td.text());
-            });
-        }
-
-        printSnpReceivingState(errorSnpList, currentSnpList);
-    }
 }
 
 async function getParent() {

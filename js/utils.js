@@ -91,10 +91,6 @@ function selectAction(snpString) {
         showMap(false, snpString);
     } else if (mode === Mode.DISPERSION) {
         showMap(true, snpString);
-    } else if (mode === Mode.CORRELATION_INTERSECT) {
-        showCorrelation(false, snpString);
-    } else if (mode === Mode.CORRELATION_ALL) {
-        showCorrelation(true, snpString);
     } else if (mode === Mode.TRACE) {
         showTrace(snpString);
     }
@@ -158,8 +154,6 @@ function getSnpListWithChecks(snpString) {
             maxLength = 1;
         } else if (mode === Mode.LEVEL || mode === Mode.TRACE) {
             maxLength = colorBoxesNumber;
-        } else if (mode === Mode.CORRELATION_ALL || mode === Mode.CORRELATION_INTERSECT) {
-            maxLength = 50;
         }
 
         if (!(snpList.length > 0 && snpList.length <= maxLength)) {
@@ -509,56 +503,6 @@ function getArrayMax(myArray, property) {
     }
 }
 
-function getCorrelationMatrix(allSnpPointsList) {
-    let correlationMatrix = [];
-    allSnpPointsList.forEach(function (firstSnpPointsList, firstSnpIndex) {
-        let firstSnpPointToDiversityPercentDict = getPointToDiversityPercentDict(allSnpPointsList, firstSnpIndex, firstSnpPointsList);
-
-        let correlationRow = getCorrelationRow(allSnpPointsList, firstSnpPointToDiversityPercentDict);
-        correlationMatrix.push(correlationRow);
-    });
-    return correlationMatrix;
-}
-
-function getCorrelationRow(allSnpPointsList, firstSnpPointToDiversityPercentDict) {
-    let correlationRow = [];
-    allSnpPointsList.forEach(function (secondSnpPointsList, secondSnpIndex) {
-        let secondSnpPointToDiversityPercentDict = getPointToDiversityPercentDict(allSnpPointsList, secondSnpIndex, secondSnpPointsList);
-        let allPossiblePointsList = getAllPossiblePoints(firstSnpPointToDiversityPercentDict, secondSnpPointToDiversityPercentDict);
-        let diversityPercentList = getDiversityPercentList(firstSnpPointToDiversityPercentDict, secondSnpPointToDiversityPercentDict, allPossiblePointsList);
-        if (mode === Mode.CORRELATION_ALL) {
-            getCorrelationAllRow(correlationRow, diversityPercentList);
-        } else if (mode === Mode.CORRELATION_INTERSECT) {
-            getCorrelationIntersectedRow(diversityPercentList, correlationRow);
-        }
-    });
-    return correlationRow;
-}
-
-function getCorrelationAllRow(correlationRow, diversityPercentList) {
-    correlationRow.push(jStat
-        .corrcoeff(diversityPercentList[0], diversityPercentList[1])
-        .toFixed(2)
-    );
-}
-
-function getCorrelationIntersectedRow(diversityPercentList, correlationRow) {
-    let newDiversityPercentList = [
-        [],
-        []
-    ];
-    for (let i = 0; i < diversityPercentList[0].length; i++) {
-        if (diversityPercentList[0][i] !== 0 && diversityPercentList[1][i] !== 0) {
-            newDiversityPercentList[0].push(diversityPercentList[0][i]);
-            newDiversityPercentList[1].push(diversityPercentList[1][i]);
-        }
-    }
-    correlationRow.push(jStat
-        .corrcoeff(newDiversityPercentList[0], newDiversityPercentList[1])
-        .toFixed(2)
-    );
-}
-
 function getDiversityPercentList(firstSnpPointToDiversityPercentDict, secondSnpPointToDiversityPercentDict, allPossiblePointsList) {
     let diversityPercentList = [];
     new Array(firstSnpPointToDiversityPercentDict, secondSnpPointToDiversityPercentDict).forEach(function (dict) {
@@ -603,60 +547,6 @@ function isArraysEquals(a, b) {
         }
     }
     return true;
-}
-
-function getHtmlTable(myArray, successSnpList) {
-    let result =
-        "<table id='correlTable'><caption>Correlation matrix (sortable!):</caption>";
-    myArray.forEach(function (row, i) {
-        if (i === 0) {
-            result += "<thead>";
-            result += "<tr>";
-            result += "<th>SNP</th>";
-            row.forEach(function (_column, j) {
-                result += `<th class="amount">${successSnpList[j]}</th>`;
-            });
-            result += "</tr>";
-            result += "</thead>";
-
-            result += "<tbody>";
-        }
-        result += "<tr>";
-        row.forEach(function (column, j) {
-            if (j === 0) {
-                result += `<td>${successSnpList[i]}</td>`;
-            }
-            result += `<td class="${getCorrelationClass(column)}">` + column + "</td>";
-        });
-        result += "</tr>";
-    });
-    result += "</tbody>";
-    result += "</table>";
-    return result;
-}
-
-function getCorrelationClass(correlationValue) {
-    if (correlationValue < -0.90) {
-        return "veryHighNeg";
-    } else if (correlationValue >= -0.90 && correlationValue < -0.70) {
-        return "highNeg";
-    } else if (correlationValue >= -0.70 && correlationValue < -0.50) {
-        return "modNeg";
-    } else if (correlationValue >= -0.50 && correlationValue < -0.30) {
-        return "lowNeg";
-    } else if (correlationValue >= -0.30 && correlationValue < 0) {
-        return "veryLowNeg";
-    } else if (correlationValue >= 0 && correlationValue <= 0.30) {
-        return "veryLowPos";
-    } else if (correlationValue > 0.30 && correlationValue <= 0.50) {
-        return "lowPos";
-    } else if (correlationValue > 0.50 && correlationValue <= 0.70) {
-        return "modPos";
-    } else if (correlationValue > 0.70 && correlationValue <= 0.90) {
-        return "highPos";
-    } else if (correlationValue > 0.90) {
-        return "veryHighPos";
-    }
 }
 
 function getAncestorSnpList(snp) {

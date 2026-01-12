@@ -7,7 +7,6 @@
     <title>yMapper</title>
     <link rel="stylesheet" type="text/css" href="css/map.css" />
     <link rel="stylesheet" type="text/css" href="css/controls.css" />
-    <link rel="stylesheet" type="text/css" href="css/table.css" />
     <link rel="stylesheet" type="text/css" href="css/leaflet.css" />
     <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
 
@@ -77,11 +76,6 @@
             Extended:
             <input type="checkbox" id="extendedCheckbox" class="toggle-button" onclick="updateExtendedState()" />
         </label>
-        <label for="intensitySlider" id="intensityLabel">
-            Intensity:
-            <input type="range" id="intensitySlider" oninput="updateIntensity(this.value)" min="0" max="10" value="5"
-                class="slider" />
-        </label>
 
         <br />
         <button type="submit" id="levelsButton" onclick="showMap(false, null)">
@@ -93,20 +87,20 @@
         <button type="submit" id="traceButton" onclick="showTrace(null)">
             Trace
         </button>
-        <button type="submit" id="correlAllButton" onclick="showCorrelation(true, null)">
-            CorrelationAll
-        </button>
-        <button type="submit" id="correlIntersectButton" onclick="showCorrelation(false, null)">
-            CorrelationIntersect
-        </button>
         <button type="submit" id="clearButton" onclick="clearAll(true)">
             Clear
         </button>
 
         <br />
         <span id="boxes"></span>
+        <label for="intensitySlider" id="intensityLabel">
+            Intensity:
+            <input type="range" id="intensitySlider" oninput="updateIntensity(this.value)" min="0" max="10" value="5"
+                class="slider" />
+        </label>
+
+        <br />
         <label id="stateLabel"> OK. </label>
     </span>
-    <span id="correlationMatrix"></span>
 </body>
 </html>
