@@ -1,9 +1,7 @@
 .github/
 .ipynb_checkpoints/
 .idea/
+back/catboost_info
 *.csv
-*.html
-ftdna_tree.txt
-ftdna_tree.json
 *.log
 *.json
