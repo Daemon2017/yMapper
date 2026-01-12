@@ -178,7 +178,7 @@ function setLatLng() {
 
 function getLink() {
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-    let myUrl = new URL("https://daemon2017.github.io/yFarseerWeb/");
+    let myUrl = new URL("https://daemon2017.github.io/yMapper/");
     myUrl.searchParams.append(LAT_URL_PARAM, map.getCenter().lat);
     myUrl.searchParams.append(LNG_URL_PARAM, map.getCenter().lng);
     myUrl.searchParams.append(ZOOM_URL_PARAM, map.getZoom());
