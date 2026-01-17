@@ -163,7 +163,7 @@ def get_df_without_other(combined_df):
 def get_json_tree_rows():
     print("Открываем древо Y-SNP от FTDNA.")
     file_name = 'ftdna_tree.json'
-    if file_name in os.listdir('../'):
+    if file_name in os.listdir('./'):
         print('Файл с древом найден!')
         with open(file_name, 'r', encoding='utf-8') as file:
             json_tree_rows = json.loads(file.read())
