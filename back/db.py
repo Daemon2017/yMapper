@@ -35,11 +35,26 @@ def stop_pool():
         _driver = None
 
 
+def select_list(prefix):
+    result_sets = _pool.execute_with_retries(
+        """
+        DECLARE $prefix AS Utf8;
+        SELECT DISTINCT snp
+        FROM snps
+        WHERE snp LIKE ($prefix || '%');
+        """,
+        {
+            '$prefix': prefix,
+        },
+    )
+    return [row.snp for row in result_sets[0].rows]
+
+
 def select_snp(snp):
     result_sets = _pool.execute_with_retries(
         """
         DECLARE $snp AS Utf8;
-        SELECT synonyms.snp
+        SELECT snp
         FROM synonyms
         WHERE synonym = $snp
         LIMIT 1;

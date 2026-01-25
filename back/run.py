@@ -13,6 +13,20 @@ cors = CORS(app)
 pool = db.get_session_pool()
 
 
+@app.route('/list', methods=['GET'])
+def get_list():
+    prefix = request.args.get('prefix')
+    if not prefix:
+        return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
+    if len(prefix) < 3:
+        return Response(json.dumps({"error": "Prefix length must be >=3"}), status=400, mimetype='application/json')
+    print(f'Processing GET /list for prefix={prefix}...')
+    response = db.select_list(prefix)
+    if not response:
+        return Response(json.dumps({"error": "No SNP in DB"}), status=404, mimetype='application/json')
+    return Response(json.dumps(response), mimetype='application/json')
+
+
 @app.route('/parent', methods=['GET'])
 def get_parent():
     snp = request.args.get('snp')

@@ -6,6 +6,31 @@
 	},
 	"item": [
 		{
+			"name": "list",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/list?prefix=R-YP",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"list"
+					],
+					"query": [
+						{
+							"key": "prefix",
+							"value": "R-YP"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "parent",
 			"request": {
 				"method": "GET",
@@ -57,6 +82,35 @@
 						{
 							"key": "group",
 							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "trace",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/trace?snp=R-YP1023&size=1.0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"trace"
+					],
+					"query": [
+						{
+							"key": "snp",
+							"value": "R-YP1023"
+						},
+						{
+							"key": "size",
+							"value": "1.0"
 						}
 					]
 				}
