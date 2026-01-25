@@ -11,6 +11,7 @@ import db
 app = Flask(__name__)
 cors = CORS(app)
 pool = db.get_session_pool()
+db.warm_up()
 
 
 @app.route('/list', methods=['GET'])
@@ -36,7 +37,7 @@ def get_parent():
     response = db.select_parent(snp)
     if not response:
         return Response(json.dumps({"error": "No SNP in DB"}), status=404, mimetype='application/json')
-    return Response(json.dumps(response[0]), mimetype='application/json')
+    return Response(json.dumps(response), mimetype='application/json')
 
 
 @app.route('/centroids', methods=['GET'])
@@ -76,7 +77,6 @@ if __name__ == '__main__':
     except (KeyboardInterrupt, SystemExit):
         print("Stopping yMapper...")
     finally:
-        if 'pool' in globals():
-            print("Closing YDB resources...")
-            db.stop_pool()
+        print("Closing YDB resources...")
+        db.stop_pool()
         print('yMapper stopped.')

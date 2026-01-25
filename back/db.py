@@ -1,28 +1,39 @@
 import ydb
+import ydb.iam
 
 db_key_path = 'key.json'
 database = '/ru-central1/b1gq47q3820jil5087ik/etnorddlk3a95odcbev7'
 
-_driver = None
-_pool = None
+
+def _create_driver():
+    driver_config = ydb.DriverConfig(
+        endpoint='grpcs://ydb.serverless.yandexcloud.net:2135',
+        database=database,
+        credentials=ydb.iam.ServiceAccountCredentials.from_file(db_key_path),
+    )
+    driver = ydb.Driver(driver_config)
+    try:
+        driver.wait(fail_fast=True, timeout=5)
+    except Exception:
+        driver.stop()
+        raise
+    return driver
+
+
+_driver = _create_driver()
+_pool = ydb.QuerySessionPool(_driver)
 
 
 def get_session_pool():
-    global _pool, _driver
-    if _pool is None:
-        driver_config = ydb.DriverConfig(
-            endpoint='grpcs://ydb.serverless.yandexcloud.net:2135',
-            database=database,
-            credentials=ydb.iam.ServiceAccountCredentials.from_file(db_key_path),
-        )
-        _driver = ydb.Driver(driver_config)
-        try:
-            _driver.wait(fail_fast=True, timeout=5)
-        except Exception:
-            _driver.stop()
-            raise
-        _pool = ydb.QuerySessionPool(_driver)
     return _pool
+
+
+def warm_up():
+    try:
+        _pool.execute_with_retries("SELECT 1;")
+        print("YDB connection warmed up successfully.")
+    except Exception as e:
+        print(f"Failed to warm up YDB: {e}")
 
 
 def stop_pool():
