@@ -1,5 +1,4 @@
 import json
-from itertools import chain
 
 import pandas as pd
 from flask import Flask, request, Response
@@ -54,17 +53,15 @@ def get_centroids():
     df = pd.DataFrame.from_records(response)
     df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
     df['centroid'] = df['centroid'].map(tuple)
-    df = df.groupby('centroid')['snp'].unique().reset_index().rename(columns={'snp': 'snps'})
-    df['snps'] = df['snps'].map(lambda x: frozenset(x))
-    df = df.groupby('snps')['centroid'].agg(list).reset_index().rename(columns={'centroid': 'centroids'})
-    df['level'] = df['snps'].map(len)
-    df = df.sort_values(by='level', ascending=False)
     if group:
-        df = df.drop(columns=['snps'])
-        df = df.groupby('level')['centroids'].apply(lambda x: list(chain.from_iterable(x))).reset_index()
+        df = df.groupby('centroid')['snp'].nunique().reset_index() \
+            .groupby('snp')['centroid'].agg(list).reset_index() \
+            .rename(columns={'snp': 'level', 'centroid': 'centroids'})
         return Response(df.to_json(orient='records'), mimetype='application/json')
     else:
-        df = df.drop(columns=['level'])
+        df = df.groupby('centroid')['snp'].apply(lambda x: tuple(sorted(set(x)))).reset_index() \
+            .groupby('snp')['centroid'].agg(list).reset_index() \
+            .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
         return Response(df.to_json(orient='records'), mimetype='application/json')
 
 
