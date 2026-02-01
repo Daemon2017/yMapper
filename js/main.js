@@ -1,68 +1,42 @@
-const LAT_URL_PARAM = "lat";
-const LNG_URL_PARAM = "lng";
-const ZOOM_URL_PARAM = "zoom";
-const ISEXTENDED_URL_PARAM = "isExtended";
-const THRESHOLD_URL_PARAM = "threshold";
-const SNPS_URL_PARAM = "snps";
-const MODE_URL_PARAM = "mode";
+const CONFIG = {
+    API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8080'
+        : 'https://bbamf0mf8kfcd675bt1e.containers.yandexcloud.net',
+    ENDPOINTS: {
+        LIST: '/list',
+        PARENT: '/parent',
+        CENTROIDS: '/centroids',
+    },
+};
 
 const LAT_FORM_ELEMENT_ID = "latForm";
 const LNG_FORM_ELEMENT_ID = "lngForm";
-const EXTENDED_CHECKBOX_ELEMENT_ID = "extendedCheckbox";
-const INTENSITY_SLIDER_ELEMENT_ID = "intensitySlider";
 const SEARCH_FORM_ELEMENT_ID = "searchForm";
 const STATE_LABEL_ELEMENT_ID = "stateLabel";
 const BOXES_ELEMENT_ID = "boxes";
+const GROUP_CHECKBOX_ELEMENT_ID = "groupCheckbox";
+const GRID_SIZE_SELECT_ELEMENT_ID = "gridSizeSelect";
 
 const BUSY_STATE_TEXT = "Busy...";
 const OK_STATE_TEXT = "OK.";
-
-const NO_SNP_WAS_SPECIFIED_ERROR_TEXT = "Error: No SNP was specified!";
 const BOTH_LAT_AND_LNG_MUST_BE_A_NUMBER_ERROR_TEXT = "Error: Both Lat and Lng must be a number!";
-const DATA_OF_ALL_SNPS_WASNT_RECEIVED_ERROR_TEXT = "Error: Data of all SNPs wasn't received!";
-
-const colorBoxesNumber = 30;
+const SERVER_ERROR_TEXT = "Error: Server error!";
 
 let map;
+let heatmapGroup = L.layerGroup();
+let colorBoxesNumber = 0;
+
 let dbSnpsList = [];
-let mode;
 let gradientValues = [];
 let uncheckedSnpsList = [];
-let currentSnpList = [];
-let haplotree = {};
-
-const Mode = Object.freeze({
-    LEVEL: String("levels"),
-    DISPERSION: String("dispersion"),
-    TRACE: String("trace"),
-});
+let dataList = [];
 
 async function main() {
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
 
-    gradientValues = createGradientList();
-
-    let colorBoxesInnerHtml = ``;
-    for (let i = 0; i < colorBoxesNumber; i++) {
-        colorBoxesInnerHtml +=
-            `<span class="colorBox tooltip" id="colorBox${i}">
-            <input type="checkbox" class="checkBox" id="checkBox${i}" onclick="updateUncheckedList(${i})"/>
-            <label class="checkBoxLabel" id="checkBoxLabel${i}" for="checkBox${i}"></label>
-        </span>`;
-    }
-    document.getElementById(BOXES_ELEMENT_ID).innerHTML = colorBoxesInnerHtml;
-
-    let queryString = window.location.search;
-    let urlParams = new URLSearchParams(queryString);
-    let lat = urlParams.get(LAT_URL_PARAM) == null ? 48.814170 : urlParams.get(LAT_URL_PARAM);
-    document.getElementById(LAT_FORM_ELEMENT_ID).value = lat;
-    let lng = urlParams.get(LNG_URL_PARAM) == null ? 23.169720 : urlParams.get(LNG_URL_PARAM);
-    document.getElementById(LNG_FORM_ELEMENT_ID).value = lng;
-    let zoom = urlParams.get(ZOOM_URL_PARAM) == null ? 4 : urlParams.get(ZOOM_URL_PARAM);
-    document.getElementById(EXTENDED_CHECKBOX_ELEMENT_ID).checked = urlParams.get(ISEXTENDED_URL_PARAM) == "true" ? true : false;
-    document.getElementById(INTENSITY_SLIDER_ELEMENT_ID).value = urlParams.get(THRESHOLD_URL_PARAM) == null ? 5 : urlParams.get(THRESHOLD_URL_PARAM);
-    let snpString = urlParams.get(SNPS_URL_PARAM);
-    mode = urlParams.get(MODE_URL_PARAM);
+    let lat = 53.2582;
+    let lng = 34.2850;
+    let zoom = 4;
 
     let baseLayer = L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -70,13 +44,13 @@ async function main() {
             maxZoom: 10,
         }
     );
-
     map = new L.Map("mapLayer", {
         center: new L.LatLng(lat, lng),
         zoom: zoom,
         layers: [baseLayer],
     });
-    map.addEventListener("move", getLatLng());
+    heatmapGroup.addTo(map);
+    map.addEventListener("moveend", getLatLng);
 
     L.Control.FileLayerLoad.LABEL = '<img class="icon" src="./img/folder.svg" alt="file icon"/>';
     let lflControl = L.Control.fileLayerLoad({
@@ -91,69 +65,39 @@ async function main() {
     });
     lflControl.addTo(map);
 
-    dbSnpsList = await getDocFromDb(document.getElementById(EXTENDED_CHECKBOX_ELEMENT_ID).checked ? "new_snps_extended" : "new_snps", "list");
-
-    haplotree = await getCollectionFromDb("haplotree");
-
+    await getDbSnpsList()
     attachDropDownPrompt();
-
-    document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
-
-    selectAction(snpString);
 }
 
-async function showMap(isDispersion, snpString) {
+async function showMap() {
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
+    clearAll(false);
 
-    if (isDispersion === true) {
-        mode = Mode.DISPERSION;
-    } else {
-        mode = Mode.LEVEL;
+    dataList = await getCentroids();
+    colorBoxesNumber = dataList.length
+    gradientValues = createGradientList();
+    let colorBoxesInnerHtml = ``;
+    for (let i = 0; i < colorBoxesNumber; i++) {
+        colorBoxesInnerHtml +=
+            `<span class="colorBox tooltip" id="colorBox${i}">
+            <input type="checkbox" class="checkBox" id="checkBox${i}" onclick="updateUncheckedList(${i})"/>
+            <label class="checkBoxLabel" id="checkBoxLabel${i}" for="checkBox${i}"></label>
+        </span>`;
     }
-
-    clearAll(false);
-    currentSnpList = getSnpListWithChecks(snpString);
-
-    let threshold = 10 - document.getElementById(INTENSITY_SLIDER_ELEMENT_ID).value;
-    drawLayers(currentSnpList, threshold);
-}
-
-async function showTrace(snpString) {
-    document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-
-    mode = Mode.TRACE;
-
-    clearAll(false);
-    currentSnpList = getSnpListWithChecks(snpString);
-
-    drawTrace(currentSnpList);
-}
-
-async function updateExtendedState() {
-    document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-    dbSnpsList = await getDocFromDb(document.getElementById(EXTENDED_CHECKBOX_ELEMENT_ID).checked ? "new_snps_extended" : "new_snps", "list");
-    document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
-}
-
-function updateIntensity(intensity) {
-    let threshold = 10 - intensity;
-    drawLayers(currentSnpList, threshold);
+    document.getElementById(BOXES_ELEMENT_ID).innerHTML = colorBoxesInnerHtml;
+    drawLayers();
 }
 
 function clearAll(isClearButtonPressed) {
     if (isClearButtonPressed) {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-        map = getMapWithoutUpperLayers();
+        heatmapGroup.clearLayers();
+        document.getElementById(BOXES_ELEMENT_ID).innerHTML = '';
+        colorBoxesNumber = 0;
     }
-    for (let i = 0; i < colorBoxesNumber; i++) {
-        document.getElementById(`checkBoxLabel${i}`).style = "background-color: transparent";
-        document.getElementById(`checkBoxLabel${i}`).innerHTML = null;
-        document.getElementById(`checkBox${i}`).checked = false;
-    }
+
     uncheckedSnpsList = [];
-    map = getMapWithoutHeatmapLayers();
-    map = getMapWithoutPolylineLayers();
-    map = getMapWithoutCircleLayers();
+
     if (isClearButtonPressed) {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
     }
@@ -161,49 +105,22 @@ function clearAll(isClearButtonPressed) {
 
 function setLatLng() {
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-    try {
-        let lat = Number(document.getElementById(LAT_FORM_ELEMENT_ID).value);
-        let lng = Number(document.getElementById(LNG_FORM_ELEMENT_ID).value);
-        map.panTo(new L.LatLng(lat, lng));
-        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
-    } catch (e) {
+    let lat = Number(document.getElementById(LAT_FORM_ELEMENT_ID).value);
+    let lng = Number(document.getElementById(LNG_FORM_ELEMENT_ID).value);
+    if (isNaN(lat) || isNaN(lng)) {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BOTH_LAT_AND_LNG_MUST_BE_A_NUMBER_ERROR_TEXT;
-        throw BOTH_LAT_AND_LNG_MUST_BE_A_NUMBER_ERROR_TEXT;
     }
-}
-
-function getLink() {
-    document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-    let myUrl = new URL("https://daemon2017.github.io/yMapper/");
-    myUrl.searchParams.append(LAT_URL_PARAM, map.getCenter().lat);
-    myUrl.searchParams.append(LNG_URL_PARAM, map.getCenter().lng);
-    myUrl.searchParams.append(ZOOM_URL_PARAM, map.getZoom());
-    myUrl.searchParams.append(ISEXTENDED_URL_PARAM, document.getElementById(EXTENDED_CHECKBOX_ELEMENT_ID).checked);
-    myUrl.searchParams.append(THRESHOLD_URL_PARAM, document.getElementById(INTENSITY_SLIDER_ELEMENT_ID).value);
-    myUrl.searchParams.append(SNPS_URL_PARAM, document.getElementById(SEARCH_FORM_ELEMENT_ID).value.replace(/ /g, ""));
-    myUrl.searchParams.append(MODE_URL_PARAM, mode);
-
-    window.prompt("Copy to clipboard: Ctrl+C, Enter", myUrl);
+    map.panTo(new L.LatLng(lat, lng));
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
 }
 
-async function getParent() {
-    let newSnpList = [];
-    currentSnpList = getSnpList(null);
-    for (const snp of currentSnpList) {
-        for (const haplogroupId of Object.keys(haplotree)) {
-            if (snp === haplotree[haplogroupId]['name']) {
-                let parentId = haplotree[haplogroupId]['parentId'];
-                let parentName = haplotree[parentId]['name'];
-                newSnpList.push(parentName);
-                break;
-            }
-        }
-    }
-    let newSnpString = Array.from(new Set(newSnpList)).join(",");
-    if (mode === null) {
-        document.getElementById(SEARCH_FORM_ELEMENT_ID).value = newSnpString;
+function updateUncheckedList(i) {
+    if (document.getElementById(`checkBox${i}`).checked === true) {
+        uncheckedSnpsList = uncheckedSnpsList.filter(item => item !== i);
     } else {
-        selectAction(newSnpString);
+        uncheckedSnpsList.push(i);
     }
+    drawLayers();
 }
+
+document.addEventListener('DOMContentLoaded', main);

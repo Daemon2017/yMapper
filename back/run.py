@@ -15,13 +15,8 @@ db.warm_up()
 
 @app.route('/list', methods=['GET'])
 def get_list():
-    prefix = request.args.get('prefix')
-    if not prefix:
-        return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
-    if len(prefix) < 3:
-        return Response(json.dumps({"error": "Prefix length must be >=3"}), status=400, mimetype='application/json')
-    print(f'Processing GET /list for prefix={prefix}...')
-    response = db.select_list(prefix)
+    print(f'Processing GET /list...')
+    response = db.select_list()
     if not response:
         return Response(json.dumps({"error": "No SNP in DB"}), status=404, mimetype='application/json')
     return Response(json.dumps(response), mimetype='application/json')
@@ -46,7 +41,7 @@ def get_centroids():
     group = request.args.get('group', 'false').lower() == 'true'
     if not snp or not size:
         return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
-    print(f'Processing GET /centroids for snp={snp} and size={size}...')
+    print(f'Processing GET /centroids for snp={snp} and size={size} and group={group}...')
     response = db.select_centroids(snp, size)
     if not response:
         return Response(json.dumps({"error": "No SNP in DB"}), status=404, mimetype='application/json')

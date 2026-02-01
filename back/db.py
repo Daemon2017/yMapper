@@ -46,17 +46,13 @@ def stop_pool():
         _driver = None
 
 
-def select_list(prefix):
+def select_list():
     result_sets = _pool.execute_with_retries(
         """
-        DECLARE $prefix AS Utf8;
         SELECT DISTINCT snp
         FROM snps
-        WHERE snp LIKE ($prefix || '%');
         """,
-        {
-            '$prefix': prefix,
-        },
+        {},
     )
     return [row.snp for row in result_sets[0].rows]
 
@@ -94,7 +90,7 @@ def select_parent(snp):
             '$snp': snp,
         },
     )
-    return result_sets[0].rows
+    return result_sets[0].rows[0]
 
 
 def select_centroids(snp, size):
