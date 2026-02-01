@@ -1,6 +1,5 @@
 async function getParent() {
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-    clearAll(true);
     const parentUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.PARENT}`;
     const params = new URLSearchParams({
         snp: document.getElementById(SEARCH_FORM_ELEMENT_ID).value
