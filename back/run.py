@@ -9,8 +9,6 @@ import db
 
 app = Flask(__name__)
 cors = CORS(app)
-pool = db.get_session_pool()
-db.warm_up()
 
 
 @app.route('/list', methods=['GET'])
@@ -58,6 +56,11 @@ def get_centroids():
             .groupby('snp')['centroid'].agg(list).reset_index() \
             .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
         return Response(df.to_json(orient='records'), mimetype='application/json')
+
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db.Session.remove()
 
 
 if __name__ == '__main__':

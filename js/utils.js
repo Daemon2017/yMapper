@@ -52,7 +52,7 @@ function createGradientList() {
     return gradientList;
 }
 
-function attachDropDownPrompt() {
+function attachDropDownPrompt(dbSnpsList) {
     $(function () {
         $("#searchForm").on("keydown", function (event) {
             if (event.keyCode === $.ui.keyCode.TAB && $(this).autocomplete("instance").menu.active) {
@@ -82,18 +82,6 @@ function attachDropDownPrompt() {
 }
 
 function drawLayers() {
-    let heatmapCfg = {
-        blur: 0.66,
-        minOpacity: 0.0,
-        scaleRadius: true,
-        useLocalExtrema: false,
-        latField: "lat",
-        lngField: "lng",
-        valueField: "count",
-        radius: document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value,
-        maxOpacity: 0.7
-    };
-
     heatmapGroup.clearLayers();
 
     let caption = '';

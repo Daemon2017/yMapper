@@ -26,7 +26,6 @@ let map;
 let heatmapGroup = L.layerGroup();
 let colorBoxesNumber = 0;
 
-let dbSnpsList = [];
 let gradientValues = [];
 let uncheckedSnpsList = [];
 let dataList = [];
@@ -65,8 +64,8 @@ async function main() {
     });
     lflControl.addTo(map);
 
-    await getDbSnpsList()
-    attachDropDownPrompt();
+    const snps = await getDbSnpsList()
+    attachDropDownPrompt(snps);
 }
 
 async function showMap() {

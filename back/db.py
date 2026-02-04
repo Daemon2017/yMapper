@@ -1,119 +1,77 @@
-import ydb
-import ydb.iam
+import json
 
-db_key_path = 'key.json'
-database = '/ru-central1/b1gq47q3820jil5087ik/etnorddlk3a95odcbev7'
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker, scoped_session
 
-
-def _create_driver():
-    driver_config = ydb.DriverConfig(
-        endpoint='grpcs://ydb.serverless.yandexcloud.net:2135',
-        database=database,
-        credentials=ydb.iam.ServiceAccountCredentials.from_file(db_key_path),
-    )
-    driver = ydb.Driver(driver_config)
-    try:
-        driver.wait(fail_fast=True, timeout=5)
-    except Exception:
-        driver.stop()
-        raise
-    return driver
-
-
-_driver = _create_driver()
-_pool = ydb.QuerySessionPool(_driver)
-
-
-def get_session_pool():
-    return _pool
-
-
-def warm_up():
-    try:
-        _pool.execute_with_retries("SELECT 1;")
-        print("YDB connection warmed up successfully.")
-    except Exception as e:
-        print(f"Failed to warm up YDB: {e}")
+with open('config.json', 'r') as f:
+    config = json.load(f)
+engine = create_engine(
+    f"postgresql://{config['DB_USER']}:{config['DB_PASSWORD']}@{config['DB_HOST']}:{config['DB_PORT']}/{config['DB_NAME']}",
+    pool_pre_ping=True
+)
+session_factory = sessionmaker(bind=engine)
+Session = scoped_session(session_factory)
 
 
 def stop_pool():
-    global _pool, _driver
-    if _pool:
-        _pool.stop()
-        _pool = None
-    if _driver:
-        _driver.stop()
-        _driver = None
+    engine.dispose()
+    print("PostgreSQL pool closed.")
 
 
 def select_list():
-    result_sets = _pool.execute_with_retries(
-        """
-        SELECT DISTINCT snp
-        FROM snps
-        """,
-        {},
-    )
-    return [row.snp for row in result_sets[0].rows]
-
-
-def select_snp(snp):
-    result_sets = _pool.execute_with_retries(
-        """
-        DECLARE $snp AS Utf8;
-        SELECT snp
-        FROM synonyms
-        WHERE synonym = $snp
-        LIMIT 1;
-        """,
-        {
-            '$snp': snp,
-        },
-    )
-    return result_sets[0].rows
+    with Session() as session:
+        query = text(
+            """
+            SELECT DISTINCT snp 
+            FROM snps
+            """
+        )
+        result = session.execute(query)
+        return [row.snp for row in result]
 
 
 def select_parent(snp):
-    result_sets = _pool.execute_with_retries(
-        """
-        DECLARE $snp AS Utf8;
-        SELECT parent
-        FROM relations
-        WHERE child IN (
-            SELECT synonyms.snp
-            FROM synonyms
-            WHERE synonym = $snp
+    with Session() as session:
+        query = text(
+            """
+            SELECT snp
+            FROM childs
+            WHERE (
+                SELECT snp 
+                FROM synonyms 
+                WHERE :snp = ANY(synonyms)
+            ) = ANY (childs)
+            LIMIT 1
+            """
         )
-        LIMIT 1;
-        """,
-        {
-            '$snp': snp,
-        },
-    )
-    return result_sets[0].rows[0]
+        result = session.execute(query,
+                                 {
+                                     "snp": snp
+                                 }).fetchone()
+        return result[0] if result else None
 
 
 def select_centroids(snp, size):
-    result_sets = _pool.execute_with_retries(
-        """
-        DECLARE $snp AS Utf8;
-        DECLARE $size AS Utf8;
-        SELECT snp, centroids
-        FROM snps
-        WHERE size = $size
-        AND snp IN (
-            SELECT child
-            FROM relations
-            WHERE parent IN (
-                SELECT synonyms.snp
-                FROM synonyms
-                WHERE synonym = $snp
+    with Session() as session:
+        query = text(
+            """
+            SELECT snp, centroids
+            FROM snps
+            WHERE size = :size
+            AND snp IN (
+                SELECT unnest(childs)
+                FROM childs
+                WHERE snp IN (
+                    SELECT snp 
+                    FROM synonyms 
+                    WHERE :snp = ANY(synonyms)
+                )
             )
-        );
-        """,
-        {
-            '$snp': snp,
-            '$size': size
-        },
-    )
-    return result_sets[0].rows
+            """
+        )
+        result = session.execute(query,
+                                 {
+                                     "snp": snp,
+                                     "size": size
+                                 })
+        return [dict(row._mapping) for row in result]
