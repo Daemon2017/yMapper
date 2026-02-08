@@ -1,4 +1,5 @@
 import json
+import re
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -23,7 +24,7 @@ def select_list():
         query = text(
             """
             SELECT DISTINCT snp 
-            FROM snps
+            FROM snps2
             """
         )
         result = session.execute(query)
@@ -51,22 +52,26 @@ def select_parent(snp):
         return result[0] if result else None
 
 
+def parse_pg_point_array(pg_string):
+    if not pg_string:
+        return []
+    points = re.findall(r"\(([-+]?\d*\.?\d+),([-+]?\d*\.?\d+)\)", pg_string)
+    return [[float(p[0]), float(p[1])] for p in points]
+
+
 def select_centroids(snp, size):
     with Session() as session:
         query = text(
             """
-            SELECT snp, centroids
-            FROM snps
-            WHERE size = :size
-            AND snp IN (
-                SELECT unnest(childs)
-                FROM childs
-                WHERE snp IN (
-                    SELECT snp 
-                    FROM synonyms 
-                    WHERE :snp = ANY(synonyms)
-                )
-            )
+            SELECT snp,
+                   centroids
+            FROM   snps2
+            WHERE  size = :size
+                   AND snp IN (SELECT Unnest(childs)
+                               FROM   childs
+                               WHERE  snp IN (SELECT snp
+                                              FROM   synonyms
+                                              WHERE  :snp = ANY ( synonyms ))); 
             """
         )
         result = session.execute(query,
@@ -74,4 +79,42 @@ def select_centroids(snp, size):
                                      "snp": snp,
                                      "size": size
                                  })
-        return [dict(row._mapping) for row in result]
+        raw_results = [dict(row._mapping) for row in result]
+        for row in raw_results:
+            if isinstance(row['centroids'], str):
+                row['centroids'] = parse_pg_point_array(row['centroids'])
+        return raw_results
+
+
+def select_centroids2(points, size, start, end):
+    with Session() as session:
+        query = text(
+            """
+            SELECT     s.snp,
+                       s.centroids
+            FROM       snps2  AS s
+            INNER JOIN tmrcas AS t
+            ON         s.snp = t.snp
+            WHERE      s.size = :size
+            AND        t.tmrca BETWEEN :start AND        :end
+            AND        EXISTS
+                       (
+                              SELECT 1
+                              FROM   Unnest(s.centroids) AS c
+                              WHERE  0 = ANY
+                                     (
+                                            SELECT c <->                            p
+                                            FROM   unnest(cast(:points AS point[])) AS p ) );
+            """
+        )
+        result = session.execute(query, {
+            "size": str(size),
+            "points": "{" + ",".join([f'"{(p[1], p[0])}"' for p in points]) + "}",
+            "start": start,
+            "end": end
+        })
+        raw_results = [dict(row._mapping) for row in result]
+        for row in raw_results:
+            if isinstance(row['centroids'], str):
+                row['centroids'] = parse_pg_point_array(row['centroids'])
+        return raw_results

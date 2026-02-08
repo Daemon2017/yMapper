@@ -50,6 +50,39 @@
 			"response": []
 		},
 		{
+			"name": "hexagon",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/hexagon?lat=55.751244&lng=37.618423&size=1.0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"hexagon"
+					],
+					"query": [
+						{
+							"key": "lat",
+							"value": "55.751244"
+						},
+						{
+							"key": "lng",
+							"value": "37.618423"
+						},
+						{
+							"key": "size",
+							"value": "1.0"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "centroids",
 			"request": {
 				"method": "GET",
@@ -72,6 +105,47 @@
 						{
 							"key": "size",
 							"value": "1.0"
+						},
+						{
+							"key": "group",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "centroids2",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/centroids2?points=[[55.5, 38.2384]]&size=1.0&start=-250&end=250&group=true",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"centroids2"
+					],
+					"query": [
+						{
+							"key": "points",
+							"value": "[[55.5, 38.2384]]"
+						},
+						{
+							"key": "size",
+							"value": "1.0"
+						},
+						{
+							"key": "start",
+							"value": "-250"
+						},
+						{
+							"key": "end",
+							"value": "250"
 						},
 						{
 							"key": "group",

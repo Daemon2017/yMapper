@@ -17,15 +17,20 @@ body * {
 #latForm,
 #lngForm,
 #searchForm,
-#fromForm,
-#toForm,
+#startForm,
+#endForm,
 #gridSizeSelect,
+#similarityModeSelect,
 #clearButton,
 #groupCheckbox,
+#group2Checkbox,
+#intersectionCheckbox,
 #setLatLngButton,
-#selectButton,
+#includeButton,
+#excludeButton,
 #dispersionButton,
-#levelUpButton {
+#parentButton,
+#similarityCountButton {
     pointer-events: auto;
 }
 
