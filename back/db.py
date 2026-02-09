@@ -59,7 +59,7 @@ def parse_pg_point_array(pg_string):
     return [[float(p[0]), float(p[1])] for p in points]
 
 
-def select_centroids(snp, size):
+def select_centroids_dispersion(snp, size):
     with Session() as session:
         query = text(
             """
@@ -86,7 +86,7 @@ def select_centroids(snp, size):
         return raw_results
 
 
-def select_centroids2(points, size, start, end):
+def select_centroids_similarity(points_include, points_exclude, size, start, end):
     with Session() as session:
         query = text(
             """
@@ -104,12 +104,21 @@ def select_centroids2(points, size, start, end):
                               WHERE  0 = ANY
                                      (
                                             SELECT c <->                            p
-                                            FROM   unnest(cast(:points AS point[])) AS p ) );
+                                            FROM   unnest(cast(:points_include AS point[])) AS p ) )
+            AND        NOT EXISTS
+                       (
+                              SELECT 1
+                              FROM   Unnest(s.centroids) AS c
+                              WHERE  0 = ANY
+                                     (
+                                            SELECT c <-> bp
+                                            FROM   unnest(cast(:points_exclude AS point[])) AS bp ) );
             """
         )
         result = session.execute(query, {
             "size": str(size),
-            "points": "{" + ",".join([f'"{(p[1], p[0])}"' for p in points]) + "}",
+            "points_include": "{" + ",".join([f'"{(p[1], p[0])}"' for p in points_include]) + "}",
+            "points_exclude": "{" + ",".join([f'"{(p[1], p[0])}"' for p in points_exclude]) + "}",
             "start": start,
             "end": end
         })

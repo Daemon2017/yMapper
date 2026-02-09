@@ -9,9 +9,7 @@ function createGradientList(fullPalette) {
     let totalItems = colorBoxesNumber;
     let paletteSize = fullPalette.length;
     for (let i = 0; i < totalItems; i++) {
-        let colorIndex = totalItems > 1
-            ? Math.floor(i * (paletteSize - 1) / (totalItems - 1))
-            : 0;
+        let colorIndex = totalItems > 1 ? Math.floor(i * (paletteSize - 1) / (totalItems - 1)) : 0;
         let targetColor = fullPalette[colorIndex];
         let numberOfItems = 10;
         let rainbow = new Rainbow();
@@ -55,22 +53,21 @@ function attachDropDownPrompt(dbSnpsList) {
     });
 }
 
-function drawLayers() {
-    heatmapGroup.clearLayers();
-
+function drawLayersDispersion() {
     const isGrouped = document.getElementById(GROUP_CHECKBOX_ELEMENT_ID).checked;
     const caption = isGrouped ? 'level' : 'snps';
     const basePalette = isGrouped ? PALETTE_GROUP : PALETTE_SNPS;
     const gradientValues = createGradientList(basePalette);
 
+    mainGroup.clearLayers();
     dataList.forEach((data, i) => {
         if (!uncheckedSnpsList.includes(i)) {
             let hexColor = gradientValues[i][9];
-            let size = parseFloat(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value) || 1.0;
+            let size = parseFloat(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
             data['centroids'].forEach(element => {
                 let lng = element[0];
                 let lat = element[1];
-                drawSingleHex(lat, lng, size, hexColor, `${caption}: ${data[caption]}`)
+                drawSingleHex(mainGroup, lat, lng, size, hexColor, `${caption}: ${data[caption]}`)
             });
             const label = document.getElementById(`checkBoxLabel${i}`);
             if (label) {
@@ -80,24 +77,25 @@ function drawLayers() {
             }
         }
     });
+    mainGroup.addTo(map);
+    map.removeLayer(includedExcludedGroup);
 }
 
-function drawLayers2() {
-    heatmapGroup.clearLayers();
-
+function drawLayersSimilarity() {
     const isGrouped = document.getElementById(GROUP_CHECKBOX2_ELEMENT_ID).checked;
     const caption = isGrouped ? 'level' : 'snps';
     const basePalette = isGrouped ? PALETTE_GROUP : PALETTE_SNPS;
     const gradientValues = createGradientList(basePalette);
 
+    mainGroup.clearLayers();
     dataList.forEach((data, i) => {
         if (!uncheckedSnpsList.includes(i)) {
             let hexColor = gradientValues[i][9];
-            let size = parseFloat(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value) || 1.0;
+            let size = parseFloat(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
             data['centroids'].forEach(element => {
                 let lng = element[0];
                 let lat = element[1];
-                drawSingleHex(lat, lng, size, hexColor, `${caption}: ${data[caption]}`)
+                drawSingleHex(mainGroup, lat, lng, size, hexColor, `${caption}: ${data[caption]}`)
             });
             const label = document.getElementById(`checkBoxLabel${i}`);
             if (label) {
@@ -107,9 +105,11 @@ function drawLayers2() {
             }
         }
     });
+    mainGroup.addTo(map);
+    map.removeLayer(includedExcludedGroup);
 }
 
-function drawSingleHex(lat, lng, size, hexColor, text) {
+function drawSingleHex(group, lat, lng, size, hexColor, text) {
     const hexCoords = getHexVertices(lat, lng, size);
     const polygon = L.polygon(hexCoords, {
         color: hexColor,
@@ -119,7 +119,7 @@ function drawSingleHex(lat, lng, size, hexColor, text) {
         interactive: true
     });
     polygon.bindTooltip(text);
-    heatmapGroup.addLayer(polygon);
+    group.addLayer(polygon);
     return polygon;
 }
 
@@ -134,7 +134,7 @@ function getHexVertices(centerLat, centerLng, size) {
     return vertices;
 }
 
-async function handleMapClick(lat, lng) {
+async function addPolygonToIncluded(lat, lng) {
     const size = parseFloat(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
     const hexagon = await getHexagon(lat, lng, size);
     const cLat = hexagon[0];
@@ -142,15 +142,39 @@ async function handleMapClick(lat, lng) {
     const existingIndex = includedCentroids.findIndex(c => c.lat === cLat && c.lng === cLng);
     if (existingIndex !== -1) {
         const entry = includedCentroids[existingIndex];
-        heatmapGroup.removeLayer(entry.polygon);
+        includedExcludedGroup.removeLayer(entry.polygon);
         includedCentroids.splice(existingIndex, 1);
     } else {
         if (includedCentroids.length >= 12) {
             const oldestEntry = includedCentroids.shift();
-            heatmapGroup.removeLayer(oldestEntry.polygon);
+            includedExcludedGroup.removeLayer(oldestEntry.polygon);
         }
-        const polygon = drawSingleHex(cLat, cLng, size, 'green', `Included. Coords: ${cLat}, ${cLng}`);
+        const polygon = drawSingleHex(includedExcludedGroup, cLat, cLng, size, 'green', `Included. Coords: ${cLat}, ${cLng}`);
         includedCentroids.push({
+            lat: cLat,
+            lng: cLng,
+            polygon: polygon
+        });
+    }
+}
+
+async function addPolygonToExcluded(lat, lng) {
+    const size = parseFloat(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
+    const hexagon = await getHexagon(lat, lng, size);
+    const cLat = hexagon[0];
+    const cLng = hexagon[1];
+    const existingIndex = excludedCentroids.findIndex(c => c.lat === cLat && c.lng === cLng);
+    if (existingIndex !== -1) {
+        const entry = excludedCentroids[existingIndex];
+        includedExcludedGroup.removeLayer(entry.polygon);
+        excludedCentroids.splice(existingIndex, 1);
+    } else {
+        if (excludedCentroids.length >= 12) {
+            const oldestEntry = excludedCentroids.shift();
+            includedExcludedGroup.removeLayer(oldestEntry.polygon);
+        }
+        const polygon = drawSingleHex(includedExcludedGroup, cLat, cLng, size, 'red', `Excluded. Coords: ${cLat}, ${cLng}`);
+        excludedCentroids.push({
             lat: cLat,
             lng: cLng,
             polygon: polygon

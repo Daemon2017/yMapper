@@ -33,15 +33,15 @@ def get_parent():
     return Response(json.dumps(response), mimetype='application/json')
 
 
-@app.route('/centroids', methods=['GET'])
-def get_centroids():
+@app.route('/centroids_dispersion', methods=['GET'])
+def get_centroids_dispersion():
     snp = request.args.get('snp')
     size = request.args.get('size')
     group = request.args.get('group', 'false').lower() == 'true'
     if not snp or not size:
         return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
-    print(f'Processing GET /centroids for snp={snp} and size={size} and group={group}...')
-    response = db.select_centroids(snp, size)
+    print(f'Processing GET /centroids_dispersion for snp={snp} and size={size} and group={group}...')
+    response = db.select_centroids_dispersion(snp, size)
     if not response:
         return Response(json.dumps({"error": "No SNP in DB"}), status=404, mimetype='application/json')
     df = pd.DataFrame.from_records(response)
@@ -62,18 +62,19 @@ def get_centroids():
     return Response(df.to_json(orient='records'), mimetype='application/json')
 
 
-@app.route('/centroids2', methods=['GET'])
-def get_centroids2():
-    points = json.loads(request.args.get('points'))
+@app.route('/centroids_similarity', methods=['GET'])
+def get_centroids_similarity():
+    points_include = json.loads(request.args.get('points_include'))
+    points_exclude = json.loads(request.args.get('points_exclude'))
     size = request.args.get('size')
     start = request.args.get('start')
     end = request.args.get('end')
     group = request.args.get('group', 'false').lower() == 'true'
-    if not points or not size or not start or not end:
+    if not points_include or not size or not start or not end:
         return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
     print(
-        f'Processing GET /centroids2 for points={points} and size={size} and start={start} and end={end} and group={group}...')
-    response = db.select_centroids2(points, size, start, end)
+        f'Processing GET /centroids_similarity for points_include={points_include} and points_exclude={points_exclude} and size={size} and start={start} and end={end} and group={group}...')
+    response = db.select_centroids_similarity(points_include, points_exclude, size, start, end)
     df = pd.DataFrame.from_records(response)
     df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
     df['centroid'] = df['centroid'].map(tuple)
@@ -89,7 +90,7 @@ def get_centroids2():
         df = df.assign(snps_len=df['snps'].str.len()) \
             .sort_values(by='snps_len', ascending=False) \
             .drop(columns=['snps_len'])
-    return Response(df.head(50).to_json(orient='records'), mimetype='application/json')
+    return Response(df.head(100).to_json(orient='records'), mimetype='application/json')
 
 
 @app.route('/hexagon', methods=['GET'])

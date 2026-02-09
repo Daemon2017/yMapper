@@ -8,7 +8,7 @@ async function getParent() {
         const response = await fetch(`${parentUrl}?${params}`);
         if (response.ok) {
             const data = await response.json();
-            let parentSnp = data
+            let parentSnp = data;
             document.getElementById(SEARCH_FORM_ELEMENT_ID).value = parentSnp;
             document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
         } else {
@@ -27,7 +27,7 @@ async function getDbSnpsList() {
         if (response.ok) {
             const dbSnpsList = await response.json();
             document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
-            return dbSnpsList
+            return dbSnpsList;
         } else {
             document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
         }
@@ -36,16 +36,16 @@ async function getDbSnpsList() {
     }
 }
 
-async function getCentroids() {
+async function getCentroidsDispersion() {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-        const centroidsUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS}`;
+        const centroidsDispersionUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_DISPERSION}`;
         const params = new URLSearchParams({
             snp: document.getElementById(SEARCH_FORM_ELEMENT_ID).value,
             size: document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value,
             group: document.getElementById(GROUP_CHECKBOX_ELEMENT_ID).checked
         });
-        const response = await fetch(`${centroidsUrl}?${params}`);
+        const response = await fetch(`${centroidsDispersionUrl}?${params}`);
         if (response.ok) {
             const data = await response.json();
             document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
@@ -58,18 +58,19 @@ async function getCentroids() {
     }
 }
 
-async function getCentroids2() {
+async function getCentroidsSimilarity() {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-        const centroids2Url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS2}`;
+        const centroidsSimilarityUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_SIMILARITY}`;
         const params = new URLSearchParams({
-            points: JSON.stringify(includedCentroids.map(({ lat, lng }) => [lat, lng])),
+            points_include: JSON.stringify(includedCentroids.map(({ lat, lng }) => [lat, lng])),
+            points_exclude: JSON.stringify(excludedCentroids.map(({ lat, lng }) => [lat, lng])),
             size: document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value,
             start: document.getElementById(START_FORM_ELEMENT_ID).value,
             end: document.getElementById(END_FORM_ELEMENT_ID).value,
             group: document.getElementById(GROUP_CHECKBOX2_ELEMENT_ID).checked
         });
-        const response = await fetch(`${centroids2Url}?${params}`);
+        const response = await fetch(`${centroidsSimilarityUrl}?${params}`);
         if (response.ok) {
             const data = await response.json();
             document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;

@@ -83,19 +83,19 @@
 			"response": []
 		},
 		{
-			"name": "centroids",
+			"name": "centroids_dispersion",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/centroids?snp=R-YP1023&size=1.0&group=true",
+					"raw": "http://localhost:8080/centroids_dispersion?snp=R-YP1023&size=1.0&group=true",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
-						"centroids"
+						"centroids_dispersion"
 					],
 					"query": [
 						{
@@ -116,24 +116,28 @@
 			"response": []
 		},
 		{
-			"name": "centroids2",
+			"name": "centroids_similarity",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/centroids2?points=[[55.5, 38.2384]]&size=1.0&start=-250&end=250&group=true",
+					"raw": "http://localhost:8080/centroids_similarity?points_include=[[55.5, 38.2384]]&points_exclude=[]&size=1.0&start=-250&end=250&group=true",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
-						"centroids2"
+						"centroids_similarity"
 					],
 					"query": [
 						{
-							"key": "points",
+							"key": "points_include",
 							"value": "[[55.5, 38.2384]]"
+						},
+						{
+							"key": "points_exclude",
+							"value": "[]"
 						},
 						{
 							"key": "size",
