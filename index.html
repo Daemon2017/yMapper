@@ -45,11 +45,13 @@
     <label for="gridSizeSelect">
         Grid size:
         <select id="gridSizeSelect" onchange="clearAll()">
+            <option value="0.25">0.25</option>
             <option value="0.5">0.5</option>
             <option value="0.75">0.75</option>
             <option value="1.0" selected>1.0</option>
             <option value="1.25">1.25</option>
             <option value="1.5">1.5</option>
+            <option value="1.75">1.75</option>
         </select>
     </label>
 
@@ -79,16 +81,17 @@
         -
         <input type="search" id="endForm" value="2000" size="5"/>
     </label>
+<!--    <select id="similarityModeSelect">-->
+<!--        <option value="union" selected>Union (∪)</option>-->
+<!--        <option value="intersection">Intersection (∩)</option>-->
+<!--        <option value="subtraction">Subtraction (\)</option>-->
+<!--    </select>-->
     <button type="button" id="includeButton" onclick="includeHexagons()">
         Include
     </button>
     <button type="button" id="excludeButton" onclick="excludeHexagons()">
         Exclude
     </button>
-<!--    <select id="similarityModeSelect">-->
-<!--        <option value="union" selected>Union (∪)</option>-->
-<!--        <option value="intersection">Intersection (∩)</option>-->
-<!--    </select>-->
     <label for="group2Checkbox">
         Group:
         <input type="checkbox" id="group2Checkbox" checked/>
