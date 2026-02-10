@@ -86,7 +86,53 @@ def select_centroids_dispersion(snp, size):
         return raw_results
 
 
-def select_centroids_similarity(points_include, points_exclude, size, start, end):
+def select_centroids_union(a_points, b_points, size, start, end):
+    with Session() as session:
+        query = text(
+            """
+            SELECT     s.snp,
+                       s.centroids
+            FROM       snps2  AS s
+            INNER JOIN tmrcas AS t
+            ON         s.snp = t.snp
+            WHERE      s.size = :size
+            AND        t.tmrca BETWEEN :start AND :end
+            AND        (
+                EXISTS (
+                    SELECT 1
+                    FROM   Unnest(s.centroids) AS c
+                    WHERE  0 = ANY (
+                        SELECT c <-> ap
+                        FROM   unnest(cast(:a_points AS point[])) AS ap
+                    )
+                )
+                OR
+                EXISTS (
+                    SELECT 1
+                    FROM   Unnest(s.centroids) AS c
+                    WHERE  0 = ANY (
+                        SELECT c <-> bp
+                        FROM   unnest(cast(:b_points AS point[])) AS bp
+                    )
+                )
+            );
+            """
+        )
+        result = session.execute(query, {
+            "size": str(size),
+            "a_points": [f"({p[1]},{p[0]})" for p in a_points],
+            "b_points": [f"({p[1]},{p[0]})" for p in b_points],
+            "start": start,
+            "end": end
+        })
+        raw_results = [dict(row._mapping) for row in result]
+        for row in raw_results:
+            if isinstance(row['centroids'], str):
+                row['centroids'] = parse_pg_point_array(row['centroids'])
+        return raw_results
+
+
+def select_centroids_subtraction(a_points, b_points, size, start, end):
     with Session() as session:
         query = text(
             """
@@ -103,8 +149,8 @@ def select_centroids_similarity(points_include, points_exclude, size, start, end
                               FROM   Unnest(s.centroids) AS c
                               WHERE  0 = ANY
                                      (
-                                            SELECT c <->                            p
-                                            FROM   unnest(cast(:points_include AS point[])) AS p ) )
+                                            SELECT c <-> ap
+                                            FROM   unnest(cast(:a_points AS point[])) AS ap ) )
             AND        NOT EXISTS
                        (
                               SELECT 1
@@ -112,13 +158,56 @@ def select_centroids_similarity(points_include, points_exclude, size, start, end
                               WHERE  0 = ANY
                                      (
                                             SELECT c <-> bp
-                                            FROM   unnest(cast(:points_exclude AS point[])) AS bp ) );
+                                            FROM   unnest(cast(:b_points AS point[])) AS bp ) );
             """
         )
         result = session.execute(query, {
             "size": str(size),
-            "points_include": "{" + ",".join([f'"{(p[1], p[0])}"' for p in points_include]) + "}",
-            "points_exclude": "{" + ",".join([f'"{(p[1], p[0])}"' for p in points_exclude]) + "}",
+            "a_points": [f"({p[1]},{p[0]})" for p in a_points],
+            "b_points": [f"({p[1]},{p[0]})" for p in b_points],
+            "start": start,
+            "end": end
+        })
+        raw_results = [dict(row._mapping) for row in result]
+        for row in raw_results:
+            if isinstance(row['centroids'], str):
+                row['centroids'] = parse_pg_point_array(row['centroids'])
+        return raw_results
+
+
+def select_centroids_intersection(a_points, b_points, size, start, end):
+    with Session() as session:
+        query = text(
+            """
+            SELECT     s.snp,
+                       s.centroids
+            FROM       snps2  AS s
+            INNER JOIN tmrcas AS t
+            ON         s.snp = t.snp
+            WHERE      s.size = :size
+            AND        t.tmrca BETWEEN :start AND        :end
+            AND        EXISTS
+                       (
+                              SELECT 1
+                              FROM   Unnest(s.centroids) AS c
+                              WHERE  0 = ANY
+                                     (
+                                            SELECT c <-> ap
+                                            FROM   unnest(cast(:a_points AS point[])) AS ap ) )
+            AND        EXISTS
+                       (
+                              SELECT 1
+                              FROM   Unnest(s.centroids) AS c
+                              WHERE  0 = ANY
+                                     (
+                                            SELECT c <-> bp
+                                            FROM   unnest(cast(:b_points AS point[])) AS bp ) );
+            """
+        )
+        result = session.execute(query, {
+            "size": str(size),
+            "a_points": [f"({p[1]},{p[0]})" for p in a_points],
+            "b_points": [f"({p[1]},{p[0]})" for p in b_points],
             "start": start,
             "end": end
         })

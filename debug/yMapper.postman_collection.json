@@ -116,19 +116,109 @@
 			"response": []
 		},
 		{
-			"name": "centroids_similarity",
+			"name": "centroids_union",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/centroids_similarity?points_include=[[55.5, 38.2384]]&points_exclude=[]&size=1.0&start=-250&end=250&group=true",
+					"raw": "http://localhost:8080/centroids_union?points_include=[[55.5, 38.2384]]&points_exclude=[]&size=1.0&start=-250&end=250&group=true",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
-						"centroids_similarity"
+						"centroids_union"
+					],
+					"query": [
+						{
+							"key": "points_include",
+							"value": "[[55.5, 38.2384]]"
+						},
+						{
+							"key": "points_exclude",
+							"value": "[]"
+						},
+						{
+							"key": "size",
+							"value": "1.0"
+						},
+						{
+							"key": "start",
+							"value": "-250"
+						},
+						{
+							"key": "end",
+							"value": "250"
+						},
+						{
+							"key": "group",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "centroids_subtraction",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/centroids_subtraction?points_include=[[55.5, 38.2384]]&points_exclude=[]&size=1.0&start=-250&end=250&group=true",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"centroids_subtraction"
+					],
+					"query": [
+						{
+							"key": "points_include",
+							"value": "[[55.5, 38.2384]]"
+						},
+						{
+							"key": "points_exclude",
+							"value": "[]"
+						},
+						{
+							"key": "size",
+							"value": "1.0"
+						},
+						{
+							"key": "start",
+							"value": "-250"
+						},
+						{
+							"key": "end",
+							"value": "250"
+						},
+						{
+							"key": "group",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "centroids_intersection",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/centroids_intersection?points_include=[[55.5, 38.2384]]&points_exclude=[]&size=1.0&start=-250&end=250&group=true",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"centroids_intersection"
 					],
 					"query": [
 						{

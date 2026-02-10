@@ -54,7 +54,7 @@ function attachDropDownPrompt(dbSnpsList) {
 }
 
 function drawLayersDispersion() {
-    const isGrouped = document.getElementById(GROUP_CHECKBOX_ELEMENT_ID).checked;
+    const isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
     const caption = isGrouped ? 'level' : 'snps';
     const basePalette = isGrouped ? PALETTE_GROUP : PALETTE_SNPS;
     const gradientValues = createGradientList(basePalette);
@@ -78,11 +78,11 @@ function drawLayersDispersion() {
         }
     });
     mainGroup.addTo(map);
-    map.removeLayer(includedExcludedGroup);
+    map.removeLayer(includedToSetsGroup);
 }
 
-function drawLayersSimilarity() {
-    const isGrouped = document.getElementById(GROUP_CHECKBOX2_ELEMENT_ID).checked;
+function drawLayersFiltering() {
+    const isGrouped = document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked;
     const caption = isGrouped ? 'level' : 'snps';
     const basePalette = isGrouped ? PALETTE_GROUP : PALETTE_SNPS;
     const gradientValues = createGradientList(basePalette);
@@ -106,7 +106,7 @@ function drawLayersSimilarity() {
         }
     });
     mainGroup.addTo(map);
-    map.removeLayer(includedExcludedGroup);
+    map.removeLayer(includedToSetsGroup);
 }
 
 function drawSingleHex(group, lat, lng, size, hexColor, text) {
@@ -134,23 +134,23 @@ function getHexVertices(centerLat, centerLng, size) {
     return vertices;
 }
 
-async function addPolygonToIncluded(lat, lng) {
+async function includeToSetA(lat, lng) {
     const size = parseFloat(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
     const hexagon = await getHexagon(lat, lng, size);
     const cLat = hexagon[0];
     const cLng = hexagon[1];
-    const existingIndex = includedCentroids.findIndex(c => c.lat === cLat && c.lng === cLng);
+    const existingIndex = includedToSetACentroids.findIndex(c => c.lat === cLat && c.lng === cLng);
     if (existingIndex !== -1) {
-        const entry = includedCentroids[existingIndex];
-        includedExcludedGroup.removeLayer(entry.polygon);
-        includedCentroids.splice(existingIndex, 1);
+        const entry = includedToSetACentroids[existingIndex];
+        includedToSetsGroup.removeLayer(entry.polygon);
+        includedToSetACentroids.splice(existingIndex, 1);
     } else {
-        if (includedCentroids.length >= 12) {
-            const oldestEntry = includedCentroids.shift();
-            includedExcludedGroup.removeLayer(oldestEntry.polygon);
+        if (includedToSetACentroids.length >= 12) {
+            const oldestEntry = includedToSetACentroids.shift();
+            includedToSetsGroup.removeLayer(oldestEntry.polygon);
         }
-        const polygon = drawSingleHex(includedExcludedGroup, cLat, cLng, size, 'green', `Included. Coords: ${cLat}, ${cLng}`);
-        includedCentroids.push({
+        const polygon = drawSingleHex(includedToSetsGroup, cLat, cLng, size, 'green', `Included to set A. Coords: ${cLat}, ${cLng}`);
+        includedToSetACentroids.push({
             lat: cLat,
             lng: cLng,
             polygon: polygon
@@ -158,26 +158,60 @@ async function addPolygonToIncluded(lat, lng) {
     }
 }
 
-async function addPolygonToExcluded(lat, lng) {
+async function includeToSetB(lat, lng) {
     const size = parseFloat(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
     const hexagon = await getHexagon(lat, lng, size);
     const cLat = hexagon[0];
     const cLng = hexagon[1];
-    const existingIndex = excludedCentroids.findIndex(c => c.lat === cLat && c.lng === cLng);
+    const existingIndex = includedToSetBCentroids.findIndex(c => c.lat === cLat && c.lng === cLng);
     if (existingIndex !== -1) {
-        const entry = excludedCentroids[existingIndex];
-        includedExcludedGroup.removeLayer(entry.polygon);
-        excludedCentroids.splice(existingIndex, 1);
+        const entry = includedToSetBCentroids[existingIndex];
+        includedToSetsGroup.removeLayer(entry.polygon);
+        includedToSetBCentroids.splice(existingIndex, 1);
     } else {
-        if (excludedCentroids.length >= 12) {
-            const oldestEntry = excludedCentroids.shift();
-            includedExcludedGroup.removeLayer(oldestEntry.polygon);
+        if (includedToSetBCentroids.length >= 12) {
+            const oldestEntry = includedToSetBCentroids.shift();
+            includedToSetsGroup.removeLayer(oldestEntry.polygon);
         }
-        const polygon = drawSingleHex(includedExcludedGroup, cLat, cLng, size, 'red', `Excluded. Coords: ${cLat}, ${cLng}`);
-        excludedCentroids.push({
+        const polygon = drawSingleHex(includedToSetsGroup, cLat, cLng, size, 'blue', `Included to set B. Coords: ${cLat}, ${cLng}`);
+        includedToSetBCentroids.push({
             lat: cLat,
             lng: cLng,
             polygon: polygon
         });
     }
+}
+
+function clearFirst() {
+    colorBoxesNumber = 0;
+    uncheckedSnpsList = [];
+    document.getElementById(BOXES_ELEMENT_ID).innerHTML = '';
+    mainGroup.clearLayers();
+}
+
+function clearSecond() {
+    isIncludeToSetAMode = false;
+    isIncludeToSetBMode = false;
+    includedToSetACentroids = [];
+    includedToSetBCentroids = [];
+    map.getContainer().style.cursor = '';
+    includedToSetsGroup.clearLayers();
+}
+
+function updateUncheckedListDispersion(i) {
+    if (document.getElementById(`checkBox${i}`).checked === true) {
+        uncheckedSnpsList = uncheckedSnpsList.filter(item => item !== i);
+    } else {
+        uncheckedSnpsList.push(i);
+    }
+    drawLayersDispersion();
+}
+
+function updateUncheckedListFiltering(i) {
+    if (document.getElementById(`checkBox${i}`).checked === true) {
+        uncheckedSnpsList = uncheckedSnpsList.filter(item => item !== i);
+    } else {
+        uncheckedSnpsList.push(i);
+    }
+    drawLayersFiltering();
 }

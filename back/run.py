@@ -62,19 +62,81 @@ def get_centroids_dispersion():
     return Response(df.to_json(orient='records'), mimetype='application/json')
 
 
-@app.route('/centroids_similarity', methods=['GET'])
-def get_centroids_similarity():
-    points_include = json.loads(request.args.get('points_include'))
-    points_exclude = json.loads(request.args.get('points_exclude'))
+@app.route('/centroids_union', methods=['GET'])
+def get_centroids_union():
+    a_points = json.loads(request.args.get('a_points'))
+    b_points = json.loads(request.args.get('b_points'))
     size = request.args.get('size')
     start = request.args.get('start')
     end = request.args.get('end')
     group = request.args.get('group', 'false').lower() == 'true'
-    if not points_include or not size or not start or not end:
+    if not a_points or not size or not start or not end:
         return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
     print(
-        f'Processing GET /centroids_similarity for points_include={points_include} and points_exclude={points_exclude} and size={size} and start={start} and end={end} and group={group}...')
-    response = db.select_centroids_similarity(points_include, points_exclude, size, start, end)
+        f'Processing GET /centroids_union for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
+    response = db.select_centroids_union(a_points, b_points, size, start, end)
+    df = pd.DataFrame.from_records(response)
+    df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
+    df['centroid'] = df['centroid'].map(tuple)
+    if group:
+        df = df.groupby('centroid')['snp'].nunique().reset_index() \
+            .groupby('snp')['centroid'].agg(list).reset_index() \
+            .rename(columns={'snp': 'level', 'centroid': 'centroids'}) \
+            .sort_values(by='level', ascending=False)
+    else:
+        df = df.groupby('centroid')['snp'].apply(lambda x: tuple(sorted(set(x)))).reset_index() \
+            .groupby('snp')['centroid'].agg(list).reset_index() \
+            .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
+        df = df.assign(snps_len=df['snps'].str.len()) \
+            .sort_values(by='snps_len', ascending=False) \
+            .drop(columns=['snps_len'])
+    return Response(df.head(100).to_json(orient='records'), mimetype='application/json')
+
+
+@app.route('/centroids_subtraction', methods=['GET'])
+def get_centroids_subtraction():
+    a_points = json.loads(request.args.get('a_points'))
+    b_points = json.loads(request.args.get('b_points'))
+    size = request.args.get('size')
+    start = request.args.get('start')
+    end = request.args.get('end')
+    group = request.args.get('group', 'false').lower() == 'true'
+    if not a_points or not size or not start or not end:
+        return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
+    print(
+        f'Processing GET /centroids_subtraction for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
+    response = db.select_centroids_subtraction(a_points, b_points, size, start, end)
+    df = pd.DataFrame.from_records(response)
+    df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
+    df['centroid'] = df['centroid'].map(tuple)
+    if group:
+        df = df.groupby('centroid')['snp'].nunique().reset_index() \
+            .groupby('snp')['centroid'].agg(list).reset_index() \
+            .rename(columns={'snp': 'level', 'centroid': 'centroids'}) \
+            .sort_values(by='level', ascending=False)
+    else:
+        df = df.groupby('centroid')['snp'].apply(lambda x: tuple(sorted(set(x)))).reset_index() \
+            .groupby('snp')['centroid'].agg(list).reset_index() \
+            .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
+        df = df.assign(snps_len=df['snps'].str.len()) \
+            .sort_values(by='snps_len', ascending=False) \
+            .drop(columns=['snps_len'])
+    return Response(df.head(100).to_json(orient='records'), mimetype='application/json')
+
+
+@app.route('/centroids_intersection', methods=['GET'])
+def get_centroids_intersection():
+    a_points = json.loads(request.args.get('a_points'))
+    b_points = json.loads(request.args.get('b_points'))
+    size = request.args.get('size')
+    start = request.args.get('start')
+    end = request.args.get('end')
+    group = request.args.get('group', 'false').lower() == 'true'
+    if not a_points or not size or not start or not end:
+        return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
+    print(
+        f'Processing GET /centroids_intersection for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
+    response = db.select_centroids_intersection(a_points, b_points, size, start, end)
     df = pd.DataFrame.from_records(response)
     df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
     df['centroid'] = df['centroid'].map(tuple)
