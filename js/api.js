@@ -74,15 +74,23 @@ async function getCentroidsFiltering() {
             centroidsFilteringUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_INTERSECTION}`;
             break;
         }
+        const body = {
+            a_points: includedToSetACentroids.map(({ lat, lng }) => [lat, lng]),
+            b_points: includedToSetBCentroids.map(({ lat, lng }) => [lat, lng])
+        };
         const params = new URLSearchParams({
-            a_points: JSON.stringify(includedToSetACentroids.map(({ lat, lng }) => [lat, lng])),
-            b_points: JSON.stringify(includedToSetBCentroids.map(({ lat, lng }) => [lat, lng])),
             size: document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value,
             start: document.getElementById(START_FORM_ELEMENT_ID).value,
             end: document.getElementById(END_FORM_ELEMENT_ID).value,
             group: document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked
         });
-        const response = await fetch(`${centroidsFilteringUrl}?${params}`);
+        const response = await fetch(`${centroidsFilteringUrl}?${params}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
         if (response.ok) {
             const data = await response.json();
             document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;

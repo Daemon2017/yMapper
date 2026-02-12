@@ -1,6 +1,5 @@
 import json
-import re
-
+import utils
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, scoped_session
 
@@ -52,13 +51,6 @@ def select_parent(snp):
         return result[0] if result else None
 
 
-def parse_pg_point_array(pg_string):
-    if not pg_string:
-        return []
-    points = re.findall(r"\(([-+]?\d*\.?\d+),([-+]?\d*\.?\d+)\)", pg_string)
-    return [[float(p[0]), float(p[1])] for p in points]
-
-
 def select_centroids_dispersion(snp, size):
     with Session() as session:
         query = text(
@@ -79,11 +71,7 @@ def select_centroids_dispersion(snp, size):
                                      "snp": snp,
                                      "size": size
                                  })
-        raw_results = [dict(row._mapping) for row in result]
-        for row in raw_results:
-            if isinstance(row['centroids'], str):
-                row['centroids'] = parse_pg_point_array(row['centroids'])
-        return raw_results
+        return [utils.transform_row(row) for row in result]
 
 
 def select_centroids_union(a_points, b_points, size, start, end):
@@ -125,11 +113,7 @@ def select_centroids_union(a_points, b_points, size, start, end):
             "start": start,
             "end": end
         })
-        raw_results = [dict(row._mapping) for row in result]
-        for row in raw_results:
-            if isinstance(row['centroids'], str):
-                row['centroids'] = parse_pg_point_array(row['centroids'])
-        return raw_results
+        return [utils.transform_row(row) for row in result]
 
 
 def select_centroids_subtraction(a_points, b_points, size, start, end):
@@ -168,11 +152,7 @@ def select_centroids_subtraction(a_points, b_points, size, start, end):
             "start": start,
             "end": end
         })
-        raw_results = [dict(row._mapping) for row in result]
-        for row in raw_results:
-            if isinstance(row['centroids'], str):
-                row['centroids'] = parse_pg_point_array(row['centroids'])
-        return raw_results
+        return [utils.transform_row(row) for row in result]
 
 
 def select_centroids_intersection(a_points, b_points, size, start, end):
@@ -211,8 +191,4 @@ def select_centroids_intersection(a_points, b_points, size, start, end):
             "start": start,
             "end": end
         })
-        raw_results = [dict(row._mapping) for row in result]
-        for row in raw_results:
-            if isinstance(row['centroids'], str):
-                row['centroids'] = parse_pg_point_array(row['centroids'])
-        return raw_results
+        return [utils.transform_row(row) for row in result]

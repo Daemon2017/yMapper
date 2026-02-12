@@ -1,7 +1,4 @@
-import json
-
-import pandas as pd
-from flask import Flask, request, Response
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 from waitress import serve
 
@@ -17,20 +14,20 @@ def get_list():
     print(f'Processing GET /list...')
     response = db.select_list()
     if not response:
-        return Response(json.dumps({"error": "No SNP in DB"}), status=404, mimetype='application/json')
-    return Response(json.dumps(response), mimetype='application/json')
+        return jsonify({"error": "No SNP in DB"}), 404
+    return jsonify(response)
 
 
 @app.route('/parent', methods=['GET'])
 def get_parent():
     snp = request.args.get('snp')
     if not snp:
-        return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
+        return jsonify({"error": "Missing parameters"}), 400
     print(f'Processing GET /parent for snp={snp}...')
     response = db.select_parent(snp)
     if not response:
-        return Response(json.dumps({"error": "No SNP in DB"}), status=404, mimetype='application/json')
-    return Response(json.dumps(response), mimetype='application/json')
+        return jsonify({"error": "No SNP in DB"}), 404
+    return jsonify(response)
 
 
 @app.route('/centroids_dispersion', methods=['GET'])
@@ -38,121 +35,58 @@ def get_centroids_dispersion():
     snp = request.args.get('snp')
     size = request.args.get('size')
     group = request.args.get('group', 'false').lower() == 'true'
-    if not snp or not size:
-        return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
+    if not all([snp, size]):
+        return jsonify({"error": "Missing parameters"}), 400
     print(f'Processing GET /centroids_dispersion for snp={snp} and size={size} and group={group}...')
     response = db.select_centroids_dispersion(snp, size)
     if not response:
-        return Response(json.dumps({"error": "No SNP in DB"}), status=404, mimetype='application/json')
-    df = pd.DataFrame.from_records(response)
-    df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
-    df['centroid'] = df['centroid'].map(tuple)
-    if group:
-        df = df.groupby('centroid')['snp'].nunique().reset_index() \
-            .groupby('snp')['centroid'].agg(list).reset_index() \
-            .rename(columns={'snp': 'level', 'centroid': 'centroids'}) \
-            .sort_values(by='level', ascending=False)
-    else:
-        df = df.groupby('centroid')['snp'].apply(lambda x: tuple(sorted(set(x)))).reset_index() \
-            .groupby('snp')['centroid'].agg(list).reset_index() \
-            .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
-        df = df.assign(snps_len=df['snps'].str.len()) \
-            .sort_values(by='snps_len', ascending=False) \
-            .drop(columns=['snps_len'])
-    return Response(df.to_json(orient='records'), mimetype='application/json')
+        return jsonify({"error": "No SNP in DB"}), 404
+    return jsonify(utils.process_centroids(response, group))
 
 
-@app.route('/centroids_union', methods=['GET'])
+@app.route('/centroids_union', methods=['POST'])
 def get_centroids_union():
-    a_points = json.loads(request.args.get('a_points'))
-    b_points = json.loads(request.args.get('b_points'))
-    size = request.args.get('size')
-    start = request.args.get('start')
-    end = request.args.get('end')
-    group = request.args.get('group', 'false').lower() == 'true'
-    if not a_points or not size or not start or not end:
-        return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
+    body = request.get_json()
+    args = request.args
+    a_points, b_points, start, end, group, size = utils.get_input(args, body)
+    if not all([a_points, size, start, end]):
+        return jsonify({"error": "Missing parameters"}), 400
     print(
-        f'Processing GET /centroids_union for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
+        f'Processing POST /centroids_union for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_union(a_points, b_points, size, start, end)
-    df = pd.DataFrame.from_records(response)
-    df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
-    df['centroid'] = df['centroid'].map(tuple)
-    if group:
-        df = df.groupby('centroid')['snp'].nunique().reset_index() \
-            .groupby('snp')['centroid'].agg(list).reset_index() \
-            .rename(columns={'snp': 'level', 'centroid': 'centroids'}) \
-            .sort_values(by='level', ascending=False)
-    else:
-        df = df.groupby('centroid')['snp'].apply(lambda x: tuple(sorted(set(x)))).reset_index() \
-            .groupby('snp')['centroid'].agg(list).reset_index() \
-            .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
-        df = df.assign(snps_len=df['snps'].str.len()) \
-            .sort_values(by='snps_len', ascending=False) \
-            .drop(columns=['snps_len'])
-    return Response(df.head(100).to_json(orient='records'), mimetype='application/json')
+    if not response:
+        return jsonify({"error": "No data in DB"}), 404
+    return jsonify(utils.process_centroids(response, group))
 
 
-@app.route('/centroids_subtraction', methods=['GET'])
+@app.route('/centroids_subtraction', methods=['POST'])
 def get_centroids_subtraction():
-    a_points = json.loads(request.args.get('a_points'))
-    b_points = json.loads(request.args.get('b_points'))
-    size = request.args.get('size')
-    start = request.args.get('start')
-    end = request.args.get('end')
-    group = request.args.get('group', 'false').lower() == 'true'
-    if not a_points or not size or not start or not end:
-        return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
+    body = request.get_json()
+    args = request.args
+    a_points, b_points, start, end, group, size = utils.get_input(args, body)
+    if not all([a_points, size, start, end]):
+        return jsonify({"error": "Missing parameters"}), 400
     print(
-        f'Processing GET /centroids_subtraction for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
+        f'Processing POST /centroids_subtraction for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_subtraction(a_points, b_points, size, start, end)
-    df = pd.DataFrame.from_records(response)
-    df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
-    df['centroid'] = df['centroid'].map(tuple)
-    if group:
-        df = df.groupby('centroid')['snp'].nunique().reset_index() \
-            .groupby('snp')['centroid'].agg(list).reset_index() \
-            .rename(columns={'snp': 'level', 'centroid': 'centroids'}) \
-            .sort_values(by='level', ascending=False)
-    else:
-        df = df.groupby('centroid')['snp'].apply(lambda x: tuple(sorted(set(x)))).reset_index() \
-            .groupby('snp')['centroid'].agg(list).reset_index() \
-            .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
-        df = df.assign(snps_len=df['snps'].str.len()) \
-            .sort_values(by='snps_len', ascending=False) \
-            .drop(columns=['snps_len'])
-    return Response(df.head(100).to_json(orient='records'), mimetype='application/json')
+    if not response:
+        return jsonify({"error": "No data in DB"}), 404
+    return jsonify(utils.process_centroids(response, group))
 
 
-@app.route('/centroids_intersection', methods=['GET'])
+@app.route('/centroids_intersection', methods=['POST'])
 def get_centroids_intersection():
-    a_points = json.loads(request.args.get('a_points'))
-    b_points = json.loads(request.args.get('b_points'))
-    size = request.args.get('size')
-    start = request.args.get('start')
-    end = request.args.get('end')
-    group = request.args.get('group', 'false').lower() == 'true'
-    if not a_points or not size or not start or not end:
-        return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
+    body = request.get_json()
+    args = request.args
+    a_points, b_points, start, end, group, size = utils.get_input(args, body)
+    if not all([a_points, size, start, end]):
+        return jsonify({"error": "Missing parameters"}), 400
     print(
-        f'Processing GET /centroids_intersection for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
+        f'Processing POST /centroids_intersection for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_intersection(a_points, b_points, size, start, end)
-    df = pd.DataFrame.from_records(response)
-    df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
-    df['centroid'] = df['centroid'].map(tuple)
-    if group:
-        df = df.groupby('centroid')['snp'].nunique().reset_index() \
-            .groupby('snp')['centroid'].agg(list).reset_index() \
-            .rename(columns={'snp': 'level', 'centroid': 'centroids'}) \
-            .sort_values(by='level', ascending=False)
-    else:
-        df = df.groupby('centroid')['snp'].apply(lambda x: tuple(sorted(set(x)))).reset_index() \
-            .groupby('snp')['centroid'].agg(list).reset_index() \
-            .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
-        df = df.assign(snps_len=df['snps'].str.len()) \
-            .sort_values(by='snps_len', ascending=False) \
-            .drop(columns=['snps_len'])
-    return Response(df.head(100).to_json(orient='records'), mimetype='application/json')
+    if not response:
+        return jsonify({"error": "No data in DB"}), 404
+    return jsonify(utils.process_centroids(response, group))
 
 
 @app.route('/hexagon', methods=['GET'])
@@ -160,12 +94,12 @@ def get_hexagon():
     lat = float(request.args.get('lat'))
     lng = float(request.args.get('lng'))
     size = float(request.args.get('size'))
-    if not lat or not lng or not size:
-        return Response(json.dumps({"error": "Missing parameters"}), status=400, mimetype='application/json')
+    if not all([lat, lng, size]):
+        return jsonify({"error": "Missing parameters"}), 400
     print(f'Processing GET /hexagon for lat={lat} and lng={lng} and size={size}...')
     hexagon = utils.get_hexagon(size, -180, lng + size, lng, -90, lat + size, lat)
     centroid = hexagon.centroid
-    return Response(json.dumps([round(centroid.y, 4), round(centroid.x, 4)]), mimetype='application/json')
+    return jsonify([round(centroid.y, 4), round(centroid.x, 4)])
 
 
 @app.teardown_appcontext
