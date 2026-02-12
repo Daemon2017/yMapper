@@ -145,7 +145,7 @@ async function includeToSetA(lat, lng) {
         includedToSetsGroup.removeLayer(entry.polygon);
         includedToSetACentroids.splice(existingIndex, 1);
     } else {
-        if (includedToSetACentroids.length >= 12) {
+        if (includedToSetACentroids.length >= 25) {
             const oldestEntry = includedToSetACentroids.shift();
             includedToSetsGroup.removeLayer(oldestEntry.polygon);
         }
@@ -169,7 +169,7 @@ async function includeToSetB(lat, lng) {
         includedToSetsGroup.removeLayer(entry.polygon);
         includedToSetBCentroids.splice(existingIndex, 1);
     } else {
-        if (includedToSetBCentroids.length >= 12) {
+        if (includedToSetBCentroids.length >= 25) {
             const oldestEntry = includedToSetBCentroids.shift();
             includedToSetsGroup.removeLayer(oldestEntry.polygon);
         }

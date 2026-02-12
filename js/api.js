@@ -73,6 +73,9 @@ async function getCentroidsFiltering() {
           case 'intersection':
             centroidsFilteringUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_INTERSECTION}`;
             break;
+          case 'xor':
+            centroidsFilteringUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_XOR}`;
+            break;
         }
         const body = {
             a_points: includedToSetACentroids.map(({ lat, lng }) => [lat, lng]),

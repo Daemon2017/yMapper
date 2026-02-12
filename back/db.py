@@ -1,7 +1,9 @@
 import json
-import utils
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, scoped_session
+
+import utils
 
 with open('config.json', 'r') as f:
     config = json.load(f)
@@ -182,6 +184,60 @@ def select_centroids_intersection(a_points, b_points, size, start, end):
                                      (
                                             SELECT c <-> bp
                                             FROM   unnest(cast(:b_points AS point[])) AS bp ) );
+            """
+        )
+        result = session.execute(query, {
+            "size": str(size),
+            "a_points": [f"({p[1]},{p[0]})" for p in a_points],
+            "b_points": [f"({p[1]},{p[0]})" for p in b_points],
+            "start": start,
+            "end": end
+        })
+        return [utils.transform_row(row) for row in result]
+
+
+def select_centroids_xor(a_points, b_points, size, start, end):
+    with Session() as session:
+        query = text(
+            """
+            SELECT     s.snp,
+                       s.centroids
+            FROM       snps2  AS s
+            INNER JOIN tmrcas AS t
+            ON         s.snp = t.snp
+            WHERE      s.size = :size
+            AND        t.tmrca BETWEEN :start AND        :end
+            AND        (
+                       (
+                              EXISTS (
+                                     SELECT 1
+                                     FROM   Unnest(s.centroids) AS c
+                                     WHERE  0 = ANY (
+                                            SELECT c <-> ap
+                                            FROM   unnest(cast(:a_points AS point[])) AS ap ) )
+                              AND NOT EXISTS (
+                                     SELECT 1
+                                     FROM   Unnest(s.centroids) AS c
+                                     WHERE  0 = ANY (
+                                            SELECT c <-> bp
+                                            FROM   unnest(cast(:b_points AS point[])) AS bp ) )
+                       )
+                       OR
+                       (
+                              EXISTS (
+                                     SELECT 1
+                                     FROM   Unnest(s.centroids) AS c
+                                     WHERE  0 = ANY (
+                                            SELECT c <-> bp
+                                            FROM   unnest(cast(:b_points AS point[])) AS bp ) )
+                              AND NOT EXISTS (
+                                     SELECT 1
+                                     FROM   Unnest(s.centroids) AS c
+                                     WHERE  0 = ANY (
+                                            SELECT c <-> ap
+                                            FROM   unnest(cast(:a_points AS point[])) AS ap ) )
+                       )
+            );
             """
         )
         result = session.execute(query, {
