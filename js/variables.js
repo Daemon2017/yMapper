@@ -5,7 +5,6 @@ const CONFIG = {
     ENDPOINTS: {
         LIST: '/list',
         PARENT: '/parent',
-        HEXAGON: '/hexagon',
         CENTROIDS_DISPERSION: '/centroids_dispersion',
         CENTROIDS_UNION: '/centroids_union',
         CENTROIDS_SUBTRACTION: '/centroids_subtraction',

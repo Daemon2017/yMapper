@@ -21,3 +21,13 @@ html {
 .leaflet-container {
     background: rgba(0, 0, 0, 0.8) !important;
 }
+
+.leaflet-tooltip {
+    width: max-content !important;
+    min-width: 50px !important;
+    max-width: 280px !important;
+    white-space: normal !important;
+    display: block !important;
+    word-break: keep-all !important;
+    overflow-wrap: break-word !important;
+}

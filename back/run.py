@@ -64,7 +64,7 @@ def get_centroids_subtraction():
     body = request.get_json()
     args = request.args
     a_points, b_points, start, end, group, size = utils.get_input(args, body)
-    if not all([a_points, size, start, end]):
+    if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(
         f'Processing POST /centroids_subtraction for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
@@ -79,7 +79,7 @@ def get_centroids_intersection():
     body = request.get_json()
     args = request.args
     a_points, b_points, start, end, group, size = utils.get_input(args, body)
-    if not all([a_points, size, start, end]):
+    if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(
         f'Processing POST /centroids_intersection for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
@@ -94,7 +94,7 @@ def get_centroids_xor():
     body = request.get_json()
     args = request.args
     a_points, b_points, start, end, group, size = utils.get_input(args, body)
-    if not all([a_points, size, start, end]):
+    if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(
         f'Processing POST /centroids_xor for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
@@ -102,19 +102,6 @@ def get_centroids_xor():
     if not response:
         return jsonify({"error": "No data in DB"}), 404
     return jsonify(utils.process_centroids(response, group))
-
-
-@app.route('/hexagon', methods=['GET'])
-def get_hexagon():
-    lat = float(request.args.get('lat'))
-    lng = float(request.args.get('lng'))
-    size = float(request.args.get('size'))
-    if not all([lat, lng, size]):
-        return jsonify({"error": "Missing parameters"}), 400
-    print(f'Processing GET /hexagon for lat={lat} and lng={lng} and size={size}...')
-    hexagon = utils.get_hexagon(size, -180, lng + size, lng, -90, lat + size, lat)
-    centroid = hexagon.centroid
-    return jsonify([round(centroid.y, 4), round(centroid.x, 4)])
 
 
 @app.teardown_appcontext

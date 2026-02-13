@@ -78,8 +78,8 @@ async function getCentroidsFiltering() {
             break;
         }
         const body = {
-            a_points: includedToSetACentroids.map(({ lat, lng }) => [lat, lng]),
-            b_points: includedToSetBCentroids.map(({ lat, lng }) => [lat, lng])
+            a_points: includedToSetACentroids.map(item => item.h3Index),
+            b_points: includedToSetBCentroids.map(item => item.h3Index)
         };
         const params = new URLSearchParams({
             size: document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value,
@@ -97,26 +97,6 @@ async function getCentroidsFiltering() {
         if (response.ok) {
             const data = await response.json();
             document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
-            return data;
-        } else {
-            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
-        }
-    } catch (error) {
-        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
-    }
-}
-
-async function getHexagon(lat, lng, size) {
-    try {
-        const hexagonUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.HEXAGON}`;
-        const params = new URLSearchParams({
-            lat: lat.toFixed(4),
-            lng: lng.toFixed(4),
-            size: size
-        });
-        const response = await fetch(`${hexagonUrl}?${params}`);
-        if (response.ok) {
-            const data = await response.json();
             return data;
         } else {
             document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
