@@ -7,7 +7,7 @@ function includeToSetA(lat, lng) {
         includedToSetsGroup.removeLayer(entry.polygon);
         includedToSetACentroids.splice(existingIndex, 1);
     } else {
-        if (includedToSetACentroids.length >= 50) {
+        if (includedToSetACentroids.length >= 100) {
             const oldestEntry = includedToSetACentroids.shift();
             includedToSetsGroup.removeLayer(oldestEntry.polygon);
         }
@@ -28,7 +28,7 @@ function includeToSetB(lat, lng) {
         includedToSetsGroup.removeLayer(entry.polygon);
         includedToSetBCentroids.splice(existingIndex, 1);
     } else {
-        if (includedToSetBCentroids.length >= 50) {
+        if (includedToSetBCentroids.length >= 100) {
             const oldestEntry = includedToSetBCentroids.shift();
             includedToSetsGroup.removeLayer(oldestEntry.polygon);
         }

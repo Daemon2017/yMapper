@@ -26,9 +26,9 @@ const END_FORM_ELEMENT_ID = "endForm";
 
 const BUSY_STATE_TEXT = "Busy...";
 const OK_STATE_TEXT = "OK.";
-const HEXAGONS_INCLUSION_TO_SET_A_STARTED_STATE_TEXT = "Click on the map to include from 1 to 50 hexagons to set A, then click the A button again to save them.";
+const HEXAGONS_INCLUSION_TO_SET_A_STARTED_STATE_TEXT = "Click on the map to include from 1 to 100 hexagons to set A, then click the A button again to save them.";
 const HEXAGONS_INCLUSION_TO_SET_A_FINISHED_STATE_TEXT = "Hexagons included to set A!";
-const HEXAGONS_INCLUSION_TO_SET_B_STARTED_STATE_TEXT = "Click on the map to include from 1 to 50 hexagons to set B, then click the B button again to save them.";
+const HEXAGONS_INCLUSION_TO_SET_B_STARTED_STATE_TEXT = "Click on the map to include from 1 to 100 hexagons to set B, then click the B button again to save them.";
 const HEXAGONS_INCLUSION_TO_SET_B_FINISHED_STATE_TEXT = "Hexagons included to set B!";
 
 const BOTH_LAT_AND_LNG_MUST_BE_A_NUMBER_ERROR_TEXT = "Error: Both Lat and Lng must be a number!";
