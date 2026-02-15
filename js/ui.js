@@ -33,22 +33,17 @@ function attachDropDownPrompt(dbSnpsList) {
     });
 }
 
-function updateUncheckedListDispersion(i) {
-    if (document.getElementById(`checkBox${i}`).checked === true) {
+function updateUncheckedList(i, action) {
+    if (document.getElementById(`checkBox${i}`).checked) {
         uncheckedSnpsList = uncheckedSnpsList.filter(item => item !== i);
     } else {
         uncheckedSnpsList.push(i);
     }
-    drawLayersDispersion();
-}
-
-function updateUncheckedListFiltering(i) {
-    if (document.getElementById(`checkBox${i}`).checked === true) {
-        uncheckedSnpsList = uncheckedSnpsList.filter(item => item !== i);
-    } else {
-        uncheckedSnpsList.push(i);
+    if (action === 'Dispersion') {
+        drawLayersDispersion();
+    } else if (action === 'Filtering') {
+        drawLayersFiltering();
     }
-    drawLayersFiltering();
 }
 
 function createGradientList(fullPalette) {

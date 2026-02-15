@@ -44,7 +44,7 @@ async function main() {
     attachDropDownPrompt(snps);
 }
 
-async function showDispersion() {
+async function show(action) {
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
 
     isIncludeToSetAMode = false;
@@ -52,40 +52,22 @@ async function showDispersion() {
     map.getContainer().style.cursor = '';
     uncheckedSnpsList = [];
 
-    dataList = await getCentroidsDispersion();
+    if (action === 'Dispersion') {
+        dataList = await getCentroidsDispersion();
+    } else if (action === 'Filtering') {
+        dataList = await getCentroidsFiltering();
+    }
     colorBoxesNumber = dataList.length
     let colorBoxesInnerHtml = ``;
     for (let i = 0; i < colorBoxesNumber; i++) {
         colorBoxesInnerHtml +=
             `<span class="colorBox tooltip" id="colorBox${i}">
-            <input type="checkbox" class="checkBox" id="checkBox${i}" onclick="updateUncheckedListDispersion(${i})"/>
-            <label class="checkBoxLabel" id="checkBoxLabel${i}" for="checkBox${i}"></label>
-        </span>`;
+                <input type="checkbox" class="checkBox" id="checkBox${i}" onclick="updateUncheckedList(${i}, '${action}')"/>
+                <label class="checkBoxLabel" id="checkBoxLabel${i}" for="checkBox${i}"></label>
+            </span>`;
     }
     document.getElementById(BOXES_ELEMENT_ID).innerHTML = colorBoxesInnerHtml;
-    drawLayersDispersion();
-}
-
-async function showFiltering() {
-    document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-
-    isIncludeToSetAMode = false;
-    isIncludeToSetBMode = false;
-    map.getContainer().style.cursor = '';
-    uncheckedSnpsList = [];
-
-    dataList = await getCentroidsFiltering();
-    colorBoxesNumber = dataList.length
-    let colorBoxesInnerHtml = ``;
-    for (let i = 0; i < colorBoxesNumber; i++) {
-        colorBoxesInnerHtml +=
-            `<span class="colorBox tooltip" id="colorBox${i}">
-            <input type="checkbox" class="checkBox" id="checkBox${i}" onclick="updateUncheckedListFiltering(${i})"/>
-            <label class="checkBoxLabel" id="checkBoxLabel${i}" for="checkBox${i}"></label>
-        </span>`;
-    }
-    document.getElementById(BOXES_ELEMENT_ID).innerHTML = colorBoxesInnerHtml;
-    drawLayersFiltering();
+    action === 'Dispersion' ? drawLayersDispersion() : drawLayersFiltering();
 }
 
 function clearAll() {
