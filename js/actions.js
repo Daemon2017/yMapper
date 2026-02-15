@@ -21,10 +21,9 @@ async function main() {
     map.addEventListener("moveend", getLatLng);
     map.on('click', function(e) {
         if (isIncludeToSetAMode) {
-            includeToSetA(e.latlng.lat, e.latlng.lng);
-        }
-        if (isIncludeToSetBMode) {
-            includeToSetB(e.latlng.lat, e.latlng.lng);
+            includeToSet(e.latlng.lat, e.latlng.lng, 'A');
+        } else if (isIncludeToSetBMode) {
+            includeToSet(e.latlng.lat, e.latlng.lng, 'B');
         }
     });
 
@@ -107,34 +106,26 @@ function setLatLng() {
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
 }
 
-function addHexagonsToSetA() {
-    if (isIncludeToSetAMode) {
-        isIncludeToSetAMode = false;
+function addHexagonsToSet(target) {
+    const isIncludeToSet = (target === 'A') ? isIncludeToSetAMode : isIncludeToSetBMode;
+    let labelText;
+    if (isIncludeToSet) {
+        if (target === 'A') {
+            isIncludeToSetAMode = false;
+        } else {
+            isIncludeToSetBMode = false;
+        }
         map.getContainer().style.cursor = '';
-        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = HEXAGONS_INCLUSION_TO_SET_A_FINISHED_STATE_TEXT;
+        labelText = (target === 'A') ? HEXAGONS_INCLUSION_TO_SET_A_FINISHED_STATE_TEXT : HEXAGONS_INCLUSION_TO_SET_B_FINISHED_STATE_TEXT;
     } else {
-        isIncludeToSetAMode = true;
-        isIncludeToSetBMode = false;
+        isIncludeToSetAMode = (target === 'A');
+        isIncludeToSetBMode = (target === 'B');
         clearFirst();
         includedToSetsGroup.addTo(map);
         map.getContainer().style.cursor = 'crosshair';
-        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = HEXAGONS_INCLUSION_TO_SET_A_STARTED_STATE_TEXT;
+        labelText = (target === 'A') ? HEXAGONS_INCLUSION_TO_SET_A_STARTED_STATE_TEXT : HEXAGONS_INCLUSION_TO_SET_B_STARTED_STATE_TEXT;
     }
-}
-
-function addHexagonsToSetB() {
-    if (isIncludeToSetBMode) {
-        isIncludeToSetBMode = false;
-        map.getContainer().style.cursor = '';
-        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = HEXAGONS_INCLUSION_TO_SET_B_FINISHED_STATE_TEXT;
-    } else {
-        isIncludeToSetBMode = true;
-        isIncludeToSetAMode = false;
-        clearFirst();
-        includedToSetsGroup.addTo(map);
-        map.getContainer().style.cursor = 'crosshair';
-        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = HEXAGONS_INCLUSION_TO_SET_B_STARTED_STATE_TEXT;
-    }
+    document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = labelText;
 }
 
 document.addEventListener('DOMContentLoaded', main);

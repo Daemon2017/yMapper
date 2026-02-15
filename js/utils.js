@@ -1,39 +1,22 @@
-function includeToSetA(lat, lng) {
+function includeToSet(lat, lng, target) {
+    const isA = (target === 'A');
+    const targetSet = isA ? includedToSetACentroids : includedToSetBCentroids;
+    const color = isA ? 'green' : 'blue';
+    const label = `Included to set ${target}.`;
     const size = parseInt(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
     const h3Index = h3.latLngToCell(lat, lng, size);
-    const existingIndex = includedToSetACentroids.findIndex(c => c.h3Index === h3Index);
+    const existingIndex = targetSet.findIndex(c => c.h3Index === h3Index);
     if (existingIndex !== -1) {
-        const entry = includedToSetACentroids[existingIndex];
+        const entry = targetSet[existingIndex];
         includedToSetsGroup.removeLayer(entry.polygon);
-        includedToSetACentroids.splice(existingIndex, 1);
+        targetSet.splice(existingIndex, 1);
     } else {
-        if (includedToSetACentroids.length >= 100) {
-            const oldestEntry = includedToSetACentroids.shift();
+        if (targetSet.length >= 100) {
+            const oldestEntry = targetSet.shift();
             includedToSetsGroup.removeLayer(oldestEntry.polygon);
         }
-        const polygon = drawSingleHex(includedToSetsGroup, h3Index, 'green', `Included to set A.`);
-        includedToSetACentroids.push({
-            h3Index: h3Index,
-            polygon: polygon
-        });
-    }
-}
-
-function includeToSetB(lat, lng) {
-    const size = parseInt(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
-    const h3Index = h3.latLngToCell(lat, lng, size);
-    const existingIndex = includedToSetBCentroids.findIndex(c => c.h3Index === h3Index);
-    if (existingIndex !== -1) {
-        const entry = includedToSetBCentroids[existingIndex];
-        includedToSetsGroup.removeLayer(entry.polygon);
-        includedToSetBCentroids.splice(existingIndex, 1);
-    } else {
-        if (includedToSetBCentroids.length >= 100) {
-            const oldestEntry = includedToSetBCentroids.shift();
-            includedToSetsGroup.removeLayer(oldestEntry.polygon);
-        }
-        const polygon = drawSingleHex(includedToSetsGroup, h3Index, 'blue', `Included to set B.`);
-        includedToSetBCentroids.push({
+        const polygon = drawSingleHex(includedToSetsGroup, h3Index, color, label);
+        targetSet.push({
             h3Index: h3Index,
             polygon: polygon
         });
