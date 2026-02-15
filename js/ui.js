@@ -39,11 +39,7 @@ function updateUncheckedList(i, action) {
     } else {
         uncheckedSnpsList.push(i);
     }
-    if (action === 'Dispersion') {
-        drawLayersDispersion();
-    } else if (action === 'Filtering') {
-        drawLayersFiltering();
-    }
+    drawLayers(action);
 }
 
 function createGradientList(fullPalette) {
@@ -66,8 +62,11 @@ function createGradientList(fullPalette) {
     return gradientList;
 }
 
-function drawLayersDispersion() {
-    const isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
+function drawLayers(action) {
+    const checkboxId = action === 'Dispersion'
+        ? GROUP_DISPERSION_CHECKBOX_ELEMENT_ID
+        : GROUP_FILTERING_CHECKBOX_ELEMENT_ID;
+    const isGrouped = document.getElementById(checkboxId).checked;
     const caption = isGrouped ? 'level' : 'snps';
     const basePalette = isGrouped ? PALETTE_GROUP : PALETTE_SNPS;
     const gradientValues = createGradientList(basePalette);
@@ -76,33 +75,6 @@ function drawLayersDispersion() {
     dataList.forEach((data, i) => {
         if (!uncheckedSnpsList.includes(i)) {
             let hexColor = gradientValues[i][9];
-            let size = parseFloat(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
-            data['centroids'].forEach(h3Index => {
-                drawSingleHex(mainGroup, h3Index, hexColor, `${caption}: ${data[caption]}`);
-            });
-            const label = document.getElementById(`checkBoxLabel${i}`);
-            if (label) {
-                label.style.backgroundColor = hexColor;
-                label.innerHTML = `<span class="tooltiptext">${data[caption]}</span>`;
-                document.getElementById(`checkBox${i}`).checked = true;
-            }
-        }
-    });
-    mainGroup.addTo(map);
-    map.removeLayer(includedToSetsGroup);
-}
-
-function drawLayersFiltering() {
-    const isGrouped = document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked;
-    const caption = isGrouped ? 'level' : 'snps';
-    const basePalette = isGrouped ? PALETTE_GROUP : PALETTE_SNPS;
-    const gradientValues = createGradientList(basePalette);
-
-    mainGroup.clearLayers();
-    dataList.forEach((data, i) => {
-        if (!uncheckedSnpsList.includes(i)) {
-            let hexColor = gradientValues[i][9];
-            let size = parseFloat(document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
             data['centroids'].forEach(h3Index => {
                 drawSingleHex(mainGroup, h3Index, hexColor, `${caption}: ${data[caption]}`);
             });

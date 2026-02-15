@@ -67,7 +67,7 @@ async function show(action) {
             </span>`;
     }
     document.getElementById(BOXES_ELEMENT_ID).innerHTML = colorBoxesInnerHtml;
-    action === 'Dispersion' ? drawLayersDispersion() : drawLayersFiltering();
+    drawLayers(action);
 }
 
 function clearAll() {
