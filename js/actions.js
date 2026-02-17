@@ -46,8 +46,6 @@ async function main() {
 
 async function show(action) {
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-    document.getElementById('filteringButton').disabled = true
-    document.getElementById('dispersionButton').disabled = true
 
     isIncludeToSetAMode = false;
     isIncludeToSetBMode = false;
@@ -70,8 +68,6 @@ async function show(action) {
     }
     document.getElementById(BOXES_ELEMENT_ID).innerHTML = colorBoxesInnerHtml;
     drawLayers(action);
-    document.getElementById('filteringButton').disabled = false
-    document.getElementById('dispersionButton').disabled = false
 }
 
 function clearAll() {
