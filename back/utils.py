@@ -15,6 +15,8 @@ def process_centroids(response, group):
     if not response:
         return {}
     df = pd.DataFrame.from_records(response)
+    if 'centroids' not in df.columns or 'snp' not in df.columns:
+        return {}
     df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
     if group:
         df = df.groupby('centroid')['snp'].nunique().reset_index() \

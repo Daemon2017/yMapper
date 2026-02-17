@@ -8,7 +8,7 @@ async function main() {
     let baseLayer = L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: 'Map data &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://cloudmade.com">CloudMade</a>',
-            maxZoom: 10,
+            maxZoom: 12,
         }
     );
     map = new L.Map("mapLayer", {
@@ -46,6 +46,8 @@ async function main() {
 
 async function show(action) {
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
+    document.getElementById('filteringButton').disabled = true
+    document.getElementById('dispersionButton').disabled = true
 
     isIncludeToSetAMode = false;
     isIncludeToSetBMode = false;
@@ -68,6 +70,8 @@ async function show(action) {
     }
     document.getElementById(BOXES_ELEMENT_ID).innerHTML = colorBoxesInnerHtml;
     drawLayers(action);
+    document.getElementById('filteringButton').disabled = false
+    document.getElementById('dispersionButton').disabled = false
 }
 
 function clearAll() {

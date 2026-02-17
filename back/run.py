@@ -14,7 +14,7 @@ def get_list():
     print(f'Processing GET /list...')
     response = db.select_list()
     if not response:
-        return jsonify({"error": "No SNP in DB"}), 404
+        return jsonify([]), 200 
     return jsonify(response)
 
 
@@ -26,11 +26,11 @@ def get_parent():
     print(f'Processing GET /parent for snp={snp}...')
     response = db.select_parent(snp)
     if not response:
-        return jsonify({"error": "No SNP in DB"}), 404
+        return jsonify([]), 200 
     return jsonify(response)
 
 
-@app.route('/centroids_dispersion', methods=['GET'])
+@app.route('/centroids/dispersion', methods=['GET'])
 def get_centroids_dispersion():
     snp = request.args.get('snp')
     size = request.args.get('size')
@@ -40,11 +40,11 @@ def get_centroids_dispersion():
     print(f'Processing GET /centroids_dispersion for snp={snp} and size={size} and group={group}...')
     response = db.select_centroids_dispersion(snp, size)
     if not response:
-        return jsonify({"error": "No SNP in DB"}), 404
+        return jsonify([]), 200 
     return jsonify(utils.process_centroids(response, group))
 
 
-@app.route('/centroids_union', methods=['POST'])
+@app.route('/centroids/union', methods=['POST'])
 def get_centroids_union():
     body = request.get_json()
     args = request.args
@@ -55,11 +55,11 @@ def get_centroids_union():
         f'Processing POST /centroids_union for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_union(a_points, b_points, size, start, end)
     if not response:
-        return jsonify({"error": "No data in DB"}), 404
+        return jsonify([]), 200 
     return jsonify(utils.process_centroids(response, group))
 
 
-@app.route('/centroids_subtraction', methods=['POST'])
+@app.route('/centroids/subtraction', methods=['POST'])
 def get_centroids_subtraction():
     body = request.get_json()
     args = request.args
@@ -70,11 +70,11 @@ def get_centroids_subtraction():
         f'Processing POST /centroids_subtraction for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_subtraction(a_points, b_points, size, start, end)
     if not response:
-        return jsonify({"error": "No data in DB"}), 404
+        return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
 
 
-@app.route('/centroids_intersection', methods=['POST'])
+@app.route('/centroids/intersection', methods=['POST'])
 def get_centroids_intersection():
     body = request.get_json()
     args = request.args
@@ -85,11 +85,11 @@ def get_centroids_intersection():
         f'Processing POST /centroids_intersection for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_intersection(a_points, b_points, size, start, end)
     if not response:
-        return jsonify({"error": "No data in DB"}), 404
+        return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
 
 
-@app.route('/centroids_xor', methods=['POST'])
+@app.route('/centroids/xor', methods=['POST'])
 def get_centroids_xor():
     body = request.get_json()
     args = request.args
@@ -100,7 +100,7 @@ def get_centroids_xor():
         f'Processing POST /centroids_xor for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_xor(a_points, b_points, size, start, end)
     if not response:
-        return jsonify({"error": "No data in DB"}), 404
+        return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
 
 

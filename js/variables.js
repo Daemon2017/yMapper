@@ -5,11 +5,11 @@ const CONFIG = {
     ENDPOINTS: {
         LIST: '/list',
         PARENT: '/parent',
-        CENTROIDS_DISPERSION: '/centroids_dispersion',
-        CENTROIDS_UNION: '/centroids_union',
-        CENTROIDS_SUBTRACTION: '/centroids_subtraction',
-        CENTROIDS_INTERSECTION: '/centroids_intersection',
-        CENTROIDS_XOR: '/centroids_xor',
+        CENTROIDS_DISPERSION: '/centroids/dispersion',
+        CENTROIDS_UNION: '/centroids/union',
+        CENTROIDS_SUBTRACTION: '/centroids/subtraction',
+        CENTROIDS_INTERSECTION: '/centroids/intersection',
+        CENTROIDS_XOR: '/centroids/xor',
     },
 };
 
