@@ -56,8 +56,8 @@ def calculate_homeland(response, mode):
     for row in response:
         lat, lng = h3.cell_to_latlng(row['h3_index'])
         current_diversity = len(row['sons_info'])
-        if current_diversity < 2:
-            continue
+        # if current_diversity < 2:
+        #     continue
         vavilov_score = current_diversity ** 2
         if mode == 'geometric':
             weight = 1
