@@ -53,23 +53,19 @@ def calculate_homeland(response, mode):
     lats = []
     lngs = []
     weights = []
-    max_diversity = 0
     for row in response:
         lat, lng = h3.cell_to_latlng(row['h3_index'])
-        if not (-30 <= lng <= 170):
-            continue
         current_diversity = len(row['sons_info'])
-        if current_diversity > max_diversity:
-            max_diversity = current_diversity
-        vavilov = current_diversity ** 2
+        if current_diversity < 2:
+            continue
+        vavilov_score = current_diversity ** 2
         if mode == 'geometric':
             weight = 1
         elif mode == 'vavilov':
-            weight = vavilov
+            weight = vavilov_score
         elif mode == 'time_weighted':
-            weight = sum(1 / (math.log(s['dt'] + 2)) for s in row['sons_info']) * vavilov
-        else:
-            weight = 1
+            tmrca_score = sum(1 / (math.log(s['dt'] + 2)) for s in row['sons_info'])
+            weight = tmrca_score * vavilov_score
         lats.append(lat)
         lngs.append(lng)
         weights.append(weight)
@@ -88,6 +84,5 @@ def calculate_homeland(response, mode):
         "lat": center_lat,
         "lng": center_lng,
         "uncertainty_km": uncertainty_km,
-        "diversity_max": max_diversity,
         "hex_count": len(response)
     }
