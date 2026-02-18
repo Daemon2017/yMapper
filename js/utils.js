@@ -8,14 +8,14 @@ function includeToSet(lat, lng, target) {
     const existingIndex = targetSet.findIndex(c => c.h3Index === h3Index);
     if (existingIndex !== -1) {
         const entry = targetSet[existingIndex];
-        includedToSetsGroup.removeLayer(entry.polygon);
+        setsGroup.removeLayer(entry.polygon);
         targetSet.splice(existingIndex, 1);
     } else {
         if (targetSet.length >= 100) {
             const oldestEntry = targetSet.shift();
-            includedToSetsGroup.removeLayer(oldestEntry.polygon);
+            setsGroup.removeLayer(oldestEntry.polygon);
         }
-        const polygon = drawSingleHex(includedToSetsGroup, h3Index, color, label);
+        const polygon = drawSingleHex(setsGroup, h3Index, color, label);
         targetSet.push({
             h3Index: h3Index,
             polygon: polygon
@@ -23,18 +23,22 @@ function includeToSet(lat, lng, target) {
     }
 }
 
-function clearFirst() {
+function clearHexagons() {
     colorBoxesNumber = 0;
     uncheckedSnpsList = [];
     document.getElementById(BOXES_ELEMENT_ID).innerHTML = '';
-    mainGroup.clearLayers();
+    hexagonsGroup.clearLayers();
 }
 
-function clearSecond() {
+function clearSets() {
     isIncludeToSetAMode = false;
     isIncludeToSetBMode = false;
     includedToSetACentroids = [];
     includedToSetBCentroids = [];
     map.getContainer().style.cursor = '';
-    includedToSetsGroup.clearLayers();
+    setsGroup.clearLayers();
+}
+
+function clearPoints() {
+    pointsGroup.clearLayers();
 }

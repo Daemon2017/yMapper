@@ -6,6 +6,7 @@ const CONFIG = {
         LIST: '/list',
         PARENT: '/parent',
         CENTROIDS_DISPERSION: '/centroids/dispersion',
+        HOMELAND: '/homeland',
         CENTROIDS_UNION: '/centroids/union',
         CENTROIDS_SUBTRACTION: '/centroids/subtraction',
         CENTROIDS_INTERSECTION: '/centroids/intersection',
@@ -65,8 +66,9 @@ const PALETTE_SNPS = [
 ];
 
 let map;
-let mainGroup = L.layerGroup();
-let includedToSetsGroup = L.layerGroup();
+let hexagonsGroup = L.layerGroup();
+let setsGroup = L.layerGroup();
+let pointsGroup = L.layerGroup();
 
 let colorBoxesNumber = 0;
 

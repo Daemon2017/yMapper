@@ -21,6 +21,7 @@ body * {
 #endForm,
 #gridSizeSelect,
 #filteringModeSelect,
+#homelandModeSelect,
 #clearDispersionButton,
 #clearFilteringButton,
 #groupDispersionCheckbox,
@@ -31,7 +32,8 @@ body * {
 #addToSetBButton,
 #dispersionButton,
 #parentButton,
-#filteringButton {
+#filteringButton,
+#homelandButton {
     pointer-events: auto;
 }
 

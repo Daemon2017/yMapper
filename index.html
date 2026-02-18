@@ -29,11 +29,11 @@
 <body>
 <div id="mapLayer"></div>
 <div id="controlsLayer">
-    <label for="latForm" id="latLabel">
+    <label>
         Lat:
         <input type="number" step="any" id="latForm"/>
     </label>
-    <label for="lngForm" id="lngLabel">
+    <label>
         Lng:
         <input type="number" step="any" id="lngForm"/>
     </label>
@@ -42,7 +42,7 @@
     </button>
 
     <br/>
-    <label for="gridSizeSelect">
+    <label>
         Grid size:
         <select id="gridSizeSelect" onchange="clearAll()">
             <option value="0">0</option>
@@ -56,26 +56,32 @@
     </label>
 
     <br/>
-    <label for="searchForm" id="searchLabel">
+    <label>
         [Search by SNP] SNPs:
         <button type="button" id="parentButton" onclick="getParent()">
             ↰
         </button>
-        <input type="search" id="searchForm" placeholder="R-CTS1211" size="34"/>
+        <input type="search" id="searchForm" placeholder="R-CTS1211"/>
     </label>
-    <label for="groupDispersionCheckbox">
+    <label>
         Group:
         <input type="checkbox" id="groupDispersionCheckbox"/>
     </label>
     <button type="button" id="dispersionButton" onclick="show('Dispersion')">
         Show
     </button>
+    <select id="homelandModeSelect">
+        <option value="geometric">Geometric</option>
+        <option value="vavilov" selected>Vavilov's</option>
+        <option value="time_weighted">Vavilov's + TMRCA</option>
+    </select>
+    <button type="button" id="homelandButton" onclick="showHomeland()">Homeland</button>
     <button type="button" id="clearDispersionButton" onclick="clearAll()">
         Clear
     </button>
 
     <br/>
-    <label for="startForm" id="agesLabel">
+    <label>
         [Search by geography] TMRCA:
         <input type="number" style="width: 50px;" id="startForm" value="-2000"/>
         -

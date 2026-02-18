@@ -71,12 +71,13 @@ function drawLayers(action) {
     const basePalette = isGrouped ? PALETTE_GROUP : PALETTE_SNPS;
     const gradientValues = createGradientList(basePalette);
 
-    mainGroup.clearLayers();
+    hexagonsGroup.clearLayers();
+    pointsGroup.clearLayers();
     dataList.forEach((data, i) => {
         if (!uncheckedSnpsList.includes(i)) {
             let hexColor = gradientValues[i][9];
             data['centroids'].forEach(h3Index => {
-                drawSingleHex(mainGroup, h3Index, hexColor, `${caption}: ${data[caption]}`);
+                drawSingleHex(hexagonsGroup, h3Index, hexColor, `${caption}: ${data[caption]}`);
             });
             const label = document.getElementById(`checkBoxLabel${i}`);
             if (label) {
@@ -86,8 +87,8 @@ function drawLayers(action) {
             }
         }
     });
-    mainGroup.addTo(map);
-    map.removeLayer(includedToSetsGroup);
+    hexagonsGroup.addTo(map);
+    map.removeLayer(setsGroup);
 }
 
 function drawSingleHex(group, h3Index, hexColor, text) {

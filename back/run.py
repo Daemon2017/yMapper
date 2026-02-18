@@ -14,7 +14,7 @@ def get_list():
     print(f'Processing GET /list...')
     response = db.select_list()
     if not response:
-        return jsonify([]), 200 
+        return jsonify([]), 200
     return jsonify(response)
 
 
@@ -26,7 +26,7 @@ def get_parent():
     print(f'Processing GET /parent for snp={snp}...')
     response = db.select_parent(snp)
     if not response:
-        return jsonify([]), 200 
+        return jsonify([]), 200
     return jsonify(response)
 
 
@@ -40,8 +40,23 @@ def get_centroids_dispersion():
     print(f'Processing GET /centroids_dispersion for snp={snp} and size={size} and group={group}...')
     response = db.select_centroids_dispersion(snp, size)
     if not response:
-        return jsonify([]), 200 
+        return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
+
+
+@app.route('/homeland', methods=['GET'])
+def get_homeland():
+    snp = request.args.get('snp')
+    size = request.args.get('size')
+    mode = request.args.get('mode')
+    if not all([snp, size, mode]):
+        return jsonify({"error": "Missing parameters"}), 400
+    print(f'Processing GET /homeland for snp={snp} and size={size} and mode={mode}...')
+    response = db.select_homeland(snp, size)
+    result = utils.calculate_homeland(response, mode)
+    if not result:
+        return jsonify([]), 200
+    return jsonify(result)
 
 
 @app.route('/centroids/union', methods=['POST'])
@@ -55,7 +70,7 @@ def get_centroids_union():
         f'Processing POST /centroids_union for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_union(a_points, b_points, size, start, end)
     if not response:
-        return jsonify([]), 200 
+        return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
 
 

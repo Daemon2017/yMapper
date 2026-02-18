@@ -44,10 +44,9 @@ def select_parent(snp):
             LIMIT 1
             """
         )
-        result = session.execute(query,
-                                 {
-                                     "snp": snp
-                                 }).fetchone()
+        result = session.execute(query, {
+            "snp": snp
+        }).fetchone()
         return result[0] if result else None
 
 
@@ -66,11 +65,48 @@ def select_centroids_dispersion(snp, size):
                                               WHERE  :snp = ANY ( synonyms ))); 
             """
         )
-        result = session.execute(query,
-                                 {
-                                     "snp": snp,
-                                     "size": size
-                                 })
+        result = session.execute(query, {
+            "snp": snp,
+            "size": size
+        })
+        return [dict(row._mapping) for row in result]
+
+
+def select_homeland(parent_snp, size):
+    with Session() as session:
+        query = text("""
+            WITH target_parent AS (
+                SELECT sy.snp AS p_name, t.tmrca AS p_tmrca 
+                FROM synonyms sy
+                JOIN tmrcas t ON sy.snp = t.snp
+                WHERE :parent_snp = ANY(sy.synonyms)
+                LIMIT 1
+            ),
+            target_sons AS (
+                SELECT unnest(c.childs) AS son_name
+                FROM childs c
+                JOIN target_parent p ON c.snp = p.p_name
+            ),
+            son_metrics AS (
+                SELECT 
+                    s.centroids, 
+                    ABS(p.p_tmrca - t.tmrca) AS dt
+                FROM snps3 s
+                JOIN tmrcas t ON s.snp = t.snp
+                JOIN target_sons ts ON s.snp = ts.son_name
+                CROSS JOIN target_parent p
+                WHERE s.size = :size
+            )
+            SELECT 
+                h3_index,
+                json_agg(json_build_object('dt', m.dt)) AS sons_info
+            FROM son_metrics m, unnest(m.centroids) AS h3_index
+            GROUP BY h3_index
+        """)
+        result = session.execute(query, {
+            "parent_snp": parent_snp,
+            "size": str(size)
+        })
         return [dict(row._mapping) for row in result]
 
 
