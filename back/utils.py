@@ -67,7 +67,7 @@ def calculate_homeland(response, mode):
         elif mode == 'vavilov':
             weight = vavilov
         elif mode == 'time_weighted':
-            weight = sum(1 / (s['dt'] + 1) for s in row['sons_info']) * vavilov
+            weight = sum(1 / (math.log(s['dt'] + 2)) for s in row['sons_info']) * vavilov
         else:
             weight = 1
         lats.append(lat)
