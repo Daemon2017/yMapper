@@ -15,6 +15,7 @@ async function main() {
         center: new L.LatLng(lat, lng),
         zoom: zoom,
         layers: [baseLayer],
+        preferCanvas: true
     });
     mainGroup.addTo(map);
     includedToSetsGroup.addTo(map);
