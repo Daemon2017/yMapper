@@ -58,15 +58,15 @@ async function getCentroidsDispersion(snp, size, group) {
     }
 }
 
-async function fetchHomeland(snp, size, mode) {
+async function getCentroidsHomeland(snp, size, group) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
+        const centroidsHomelandUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_HOMELAND}`;
         const params = new URLSearchParams({
             snp: snp,
             size: size,
-            mode: mode
         });
-        const response = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.HOMELAND}?${params}`);
+        const response = await fetch(`${centroidsHomelandUrl}?${params}`);
         if (response.ok) {
             const data = await response.json();
             document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;

@@ -37,26 +37,24 @@ def get_centroids_dispersion():
     group = request.args.get('group', 'false').lower() == 'true'
     if not all([snp, size]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(f'Processing GET /centroids_dispersion for snp={snp} and size={size} and group={group}...')
+    print(f'Processing GET /centroids/dispersion for snp={snp} and size={size} and group={group}...')
     response = db.select_centroids_dispersion(snp, size)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
 
 
-@app.route('/homeland', methods=['GET'])
-def get_homeland():
+@app.route('/centroids/homeland', methods=['GET'])
+def get_centroids_homeland():
     snp = request.args.get('snp')
     size = request.args.get('size')
-    mode = request.args.get('mode')
-    if not all([snp, size, mode]):
+    if not all([snp, size]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(f'Processing GET /homeland for snp={snp} and size={size} and mode={mode}...')
+    print(f'Processing GET /centroids/homeland for snp={snp} and size={size}...')
     response = db.select_homeland(snp, size)
-    result = utils.calculate_homeland(response, mode)
-    if not result:
+    if not response:
         return jsonify([]), 200
-    return jsonify(result)
+    return jsonify(utils.calculate_homeland(response))
 
 
 @app.route('/centroids/union', methods=['POST'])
@@ -67,7 +65,7 @@ def get_centroids_union():
     if not all([a_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(
-        f'Processing POST /centroids_union for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
+        f'Processing POST /centroids/union for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_union(a_points, b_points, size, start, end)
     if not response:
         return jsonify([]), 200
@@ -82,7 +80,7 @@ def get_centroids_subtraction():
     if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(
-        f'Processing POST /centroids_subtraction for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
+        f'Processing POST /centroids/subtraction for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_subtraction(a_points, b_points, size, start, end)
     if not response:
         return jsonify([]), 200
@@ -97,7 +95,7 @@ def get_centroids_intersection():
     if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(
-        f'Processing POST /centroids_intersection for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
+        f'Processing POST /centroids/intersection for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_intersection(a_points, b_points, size, start, end)
     if not response:
         return jsonify([]), 200
@@ -112,7 +110,7 @@ def get_centroids_xor():
     if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(
-        f'Processing POST /centroids_xor for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
+        f'Processing POST /centroids/xor for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
     response = db.select_centroids_xor(a_points, b_points, size, start, end)
     if not response:
         return jsonify([]), 200

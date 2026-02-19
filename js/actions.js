@@ -64,6 +64,8 @@ async function show(action) {
         dataList = await getCentroidsDispersion(snp, size, group);
     } else if (action === 'Filtering') {
         dataList = await getCentroidsFiltering(start, end, size, group);
+    } else if (action === 'Homeland') {
+        dataList = await getCentroidsHomeland(snp, size);
     }
     colorBoxesNumber = dataList.length
     let colorBoxesInnerHtml = ``;
@@ -76,46 +78,6 @@ async function show(action) {
     }
     document.getElementById(BOXES_ELEMENT_ID).innerHTML = colorBoxesInnerHtml;
     drawLayers(action);
-}
-
-async function showHomeland() {
-    document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-
-    const snp = document.getElementById(SEARCH_FORM_ELEMENT_ID).value;
-    const size = document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value;
-    const mode = document.getElementById("homelandModeSelect").value;
-    const data = await fetchHomeland(snp, size, mode);
-
-    const HOMELAND_COLORS = {
-        'geometric': 'red',
-        'vavilov': 'orange',
-        'time_weighted': 'green'
-    };
-    const uncertaintyCircle = L.circle([data.lat, data.lng], {
-        radius: data.uncertainty_km * 1000,
-        color: HOMELAND_COLORS[mode],
-        fillColor: HOMELAND_COLORS[mode],
-        fillOpacity: 0.05,
-        weight: 1,
-        dashArray: '5, 5',
-        interactive: false
-    }).addTo(pointsGroup);
-    const marker = L.circleMarker([data.lat, data.lng], {
-        radius: 12,
-        fillColor: HOMELAND_COLORS[mode],
-        color: "#000",
-        weight: 2,
-        fillOpacity: 0.9
-    }).addTo(pointsGroup);
-    marker.bindTooltip(`
-        <b>${snp}. Mode: ${mode.toUpperCase()}</b><br>
-        Accuracy: ±${Math.round(data.uncertainty_km)} km<br>
-    `).openTooltip();
-    pointsGroup.addLayer(marker);
-
-    map.flyTo([data.lat, data.lng], 5);
-
-    document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
 }
 
 function clearAll() {

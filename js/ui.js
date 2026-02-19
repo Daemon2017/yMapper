@@ -77,7 +77,17 @@ function drawLayers(action) {
         if (!uncheckedSnpsList.includes(i)) {
             let hexColor = gradientValues[i][9];
             data['centroids'].forEach(h3Index => {
-                drawSingleHex(hexagonsGroup, h3Index, hexColor, `${caption}: ${data[caption]}`);
+                let tooltipText = '';
+                if (action === 'Homeland') {
+                    tooltipText = `
+                        <b>Level:</b> ${data.level.toFixed(2)}%<br/>
+                        <b>Vavilov Score:</b> ${data.vavilov_score.toFixed(2)}<br/>
+                        <b>TMRCA Score:</b> ${data.tmrca_score.toFixed(2)}<br/>
+                    `;
+                } else {
+                    tooltipText = `<b>${caption}:</b> ${data[caption]}`;
+                }
+                drawSingleHex(hexagonsGroup, h3Index, hexColor, tooltipText);
             });
             const label = document.getElementById(`checkBoxLabel${i}`);
             if (label) {

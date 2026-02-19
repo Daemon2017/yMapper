@@ -6,7 +6,7 @@ const CONFIG = {
         LIST: '/list',
         PARENT: '/parent',
         CENTROIDS_DISPERSION: '/centroids/dispersion',
-        HOMELAND: '/homeland',
+        CENTROIDS_HOMELAND: '/centroids/homeland',
         CENTROIDS_UNION: '/centroids/union',
         CENTROIDS_SUBTRACTION: '/centroids/subtraction',
         CENTROIDS_INTERSECTION: '/centroids/intersection',

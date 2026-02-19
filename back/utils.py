@@ -1,6 +1,4 @@
-import math
-
-import h3
+import numpy as np
 import pandas as pd
 
 
@@ -15,11 +13,9 @@ def get_input(args, body):
 
 
 def process_centroids(response, group):
-    if not response:
-        return {}
     df = pd.DataFrame.from_records(response)
     if 'centroids' not in df.columns or 'snp' not in df.columns:
-        return {}
+        return []
     df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
     if group:
         df = df.groupby('centroid')['snp'].nunique().reset_index() \
@@ -36,53 +32,21 @@ def process_centroids(response, group):
     return df.head(100).to_dict(orient='records')
 
 
-def get_weighted_median(values, weights):
-    combined = sorted(zip(values, weights))
-    total_weight = sum(weights)
-    cumulative_weight = 0
-    for val, weight in combined:
-        cumulative_weight += weight
-        if cumulative_weight >= total_weight / 2:
-            return val
-    return values[0] if values else 0
-
-
-def calculate_homeland(response, mode):
+def calculate_homeland(response):
     if not response:
-        return None
-    lats = []
-    lngs = []
-    weights = []
-    for row in response:
-        lat, lng = h3.cell_to_latlng(row['h3_index'])
-        current_diversity = len(row['sons_info'])
-        # if current_diversity < 2:
-        #     continue
-        vavilov_score = current_diversity ** 2
-        if mode == 'geometric':
-            weight = 1
-        elif mode == 'vavilov':
-            weight = vavilov_score
-        elif mode == 'time_weighted':
-            tmrca_score = sum(1 / (math.log(s['dt'] + 2)) for s in row['sons_info'])
-            weight = tmrca_score * vavilov_score
-        lats.append(lat)
-        lngs.append(lng)
-        weights.append(weight)
-    if not weights or sum(weights) == 0:
-        return None
-    center_lat = get_weighted_median(lats, weights)
-    center_lng = get_weighted_median(lngs, weights)
-    total_weight = sum(weights)
-    sum_sq_dist = 0
-    for i in range(len(lats)):
-        dist_sq = (lats[i] - center_lat) ** 2 + (lngs[i] - center_lng) ** 2
-        sum_sq_dist += dist_sq * weights[i]
-    std_dev = math.sqrt(sum_sq_dist / total_weight) if total_weight > 0 else 0
-    uncertainty_km = std_dev * 111
-    return {
-        "lat": center_lat,
-        "lng": center_lng,
-        "uncertainty_km": uncertainty_km,
-        "hex_count": len(response)
-    }
+        return []
+    df = pd.DataFrame(response)
+    df['diversity'] = df['sons_info'].str.len()
+    df['min_dt'] = df['sons_info'].apply(lambda x: min(s['dt'] for s in x) if x else 0)
+    df['vavilov_score'] = np.log1p(df['diversity'])
+    df['tmrca_score'] = 1 / np.log1p(df['min_dt'] + 1)
+    df['total_score'] = df['vavilov_score'] * df['tmrca_score']
+    max_score = df['total_score'].max()
+    if max_score == 0:
+        return []
+    df['level'] = ((df['total_score'] / max_score) * 100).round(2)
+    df = df.groupby('level') \
+        .agg({'h3_index': list, 'vavilov_score': 'mean', 'tmrca_score': 'mean'}).reset_index() \
+        .rename(columns={'h3_index': 'centroids'}) \
+        .sort_values(by='level', ascending=False)
+    return df.head(100).to_dict(orient='records')
