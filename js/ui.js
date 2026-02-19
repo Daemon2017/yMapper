@@ -39,7 +39,18 @@ function updateUncheckedList(i, action) {
     } else {
         uncheckedSnpsList.push(i);
     }
-    drawLayers(action);
+    let isGrouped = false;
+    if (action === 'Dispersion') {
+        isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
+    } else if (action === 'Filtering') {
+        const start = document.getElementById(START_FORM_ELEMENT_ID).value;
+        const end = document.getElementById(END_FORM_ELEMENT_ID).value;
+        isGrouped = document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked;
+    } else if (action === 'Homeland') {
+        isGrouped = true;
+    }
+    const caption = isGrouped ? 'level' : 'snps';
+    drawLayers(dataList, action, caption, isGrouped);
 }
 
 function createGradientList(fullPalette) {
@@ -62,12 +73,18 @@ function createGradientList(fullPalette) {
     return gradientList;
 }
 
-function drawLayers(action) {
-    const checkboxId = action === 'Dispersion'
-        ? GROUP_DISPERSION_CHECKBOX_ELEMENT_ID
-        : GROUP_FILTERING_CHECKBOX_ELEMENT_ID;
-    const isGrouped = document.getElementById(checkboxId).checked;
-    const caption = isGrouped ? 'level' : 'snps';
+function drawLayers(dataList, action, caption, isGrouped) {
+    colorBoxesNumber = dataList.length
+    let colorBoxesInnerHtml = ``;
+    for (let i = 0; i < colorBoxesNumber; i++) {
+        colorBoxesInnerHtml +=
+            `<span class="colorBox tooltip" id="colorBox${i}">
+                <input type="checkbox" class="checkBox" id="checkBox${i}" onclick="updateUncheckedList(${i}, '${action}')"/>
+                <label class="checkBoxLabel" id="checkBoxLabel${i}" for="checkBox${i}"></label>
+            </span>`;
+    }
+    document.getElementById(BOXES_ELEMENT_ID).innerHTML = colorBoxesInnerHtml;
+
     const basePalette = isGrouped ? PALETTE_GROUP : PALETTE_SNPS;
     const gradientValues = createGradientList(basePalette);
 

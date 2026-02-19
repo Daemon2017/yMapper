@@ -55,29 +55,22 @@ async function show(action) {
     uncheckedSnpsList = [];
 
     const snp = document.getElementById(SEARCH_FORM_ELEMENT_ID).value;
-    const start = document.getElementById(START_FORM_ELEMENT_ID).value;
-    const end = document.getElementById(END_FORM_ELEMENT_ID).value;
     const size = document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value;
-    const group = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
-
+    let isGrouped = false;
     if (action === 'Dispersion') {
-        dataList = await getCentroidsDispersion(snp, size, group);
+        isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
+        dataList = await getCentroidsDispersion(snp, size, isGrouped);
     } else if (action === 'Filtering') {
-        dataList = await getCentroidsFiltering(start, end, size, group);
+        const start = document.getElementById(START_FORM_ELEMENT_ID).value;
+        const end = document.getElementById(END_FORM_ELEMENT_ID).value;
+        isGrouped = document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked;
+        dataList = await getCentroidsFiltering(start, end, size, isGrouped);
     } else if (action === 'Homeland') {
+        isGrouped = true;
         dataList = await getCentroidsHomeland(snp, size);
     }
-    colorBoxesNumber = dataList.length
-    let colorBoxesInnerHtml = ``;
-    for (let i = 0; i < colorBoxesNumber; i++) {
-        colorBoxesInnerHtml +=
-            `<span class="colorBox tooltip" id="colorBox${i}">
-                <input type="checkbox" class="checkBox" id="checkBox${i}" onclick="updateUncheckedList(${i}, '${action}')"/>
-                <label class="checkBoxLabel" id="checkBoxLabel${i}" for="checkBox${i}"></label>
-            </span>`;
-    }
-    document.getElementById(BOXES_ELEMENT_ID).innerHTML = colorBoxesInnerHtml;
-    drawLayers(action);
+    const caption = isGrouped ? 'level' : 'snps';
+    drawLayers(dataList, action, caption, isGrouped);
 }
 
 function clearAll() {

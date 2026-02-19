@@ -36,14 +36,14 @@ async function getDbSnpsList() {
     }
 }
 
-async function getCentroidsDispersion(snp, size, group) {
+async function getCentroidsDispersion(snp, size, isGrouped) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const centroidsDispersionUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_DISPERSION}`;
         const params = new URLSearchParams({
             snp: snp,
             size: size,
-            group: group
+            group: isGrouped
         });
         const response = await fetch(`${centroidsDispersionUrl}?${params}`);
         if (response.ok) {
@@ -79,7 +79,7 @@ async function getCentroidsHomeland(snp, size, group) {
     }
 }
 
-async function getCentroidsFiltering(start, end, size, group) {
+async function getCentroidsFiltering(start, end, size, isGrouped) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const mode = document.getElementById("filteringModeSelect").value;
@@ -106,7 +106,7 @@ async function getCentroidsFiltering(start, end, size, group) {
             size: size,
             start: start,
             end: end,
-            group: group
+            group: isGrouped
         });
         const response = await fetch(`${centroidsFilteringUrl}?${params}`, {
             method: 'POST',
