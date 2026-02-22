@@ -31,8 +31,10 @@ const HEXAGONS_INCLUSION_TO_SET_A_STARTED_STATE_TEXT = "Click on the map to incl
 const HEXAGONS_INCLUSION_TO_SET_A_FINISHED_STATE_TEXT = "Hexagons included to set A!";
 const HEXAGONS_INCLUSION_TO_SET_B_STARTED_STATE_TEXT = "Click on the map to include from 1 to 100 hexagons to set B, then click the B button again to save them.";
 const HEXAGONS_INCLUSION_TO_SET_B_FINISHED_STATE_TEXT = "Hexagons included to set B!";
+const HEXAGONS_SETS_SWAPPED_STATE_TEXT = "Sets A and B swapped.";
 
 const BOTH_LAT_AND_LNG_MUST_BE_A_NUMBER_ERROR_TEXT = "Error: Both Lat and Lng must be a number!";
+const HEXAGONS_SETTING_NOT_FINISHED_ERROR_TEXT = "Error: At first you must finish adding hexagons to current set!";
 const SERVER_ERROR_TEXT = "Error: Server error!";
 
 const PALETTE_GROUP = [

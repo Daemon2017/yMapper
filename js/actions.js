@@ -115,4 +115,20 @@ function addHexagonsToSet(target) {
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = labelText;
 }
 
+function swapSets() {
+    if (!isIncludeToSetAMode && !isIncludeToSetBMode) {
+        [includedToSetACentroids, includedToSetBCentroids] = [includedToSetBCentroids, includedToSetACentroids];
+        setsGroup.clearLayers();
+        includedToSetACentroids.forEach(item => {
+            item.polygon = drawSingleHex(setsGroup, item.h3Index, 'green', 'Included to set A.');
+        });
+        includedToSetBCentroids.forEach(item => {
+            item.polygon = drawSingleHex(setsGroup, item.h3Index, 'blue', 'Included to set B.');
+        });
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = HEXAGONS_SETS_SWAPPED_STATE_TEXT;
+    } else {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = HEXAGONS_SETTING_NOT_FINISHED_ERROR_TEXT;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', main);
