@@ -40,6 +40,8 @@ def select_parent(snp):
                 SELECT snp 
                 FROM synonyms 
                 WHERE :snp = ANY(synonyms)
+                ORDER BY (snp = :snp) DESC
+                LIMIT 1
             ) = ANY (childs)
             LIMIT 1
             """
@@ -62,7 +64,9 @@ def select_centroids_dispersion(snp, size):
                                FROM   childs
                                WHERE  snp IN (SELECT snp
                                               FROM   synonyms
-                                              WHERE  :snp = ANY ( synonyms ))); 
+                                              WHERE  :snp = ANY (synonyms)
+                                              ORDER BY (snp = :snp) DESC
+                                              LIMIT 1)); 
             """
         )
         result = session.execute(query, {
@@ -80,6 +84,7 @@ def select_homeland(parent_snp, size):
                 FROM synonyms sy
                 JOIN tmrcas t ON sy.snp = t.snp
                 WHERE :parent_snp = ANY(sy.synonyms)
+                ORDER BY (sy.snp = :parent_snp) DESC
                 LIMIT 1
             ),
             target_sons AS (
