@@ -11,7 +11,7 @@ function includeToSet(lat, lng, target) {
         setsGroup.removeLayer(entry.polygon);
         targetSet.splice(existingIndex, 1);
     } else {
-        if (targetSet.length >= 100) {
+        if (targetSet.length >= 150) {
             const oldestEntry = targetSet.shift();
             setsGroup.removeLayer(oldestEntry.polygon);
         }
