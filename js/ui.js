@@ -12,13 +12,15 @@ function attachDropDownPrompt(dbSnpsList) {
             }
         }).autocomplete({
             source: function (request, response) {
-                let term = request.term;
-                let filteredSnpsList = dbSnpsList.filter(snp => snp.startsWith(term));
+                let term = request.term.replace(/\s+/g, '').toLowerCase();
+                let filteredSnpsList = dbSnpsList.filter(snp =>
+                    snp.replace(/\s+/g, '').toLowerCase().startsWith(term)
+                );
                 let limitedSnpsList = filteredSnpsList.slice(0, 10);
                 response(limitedSnpsList);
             },
             search: function (_event, _ui) {
-                if (this.value.length <= 2) {
+                if (this.value.replace(/\s+/g, '').length <= 2) {
                     return false;
                 }
             },
@@ -26,9 +28,13 @@ function attachDropDownPrompt(dbSnpsList) {
                 return false;
             },
             select: function (_event, ui) {
-                this.value = ui.item.value;
+                this.value = ui.item.value.replace(/\s+/g, '');
                 return false;
             }
+        });
+
+        $("#searchForm").on("change blur", function() {
+            this.value = this.value.replace(/\s+/g, '');
         });
     });
 }

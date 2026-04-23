@@ -54,7 +54,9 @@ async function show(action) {
     map.getContainer().style.cursor = '';
     uncheckedSnpsList = [];
 
-    const snp = document.getElementById(SEARCH_FORM_ELEMENT_ID).value;
+    const searchForm = document.getElementById(SEARCH_FORM_ELEMENT_ID);
+    searchForm.value = searchForm.value.replace(/\s+/g, '');
+    const snp = searchForm.value;
     const size = document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value;
     let isGrouped = false;
     if (action === 'Dispersion') {
