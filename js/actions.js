@@ -47,32 +47,47 @@ async function main() {
 }
 
 async function show(action) {
+    if (document.getElementById(STATE_LABEL_ELEMENT_ID).innerText === BUSY_STATE_TEXT) {
+        return;
+    }
+
+    const controls = document.querySelectorAll("button, input, select");
+    controls.forEach(el => el.disabled = true);
+
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
 
-    isIncludeToSetAMode = false;
-    isIncludeToSetBMode = false;
-    map.getContainer().style.cursor = '';
-    uncheckedSnpsList = [];
+    try {
+        isIncludeToSetAMode = false;
+        isIncludeToSetBMode = false;
+        map.getContainer().style.cursor = '';
+        uncheckedSnpsList = [];
 
-    const searchForm = document.getElementById(SEARCH_FORM_ELEMENT_ID);
-    searchForm.value = searchForm.value.replace(/\s+/g, '');
-    const snp = searchForm.value;
-    const size = document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value;
-    let isGrouped = false;
-    if (action === 'Dispersion') {
-        isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
-        dataList = await getCentroidsDispersion(snp, size, isGrouped);
-    } else if (action === 'Filtering') {
-        const start = document.getElementById(START_FORM_ELEMENT_ID).value;
-        const end = document.getElementById(END_FORM_ELEMENT_ID).value;
-        isGrouped = document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked;
-        dataList = await getCentroidsFiltering(start, end, size, isGrouped);
-    } else if (action === 'Homeland') {
-        isGrouped = true;
-        dataList = await getCentroidsHomeland(snp, size);
+        const searchForm = document.getElementById(SEARCH_FORM_ELEMENT_ID);
+        searchForm.value = searchForm.value.replace(/\s+/g, '');
+        const snp = searchForm.value;
+        const size = document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value;
+        let isGrouped = false;
+        if (action === 'Dispersion') {
+            isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
+            dataList = await getCentroidsDispersion(snp, size, isGrouped);
+        } else if (action === 'Filtering') {
+            const start = document.getElementById(START_FORM_ELEMENT_ID).value;
+            const end = document.getElementById(END_FORM_ELEMENT_ID).value;
+            isGrouped = document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked;
+            dataList = await getCentroidsFiltering(start, end, size, isGrouped);
+        } else if (action === 'Homeland') {
+            isGrouped = true;
+            dataList = await getCentroidsHomeland(snp, size);
+        }
+        const caption = isGrouped ? 'level' : 'snps';
+        drawLayers(dataList, action, caption, isGrouped);
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
+    } catch (error) {
+        console.error("Show error:", error);
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+    } finally {
+        controls.forEach(el => el.disabled = false);
     }
-    const caption = isGrouped ? 'level' : 'snps';
-    drawLayers(dataList, action, caption, isGrouped);
 }
 
 function clearAll() {
