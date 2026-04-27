@@ -4,9 +4,10 @@ function getLatLng() {
     document.getElementById(LNG_FORM_ELEMENT_ID).value = center.lng;
 }
 
-function attachDropDownPrompt(dbSnpsList) {
+function attachDropDownPrompt(dbSnpsList, elementId) {
     $(function () {
-        $("#searchForm").on("keydown", function (event) {
+        const $input = $(`#${elementId}`);
+        $input.on("keydown", function (event) {
             if (event.keyCode === $.ui.keyCode.TAB && $(this).autocomplete("instance").menu.active) {
                 event.preventDefault();
             }
@@ -33,7 +34,7 @@ function attachDropDownPrompt(dbSnpsList) {
             }
         });
 
-        $("#searchForm").on("change blur", function() {
+        $input.on("change blur", function() {
             this.value = this.value.replace(/\s+/g, '');
         });
     });

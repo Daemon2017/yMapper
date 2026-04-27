@@ -9,7 +9,8 @@ def get_input(args, body):
     start = args.get('start')
     end = args.get('end')
     group = args.get('group', 'false').lower() == 'true'
-    return a_points, b_points, start, end, group, size
+    snp = args.get('snp')
+    return a_points, b_points, start, end, group, size, snp
 
 
 def process_centroids(response, group):

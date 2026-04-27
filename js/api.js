@@ -19,6 +19,27 @@ async function getParent() {
     }
 }
 
+async function getParentFiltering() {
+    const input = document.getElementById(SEARCH_FILTERING_FORM_ELEMENT_ID);
+    const snp = input.value.replace(/\s+/g, '');
+    if (!snp) return;
+    try {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
+        const parentUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.PARENT}`;
+        const params = new URLSearchParams({ snp: snp });
+        const response = await fetch(`${parentUrl}?${params}`);
+        if (response.ok) {
+            const data = await response.json();
+            input.value = data;
+            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
+        } else {
+            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+        }
+    } catch (error) {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+    }
+}
+
 async function getDbSnpsList() {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
@@ -79,7 +100,7 @@ async function getCentroidsHomeland(snp, size, group) {
     }
 }
 
-async function getCentroidsFiltering(start, end, size, isGrouped) {
+async function getCentroidsFiltering(start, end, size, isGrouped, snp) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const mode = document.getElementById("filteringModeSelect").value;
@@ -106,7 +127,8 @@ async function getCentroidsFiltering(start, end, size, isGrouped) {
             size: size,
             start: start,
             end: end,
-            group: isGrouped
+            group: isGrouped,
+            snp: snp
         });
         const response = await fetch(`${centroidsFilteringUrl}?${params}`, {
             method: 'POST',

@@ -24,6 +24,7 @@ const GROUP_FILTERING_CHECKBOX_ELEMENT_ID = "groupFilteringCheckbox";
 const GRID_SIZE_SELECT_ELEMENT_ID = "gridSizeSelect";
 const START_FORM_ELEMENT_ID = "startForm";
 const END_FORM_ELEMENT_ID = "endForm";
+const SEARCH_FILTERING_FORM_ELEMENT_ID = "searchFilteringForm";
 
 const BUSY_STATE_TEXT = "Busy...";
 const OK_STATE_TEXT = "OK.";

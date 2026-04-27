@@ -43,7 +43,8 @@ async function main() {
     lflControl.addTo(map);
 
     const snps = await getDbSnpsList();
-    attachDropDownPrompt(snps);
+    attachDropDownPrompt(snps, SEARCH_FORM_ELEMENT_ID);
+    attachDropDownPrompt(snps, SEARCH_FILTERING_FORM_ELEMENT_ID);
 }
 
 async function show(action) {
@@ -74,7 +75,8 @@ async function show(action) {
             const start = document.getElementById(START_FORM_ELEMENT_ID).value;
             const end = document.getElementById(END_FORM_ELEMENT_ID).value;
             isGrouped = document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked;
-            dataList = await getCentroidsFiltering(start, end, size, isGrouped);
+            const snpFilter = document.getElementById(SEARCH_FILTERING_FORM_ELEMENT_ID).value.replace(/\s+/g, '');
+            dataList = await getCentroidsFiltering(start, end, size, isGrouped, snpFilter);
         } else if (action === 'Homeland') {
             isGrouped = true;
             dataList = await getCentroidsHomeland(snp, size);

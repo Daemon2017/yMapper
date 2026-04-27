@@ -115,9 +115,9 @@ def select_homeland(parent_snp, size):
         return [dict(row._mapping) for row in result]
 
 
-def select_centroids_union(a_points, b_points, size, start, end):
+def select_centroids_union(a_points, b_points, size, start, end, filter_snp):
     with Session() as session:
-        query = text(
+        query = \
             """
             SELECT     s.snp,
                        s.centroids
@@ -128,20 +128,34 @@ def select_centroids_union(a_points, b_points, size, start, end):
             AND        t.tmrca BETWEEN :start AND :end
             AND        (s.centroids && :a_points OR s.centroids && :b_points)
             """
-        )
-        result = session.execute(query, {
+        params = {
             "size": str(size),
             "a_points": a_points,
             "b_points": b_points,
             "start": start,
-            "end": end
-        })
+            "end": end,
+            "filter_snp": filter_snp
+        }
+        if filter_snp and filter_snp.strip() != '':
+            query += """
+            AND s.snp IN (
+                WITH RECURSIVE descendants AS (
+                    SELECT snp as node_name FROM synonyms 
+                    WHERE :filter_snp = ANY(synonyms)
+                    UNION ALL
+                    SELECT unnest(c.childs) FROM childs c 
+                    JOIN descendants d ON c.snp = d.node_name
+                )
+                SELECT node_name FROM descendants
+            )
+            """
+        result = session.execute(text(query), params)
         return [dict(row._mapping) for row in result]
 
 
-def select_centroids_subtraction(a_points, b_points, size, start, end):
+def select_centroids_subtraction(a_points, b_points, size, start, end, filter_snp):
     with Session() as session:
-        query = text(
+        query = \
             """
             SELECT     s.snp,
                        s.centroids
@@ -152,20 +166,34 @@ def select_centroids_subtraction(a_points, b_points, size, start, end):
             AND        t.tmrca BETWEEN :start AND :end
             AND        s.centroids && :a_points AND NOT (s.centroids && :b_points)
             """
-        )
-        result = session.execute(query, {
+        params = {
             "size": str(size),
             "a_points": a_points,
             "b_points": b_points,
             "start": start,
-            "end": end
-        })
+            "end": end,
+            "filter_snp": filter_snp
+        }
+        if filter_snp and filter_snp.strip() != '':
+            query += """
+            AND s.snp IN (
+                WITH RECURSIVE descendants AS (
+                    SELECT snp as node_name FROM synonyms 
+                    WHERE :filter_snp = ANY(synonyms)
+                    UNION ALL
+                    SELECT unnest(c.childs) FROM childs c 
+                    JOIN descendants d ON c.snp = d.node_name
+                )
+                SELECT node_name FROM descendants
+            )
+            """
+        result = session.execute(text(query), params)
         return [dict(row._mapping) for row in result]
 
 
-def select_centroids_intersection(a_points, b_points, size, start, end):
+def select_centroids_intersection(a_points, b_points, size, start, end, filter_snp):
     with Session() as session:
-        query = text(
+        query = \
             """
             SELECT     s.snp,
                        s.centroids
@@ -177,20 +205,34 @@ def select_centroids_intersection(a_points, b_points, size, start, end):
             AND        s.centroids && :a_points
             AND        s.centroids && :b_points
             """
-        )
-        result = session.execute(query, {
+        params = {
             "size": str(size),
             "a_points": a_points,
             "b_points": b_points,
             "start": start,
-            "end": end
-        })
+            "end": end,
+            "filter_snp": filter_snp
+        }
+        if filter_snp and filter_snp.strip() != '':
+            query += """
+            AND s.snp IN (
+                WITH RECURSIVE descendants AS (
+                    SELECT snp as node_name FROM synonyms 
+                    WHERE :filter_snp = ANY(synonyms)
+                    UNION ALL
+                    SELECT unnest(c.childs) FROM childs c 
+                    JOIN descendants d ON c.snp = d.node_name
+                )
+                SELECT node_name FROM descendants
+            )
+            """
+        result = session.execute(text(query), params)
         return [dict(row._mapping) for row in result]
 
 
-def select_centroids_xor(a_points, b_points, size, start, end):
+def select_centroids_xor(a_points, b_points, size, start, end, filter_snp):
     with Session() as session:
-        query = text(
+        query = \
             """
             SELECT     s.snp,
                        s.centroids
@@ -201,12 +243,26 @@ def select_centroids_xor(a_points, b_points, size, start, end):
             AND        t.tmrca BETWEEN :start AND :end
             AND        (s.centroids && :a_points) != (s.centroids && :b_points)
             """
-        )
-        result = session.execute(query, {
+        params = {
             "size": str(size),
             "a_points": a_points,
             "b_points": b_points,
             "start": start,
-            "end": end
-        })
+            "end": end,
+            "filter_snp": filter_snp
+        }
+        if filter_snp and filter_snp.strip() != '':
+            query += """
+            AND s.snp IN (
+                WITH RECURSIVE descendants AS (
+                    SELECT snp as node_name FROM synonyms 
+                    WHERE :filter_snp = ANY(synonyms)
+                    UNION ALL
+                    SELECT unnest(c.childs) FROM childs c 
+                    JOIN descendants d ON c.snp = d.node_name
+                )
+                SELECT node_name FROM descendants
+            )
+            """
+        result = session.execute(text(query), params)
         return [dict(row._mapping) for row in result]
