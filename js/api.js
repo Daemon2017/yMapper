@@ -57,6 +57,26 @@ async function getDbSnpsList() {
     }
 }
 
+async function getCentroidsGeography(snp, size) {
+    try {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
+        const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_GEOGRAPHY}`;
+        const params = new URLSearchParams({
+            snp: snp,
+            size: size
+        });
+        const response = await fetch(`${url}?${params}`);
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
+            return data;
+        }
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+    } catch (error) {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+    }
+}
+
 async function getCentroidsDispersion(snp, size, isGrouped) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;

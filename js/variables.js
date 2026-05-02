@@ -5,6 +5,7 @@ const CONFIG = {
     ENDPOINTS: {
         LIST: '/list',
         PARENT: '/parent',
+        CENTROIDS_GEOGRAPHY: '/centroids/geography',
         CENTROIDS_DISPERSION: '/centroids/dispersion',
         CENTROIDS_HOMELAND: '/centroids/homeland',
         CENTROIDS_UNION: '/centroids/union',

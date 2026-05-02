@@ -1,4 +1,6 @@
 async function main() {
+    const controls = document.querySelectorAll("button, input, select");
+    controls.forEach(el => el.disabled = true);
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
 
     let lat = 53.2582;
@@ -42,9 +44,16 @@ async function main() {
     });
     lflControl.addTo(map);
 
-    const snps = await getDbSnpsList();
-    attachDropDownPrompt(snps, SEARCH_FORM_ELEMENT_ID);
-    attachDropDownPrompt(snps, SEARCH_FILTERING_FORM_ELEMENT_ID);
+    try {
+        const snps = await getDbSnpsList();
+        attachDropDownPrompt(snps, SEARCH_FORM_ELEMENT_ID);
+        attachDropDownPrompt(snps, SEARCH_FILTERING_FORM_ELEMENT_ID);
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
+    } catch (error) {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+    } finally {
+        controls.forEach(el => el.disabled = false);
+    }
 }
 
 async function show(action) {
@@ -68,7 +77,10 @@ async function show(action) {
         const snp = searchForm.value;
         const size = document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value;
         let isGrouped = false;
-        if (action === 'Dispersion') {
+        if (action === 'Geography') {
+            isGrouped = false;
+            dataList = await getCentroidsGeography(snp, size);
+        } else if (action === 'Dispersion') {
             isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
             dataList = await getCentroidsDispersion(snp, size, isGrouped);
         } else if (action === 'Filtering') {
@@ -85,7 +97,6 @@ async function show(action) {
         drawLayers(dataList, action, caption, isGrouped);
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
     } catch (error) {
-        console.error("Show error:", error);
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
     } finally {
         controls.forEach(el => el.disabled = false);

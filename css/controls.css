@@ -36,7 +36,8 @@ body * {
 #filteringButton,
 #homelandButton,
 #parentFilteringButton,
-#searchFilteringForm {
+#searchFilteringForm,
+#geographyButton {
     pointer-events: auto;
 }
 

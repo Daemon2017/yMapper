@@ -52,6 +52,27 @@ def select_parent(snp):
         return result[0] if result else None
 
 
+def select_centroids_geography(snp, size):
+    with Session() as session:
+        query = text("""
+            SELECT snp, 
+                   centroids 
+            FROM snps3 
+            WHERE size = :size 
+            AND snp IN (
+                SELECT snp FROM synonyms 
+                WHERE :snp = ANY(synonyms) 
+                ORDER BY (snp = :snp) DESC 
+                LIMIT 1
+            )
+        """)
+        result = session.execute(query, {
+            "snp": snp,
+            "size": str(size)
+        })
+        return [dict(row._mapping) for row in result]
+
+
 def select_centroids_dispersion(snp, size):
     with Session() as session:
         query = text(

@@ -30,6 +30,21 @@ def get_parent():
     return jsonify(response)
 
 
+@app.route('/centroids/geography', methods=['GET'])
+def get_centroids_geography_route():
+    snp = request.args.get('snp')
+    size = request.args.get('size')
+    if not all([snp, size]):
+        return jsonify({"error": "Missing parameters"}), 400
+
+    print(f'Processing GET /centroids/geography for snp={snp} and size={size}...')
+    response = db.select_centroids_geography(snp, size)
+    if not response:
+        return jsonify([]), 200
+
+    return jsonify(utils.process_centroids(response, group=False))
+
+
 @app.route('/centroids/dispersion', methods=['GET'])
 def get_centroids_dispersion():
     snp = request.args.get('snp')

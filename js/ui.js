@@ -85,9 +85,10 @@ function drawLayers(dataList, action, caption, isGrouped) {
     let colorBoxesInnerHtml = ``;
     for (let i = 0; i < colorBoxesNumber; i++) {
         colorBoxesInnerHtml +=
-            `<span class="colorBox tooltip" id="colorBox${i}">
+            `<span class="colorBox tooltip" id="colorBox${i}" data-tooltip="${dataList[i][caption]}">
                 <input type="checkbox" class="checkBox" id="checkBox${i}" onclick="updateUncheckedList(${i}, '${action}')"/>
                 <label class="checkBoxLabel" id="checkBoxLabel${i}" for="checkBox${i}"></label>
+                <span class="tooltiptext">${dataList[i][caption]}</span>
             </span>`;
     }
     document.getElementById(BOXES_ELEMENT_ID).innerHTML = colorBoxesInnerHtml;
@@ -115,9 +116,13 @@ function drawLayers(dataList, action, caption, isGrouped) {
             });
             const label = document.getElementById(`checkBoxLabel${i}`);
             if (label) {
-                label.style.backgroundColor = hexColor;
-                label.innerHTML = `<span class="tooltiptext">${data[caption]}</span>`;
-                document.getElementById(`checkBox${i}`).checked = true;
+                if (uncheckedSnpsList.includes(i)) {
+                    label.style.backgroundColor = '#ccc';
+                    document.getElementById(`checkBox${i}`).checked = false;
+                } else {
+                    label.style.backgroundColor = hexColor;
+                    document.getElementById(`checkBox${i}`).checked = true;
+                }
             }
         }
     });
