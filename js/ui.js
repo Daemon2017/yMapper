@@ -53,6 +53,8 @@ function updateUncheckedList(i, action) {
         const start = document.getElementById(START_FORM_ELEMENT_ID).value;
         const end = document.getElementById(END_FORM_ELEMENT_ID).value;
         isGrouped = document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked;
+    } else if (action === 'Max') {
+        isGrouped = document.getElementById(GROUP_MACRO_CHECKBOX_ELEMENT_ID).checked;
     } else if (action === 'Homeland') {
         isGrouped = true;
     }

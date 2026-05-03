@@ -132,6 +132,21 @@ def get_centroids_xor():
     return jsonify(utils.process_centroids(response, group))
 
 
+@app.route('/centroids/max', methods=['GET'])
+def get_centroids_max():
+    start = request.args.get('start')
+    end = request.args.get('end')
+    size = request.args.get('size')
+    group = request.args.get('group', 'false').lower() == 'true'
+    snp = request.args.get('snp', '')
+    if not all([start, end, size]):
+        return jsonify({"error": "Missing parameters"}), 400
+    response = db.select_max(start, end, size, snp)
+    if not response:
+        return jsonify([]), 200
+    return jsonify(utils.process_max_centroids(response, group))
+
+
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db.Session.remove()

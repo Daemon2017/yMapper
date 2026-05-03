@@ -81,14 +81,38 @@
     </button>
 
     <br/>
+    <label> [Macro-View]
+        SNPs within:
+        <button type="button" id="parentMacroButton" onclick="getParentMacro()">
+            ↰
+        </button>
+        <input type="search" id="macroSearchFilteringForm" placeholder="R-CTS1211"/>
+    </label>
+    <label> TMRCA:
+        <input type="number" style="width: 50px;" id="macroStartForm" value="0"/>
+        -
+        <input type="number" style="width: 50px;" id="macroEndForm" value="500"/>
+    </label>
+    <label>
+        Group:
+        <input type="checkbox" id="groupMacroCheckbox" checked/>
+    </label>
+    <button type="button" id="macroMaxButton" onclick="show('Max')">
+        MAX
+    </button>
+
+    <br/>
     <label> [GEO-Search]
         SNPs within:
-        <button type="button" id="parentFilteringButton" onclick="getParentFiltering()"> ↰ </button>
+        <button type="button" id="parentFilteringButton" onclick="getParentFiltering()">
+            ↰
+        </button>
         <input type="search" id="searchFilteringForm" placeholder="R-CTS1211"/>
-
-        TMRCA:
-        <input type="number" style="width: 50px;" id="startForm" value="-2000"/> -
-        <input type="number" style="width: 50px;" id="endForm" value="2000"/>
+        <label> TMRCA:
+            <input type="number" style="width: 50px;" id="startForm" value="-2000"/>
+            -
+            <input type="number" style="width: 50px;" id="endForm" value="2000"/>
+        </label>
     </label>
     <button type="button" id="addToSetAButton" onclick="addHexagonsToSet('A')">
         A

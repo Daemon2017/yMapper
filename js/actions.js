@@ -47,6 +47,7 @@ async function main() {
     try {
         const snps = await getDbSnpsList();
         attachDropDownPrompt(snps, SEARCH_FORM_ELEMENT_ID);
+        attachDropDownPrompt(snps, MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID);
         attachDropDownPrompt(snps, SEARCH_FILTERING_FORM_ELEMENT_ID);
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
     } catch (error) {
@@ -92,6 +93,12 @@ async function show(action) {
         } else if (action === 'Homeland') {
             isGrouped = true;
             dataList = await getCentroidsHomeland(snp, size);
+        } else if (action === 'Max') {
+            const start = document.getElementById(MACRO_START_FORM_ELEMENT_ID).value;
+            const end = document.getElementById(MACRO_END_FORM_ELEMENT_ID).value;
+            const snpFilter = document.getElementById(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID).value.replace(/\s+/g, '');
+            isGrouped = document.getElementById(GROUP_MACRO_CHECKBOX_ELEMENT_ID).checked;
+            dataList = await getCentroidsMax(start, end, size, isGrouped, snpFilter);
         }
         const caption = isGrouped ? 'level' : 'snps';
         drawLayers(dataList, action, caption, isGrouped);

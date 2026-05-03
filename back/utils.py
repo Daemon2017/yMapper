@@ -33,6 +33,36 @@ def process_centroids(response, group):
     return df.head(100).to_dict(orient='records')
 
 
+def process_max_centroids(response, group):
+    if not response:
+        return []
+    df = pd.DataFrame.from_records(response)
+    if group:
+        winners = df.sort_values(by=['sons_count'], ascending=False) \
+            .groupby('h3_index').head(1)
+        final_groups = winners.groupby('sons_count')['h3_index'].agg(list).reset_index()
+        result = []
+        for _, row in final_groups.iterrows():
+            lvl = int(row['sons_count'])
+            result.append({
+                'level': lvl,
+                'centroids': row['h3_index'],
+                'snps': f"Max Sons: {lvl}"
+            })
+        return sorted(result, key=lambda x: x['level'], reverse=True)[:100]
+    else:
+        df = df.sample(frac=1).reset_index(drop=True)
+        idx_winners = df.sort_values(by='sons_count', ascending=False) \
+            .groupby('h3_index').head(1)
+        result_df = idx_winners.groupby('snp')['h3_index'] \
+            .agg(list).reset_index() \
+            .rename(columns={'snp': 'snps', 'h3_index': 'centroids'})
+        result_df['count'] = result_df['centroids'].str.len()
+        return result_df.sort_values(by='count', ascending=False) \
+            .drop(columns=['count']) \
+            .head(100).to_dict(orient='records')
+
+
 def calculate_homeland(response):
     if not response:
         return []

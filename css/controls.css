@@ -37,7 +37,13 @@ body * {
 #homelandButton,
 #parentFilteringButton,
 #searchFilteringForm,
-#geographyButton {
+#geographyButton,
+#macroStartForm,
+#macroEndForm,
+#macroMaxButton,
+#groupMacroCheckbox,
+#parentMacroButton,
+#macroSearchFilteringForm {
     pointer-events: auto;
 }
 

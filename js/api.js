@@ -40,6 +40,28 @@ async function getParentFiltering() {
     }
 }
 
+async function getParentMacro() {
+    const input = document.getElementById(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID);
+    const snp = input.value.replace(/\s+/g, '');
+    if (!snp) return;
+    try {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
+        const parentUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.PARENT}`;
+        const params = new URLSearchParams({ snp: snp });
+        const response = await fetch(`${parentUrl}?${params}`);
+        if (response.ok) {
+            const data = await response.json();
+            input.value = data;
+            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
+        } else {
+            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+        }
+    } catch (error) {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+    }
+}
+
+
 async function getDbSnpsList() {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
@@ -167,4 +189,11 @@ async function getCentroidsFiltering(start, end, size, isGrouped, snp) {
     } catch (error) {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
     }
+}
+
+async function getCentroidsMax(start, end, size, isGrouped, snp) {
+    const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_MAX}`;
+    const params = new URLSearchParams({ start, end, size, group: isGrouped, snp: snp });
+    const response = await fetch(`${url}?${params}`);
+    return await response.json();
 }

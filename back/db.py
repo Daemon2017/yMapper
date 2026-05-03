@@ -287,3 +287,50 @@ def select_centroids_xor(a_points, b_points, size, start, end, filter_snp):
             """
         result = session.execute(text(query), params)
         return [dict(row._mapping) for row in result]
+
+
+def select_max(start, end, size, filter_snp=None):
+    with Session() as session:
+        query = \
+            """
+            WITH local_data AS (
+                SELECT s.snp, unnest(s.centroids) as h3_index
+                FROM snps3 s
+                JOIN tmrcas t ON s.snp = t.snp
+                WHERE s.size = :size AND t.tmrca BETWEEN :start AND :end
+            ),
+            filtered_parents AS (
+                SELECT ld.snp, ld.h3_index
+                FROM local_data ld
+            """
+        if filter_snp and filter_snp.strip() != '':
+            query += """
+            WHERE ld.snp IN (
+                WITH RECURSIVE descendants AS (
+                    SELECT snp as node_name FROM synonyms WHERE :filter_snp = ANY(synonyms)
+                    UNION ALL
+                    SELECT unnest(c.childs) FROM childs c JOIN descendants d ON c.snp = d.node_name
+                )
+                SELECT node_name FROM descendants
+            )
+            """
+        query += """
+        )
+        SELECT 
+            p.snp, 
+            p.h3_index, 
+            COUNT(DISTINCT s_son.snp) as sons_count
+        FROM filtered_parents p
+        JOIN childs ch ON p.snp = ch.snp
+        JOIN local_data s_son ON s_son.snp = ANY(ch.childs) AND s_son.h3_index = p.h3_index
+        GROUP BY p.snp, p.h3_index
+        HAVING COUNT(DISTINCT s_son.snp) > 0
+        """
+        params = {
+            "start": start,
+            "end": end,
+            "size": str(size),
+            "filter_snp": filter_snp
+        }
+        result = session.execute(text(query), params)
+        return [dict(row._mapping) for row in result]

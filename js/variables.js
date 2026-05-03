@@ -12,6 +12,7 @@ const CONFIG = {
         CENTROIDS_SUBTRACTION: '/centroids/subtraction',
         CENTROIDS_INTERSECTION: '/centroids/intersection',
         CENTROIDS_XOR: '/centroids/xor',
+        CENTROIDS_MAX: '/centroids/max',
     },
 };
 
@@ -21,11 +22,15 @@ const SEARCH_FORM_ELEMENT_ID = "searchForm";
 const STATE_LABEL_ELEMENT_ID = "stateLabel";
 const BOXES_ELEMENT_ID = "boxes";
 const GROUP_DISPERSION_CHECKBOX_ELEMENT_ID = "groupDispersionCheckbox";
+const GROUP_MACRO_CHECKBOX_ELEMENT_ID = "groupMacroCheckbox";
 const GROUP_FILTERING_CHECKBOX_ELEMENT_ID = "groupFilteringCheckbox";
 const GRID_SIZE_SELECT_ELEMENT_ID = "gridSizeSelect";
 const START_FORM_ELEMENT_ID = "startForm";
 const END_FORM_ELEMENT_ID = "endForm";
 const SEARCH_FILTERING_FORM_ELEMENT_ID = "searchFilteringForm";
+const MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID = "macroSearchFilteringForm";
+const MACRO_START_FORM_ELEMENT_ID = "macroStartForm";
+const MACRO_END_FORM_ELEMENT_ID = "macroEndForm";
 
 const BUSY_STATE_TEXT = "Busy...";
 const OK_STATE_TEXT = "OK.";
