@@ -43,7 +43,8 @@ body * {
 #macroMaxButton,
 #groupMacroCheckbox,
 #parentMacroButton,
-#macroSearchFilteringForm {
+#macroSearchFilteringForm,
+#screenshotModeButton {
     pointer-events: auto;
 }
 

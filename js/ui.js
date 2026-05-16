@@ -149,3 +149,32 @@ function drawSingleHex(group, h3Index, hexColor, text) {
 function getHexVertices(h3Index) {
     return h3.cellToBoundary(h3Index);
 }
+
+function toggleUI() {
+    const controls = document.getElementById(CONTROLS_LAYER_ELEMENT_ID);
+    const btn = document.getElementById(SCREENSHOT_MODE_BUTTON_ELEMENT_ID);
+    const leafletControls = document.querySelectorAll('.leaflet-control');
+    const hiddenOpacity = 0.1;
+        if (controls && btn) {
+        const currentOpacity = btn.style.opacity ? parseFloat(btn.style.opacity) : 1;
+        const isHidden = currentOpacity === hiddenOpacity;
+        const children = controls.children;
+        if (isHidden) {
+            leafletControls.forEach(el => el.style.setProperty('display', 'block', 'important'));
+            for (let el of children) {
+                el.style.removeProperty('display');
+            }
+            btn.style.opacity = '1';
+            btn.style.color = '#000';
+        } else {
+            leafletControls.forEach(el => el.style.setProperty('display', 'none', 'important'));
+            for (let el of children) {
+                if (el.id !== SCREENSHOT_MODE_BUTTON_ELEMENT_ID) {
+                    el.style.setProperty('display', 'none', 'important');
+                }
+            }
+            btn.style.opacity = hiddenOpacity.toString();
+            btn.style.color = '#555';
+        }
+    }
+}

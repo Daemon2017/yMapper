@@ -1,5 +1,5 @@
 async function main() {
-    const controls = document.querySelectorAll("button, input, select");
+    const controls = document.querySelectorAll("button:not(.ignore-disabling), input, select");
     controls.forEach(el => el.disabled = true);
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
 
@@ -62,7 +62,7 @@ async function show(action) {
         return;
     }
 
-    const controls = document.querySelectorAll("button, input, select");
+    const controls = document.querySelectorAll("button:not(.ignore-disabling), input, select");
     controls.forEach(el => el.disabled = true);
 
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
