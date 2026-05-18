@@ -99,6 +99,11 @@ async function show(action) {
             const snpFilter = document.getElementById(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID).value.replace(/\s+/g, '');
             isGrouped = document.getElementById(GROUP_MACRO_CHECKBOX_ELEMENT_ID).checked;
             dataList = await getCentroidsMax(start, end, size, isGrouped, snpFilter);
+        } else if (action === 'Correlation') {
+            const start = document.getElementById("searchStartForm").value;
+            const end = document.getElementById("searchEndForm").value;
+            isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
+            dataList = await getCentroidsCorrelation(snp, size, start, end, isGrouped);
         }
         const caption = isGrouped ? 'level' : 'snps';
         drawLayers(dataList, action, caption, isGrouped);

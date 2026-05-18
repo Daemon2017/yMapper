@@ -77,6 +77,14 @@
     <button type="button" id="homelandButton" onclick="show('Homeland')">
         Homeland
     </button>
+    <label> TMRCA:
+        <input type="number" style="width: 50px;" id="searchStartForm" value="0"/>
+        -
+        <input type="number" style="width: 50px;" id="searchEndForm" value="500"/>
+    </label>
+    <button type="button" id="correlationButton" onclick="show('Correlation')">
+        Correlation
+    </button>
     <button type="button" id="clearDispersionButton" onclick="clearAll()">
         Clear
     </button>
@@ -100,6 +108,9 @@
     </label>
     <button type="button" id="macroMaxButton" onclick="show('Max')">
         MAX
+    </button>
+    <button type="button" id="clearMacroButton" onclick="clearAll()">
+        Clear
     </button>
 
     <br/>

@@ -141,10 +141,26 @@ def get_centroids_max():
     snp = request.args.get('snp', '')
     if not all([start, end, size]):
         return jsonify({"error": "Missing parameters"}), 400
+    print(
+        f'Processing POST /centroids/max for size={size} and start={start} and end={end} and group={group}...')
     response = db.select_max(start, end, size, snp)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_max_centroids(response, group))
+
+
+@app.route('/centroids/correlation', methods=['GET'])
+def get_centroids_correlation_route():
+    snp = request.args.get('snp')
+    size = request.args.get('size')
+    start = request.args.get('start')
+    end = request.args.get('end')
+    group = request.args.get('group', 'false').lower() == 'true'
+    if not all([snp, size, start, end]):
+        return jsonify({"error": "Missing parameters"}), 400
+    print(f'Processing GET /centroids/correlation for snp={snp}, size={size}, group={group}...')
+    response = db.select_centroids_correlation(snp, size, start, end)
+    return jsonify(utils.process_correlation_centroids(response, group))
 
 
 @app.teardown_appcontext

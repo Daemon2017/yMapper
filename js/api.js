@@ -61,7 +61,6 @@ async function getParentMacro() {
     }
 }
 
-
 async function getDbSnpsList() {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
@@ -196,4 +195,28 @@ async function getCentroidsMax(start, end, size, isGrouped, snp) {
     const params = new URLSearchParams({ start, end, size, group: isGrouped, snp: snp });
     const response = await fetch(`${url}?${params}`);
     return await response.json();
+}
+
+async function getCentroidsCorrelation(snp, size, start, end, isGrouped) {
+    try {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
+        const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_CORRELATION}`;
+        const params = new URLSearchParams({
+            snp: snp,
+            size: size,
+            start: start,
+            end: end,
+            group: isGrouped
+        });
+        const response = await fetch(`${url}?${params}`);
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
+            return data;
+        } else {
+            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+        }
+    } catch (error) {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+    }
 }

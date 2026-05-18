@@ -334,3 +334,52 @@ def select_max(start, end, size, filter_snp=None):
         }
         result = session.execute(text(query), params)
         return [dict(row._mapping) for row in result]
+
+
+def select_centroids_correlation(snp, size, start, end):
+    with Session() as session:
+        query = text("""
+            WITH target_snp AS (
+                SELECT centroids 
+                FROM snps3 
+                WHERE size = :size 
+                AND snp IN (
+                    SELECT snp FROM synonyms 
+                    WHERE :snp = ANY(synonyms) 
+                    ORDER BY (snp = :snp) DESC 
+                    LIMIT 1
+                )
+                LIMIT 1
+            ),
+            candidates AS (
+                SELECT 
+                    s.snp,
+                    s.centroids,
+                    t.tmrca
+                FROM snps3 s
+                INNER JOIN tmrcas t ON s.snp = t.snp
+                CROSS JOIN target_snp ts
+                WHERE s.size = :size 
+                AND t.tmrca BETWEEN :start AND :end
+                AND s.centroids && ts.centroids
+            )
+            SELECT 
+                c.snp,
+                c.centroids,
+                (
+                    SELECT json_build_object(
+                        'intersection_count', cardinality(array(SELECT unnest(c.centroids) INTERSECT SELECT unnest(ts.centroids))),
+                        'union_count', cardinality(array(SELECT unnest(c.centroids) UNION SELECT unnest(ts.centroids)))
+                    )
+                    FROM target_snp ts
+                ) AS jaccard_metrics
+            FROM candidates c
+        """)
+
+        result = session.execute(query, {
+            "snp": snp,
+            "size": str(size),
+            "start": int(start),
+            "end": int(end)
+        })
+        return [dict(row._mapping) for row in result]

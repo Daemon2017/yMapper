@@ -81,3 +81,44 @@ def calculate_homeland(response):
         .rename(columns={'h3_index': 'centroids'}) \
         .sort_values(by='level', ascending=False)
     return df.head(100).to_dict(orient='records')
+
+
+def process_correlation_centroids(response, group):
+    if not response:
+        return []
+    df = pd.DataFrame(response)
+    df['intersection'] = df['jaccard_metrics'].apply(lambda x: x['intersection_count'])
+    df['union'] = df['jaccard_metrics'].apply(lambda x: x['union_count'])
+    df['correlation'] = (df['intersection'] / df['union']).round(4)
+    df = df[df['correlation'] >= 0.33]
+    if df.empty:
+        return []
+    df_top_100 = df.sort_values(by='correlation', ascending=False).head(100)
+    if group:
+        df_exploded = df_top_100.explode('centroids')
+        counts = df_exploded.groupby('centroids') \
+            .size().reset_index(name='frequency')
+        max_freq = counts['frequency'].max()
+        if max_freq > 0:
+            counts['level'] = ((counts['frequency'] / max_freq) * 100).round(2)
+        else:
+            counts['level'] = 0.0
+        final_groups = counts.groupby('level')['centroids'] \
+            .agg(list).reset_index()
+        result = []
+        for _, row in final_groups.iterrows():
+            lvl = float(row['level'])
+            result.append({
+                'level': lvl,
+                'centroids': row['centroids'],
+                'snps': f"Correlation Intensity: {lvl}%"
+            })
+        return sorted(result, key=lambda x: x['level'], reverse=True)
+    else:
+        result = []
+        for _, row in df_top_100.iterrows():
+            result.append({
+                'snps': f"{row['snp']} (r={row['correlation']})",
+                'centroids': row['centroids']
+            })
+        return result

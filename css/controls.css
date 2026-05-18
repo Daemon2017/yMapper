@@ -44,7 +44,11 @@ body * {
 #groupMacroCheckbox,
 #parentMacroButton,
 #macroSearchFilteringForm,
-#screenshotModeButton {
+#screenshotModeButton,
+#clearMacroButton,
+#searchStartForm,
+#searchEndForm,
+#correlationButton {
     pointer-events: auto;
 }
 

@@ -13,6 +13,7 @@ const CONFIG = {
         CENTROIDS_INTERSECTION: '/centroids/intersection',
         CENTROIDS_XOR: '/centroids/xor',
         CENTROIDS_MAX: '/centroids/max',
+        CENTROIDS_CORRELATION: '/centroids/correlation',
     },
 };
 
