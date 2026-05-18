@@ -339,8 +339,8 @@ def select_max(start, end, size, filter_snp=None):
 def select_centroids_correlation(snp, size, start, end):
     with Session() as session:
         query = text("""
-            WITH target_snp AS (
-                SELECT centroids 
+            WITH RECURSIVE target_snp AS (
+                SELECT snp AS target_name, centroids 
                 FROM snps3 
                 WHERE size = :size 
                 AND snp IN (
@@ -350,6 +350,15 @@ def select_centroids_correlation(snp, size, start, end):
                     LIMIT 1
                 )
                 LIMIT 1
+            ),
+            downstream_descendants AS (
+                SELECT unnest(c.childs) AS node_name
+                FROM childs c
+                JOIN target_snp ts ON c.snp = ts.target_name
+                UNION ALL
+                SELECT unnest(c.childs)
+                FROM childs c
+                JOIN downstream_descendants d ON c.snp = d.node_name
             ),
             candidates AS (
                 SELECT 
@@ -361,7 +370,8 @@ def select_centroids_correlation(snp, size, start, end):
                 CROSS JOIN target_snp ts
                 WHERE s.size = :size 
                 AND t.tmrca BETWEEN :start AND :end
-                AND s.centroids && ts.centroids
+                AND s.snp NOT IN (SELECT node_name FROM downstream_descendants)
+                AND s.centroids && ts.centroids  
             )
             SELECT 
                 c.snp,

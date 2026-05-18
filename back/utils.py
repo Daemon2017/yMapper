@@ -90,7 +90,7 @@ def process_correlation_centroids(response, group):
     df['intersection'] = df['jaccard_metrics'].apply(lambda x: x['intersection_count'])
     df['union'] = df['jaccard_metrics'].apply(lambda x: x['union_count'])
     df['correlation'] = (df['intersection'] / df['union']).round(4)
-    df = df[df['correlation'] >= 0.33]
+    df = df[df['correlation'] >= 0.25]
     if df.empty:
         return []
     df_top_100 = df.sort_values(by='correlation', ascending=False).head(100)
