@@ -42,3 +42,89 @@ function clearSets() {
 function clearPoints() {
     pointsGroup.clearLayers();
 }
+
+function updateUrlParams(currentAction) {
+    const params = new URLSearchParams();
+    if (map) {
+        const center = map.getCenter();
+        params.set('lat', center.lat.toFixed(4));
+        params.set('lng', center.lng.toFixed(4));
+        params.set('z', map.getZoom());
+    }
+    params.set('grid', document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
+    let action = currentAction;
+    if (!action) {
+        const currentHashParams = new URLSearchParams(window.location.hash.substring(1));
+        action = currentHashParams.get('action');
+    }
+    if (action) {
+        params.set('action', action);
+        if (['Geography', 'Dispersion', 'Homeland', 'Correlation'].includes(action)) {
+            params.set('snp', document.getElementById(SEARCH_FORM_ELEMENT_ID).value);
+            if (action === 'Dispersion' || action === 'Correlation') {
+                params.set('groupDisp', document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked ? '1' : '0');
+            }
+            if (action === 'Correlation') {
+                params.set('sStart', document.getElementById('searchStartForm').value);
+                params.set('sEnd', document.getElementById('searchEndForm').value);
+            }
+        }
+        else if (action === 'Max') {
+            params.set('macroSnp', document.getElementById(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID).value);
+            params.set('macroStart', document.getElementById(MACRO_START_FORM_ELEMENT_ID).value);
+            params.set('macroEnd', document.getElementById(MACRO_END_FORM_ELEMENT_ID).value);
+            params.set('groupMacro', document.getElementById(GROUP_MACRO_CHECKBOX_ELEMENT_ID).checked ? '1' : '0');
+        }
+        else if (action === 'Filtering') {
+            params.set('filterSnp', document.getElementById(SEARCH_FILTERING_FORM_ELEMENT_ID).value);
+            params.set('fStart', document.getElementById(START_FORM_ELEMENT_ID).value);
+            params.set('fEnd', document.getElementById(END_FORM_ELEMENT_ID).value);
+            params.set('modeSelect', document.getElementById('filteringModeSelect').value);
+            params.set('groupFilter', document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked ? '1' : '0');
+        }
+    }
+    window.location.hash = params.toString();
+}
+
+function restoreParamsFromUrl() {
+    const hash = window.location.hash.substring(1);
+    if (!hash) return null;
+    const params = new URLSearchParams(hash);
+    const setVal = (id, key) => {
+        const el = document.getElementById(id);
+        if (el && params.has(key)) el.value = params.get(key);
+    };
+    const setCheck = (id, key) => {
+        const el = document.getElementById(id);
+        if (el && params.has(key)) el.checked = params.get(key) === '1';
+    };
+    setVal(GRID_SIZE_SELECT_ELEMENT_ID, 'grid');
+    const action = params.get('action');
+    if (action) {
+        if (['Geography', 'Dispersion', 'Homeland', 'Correlation'].includes(action)) {
+            setVal(SEARCH_FORM_ELEMENT_ID, 'snp');
+            setCheck(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID, 'groupDisp');
+            setVal('searchStartForm', 'sStart');
+            setVal('searchEndForm', 'sEnd');
+        }
+        else if (action === 'Max') {
+            setVal(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID, 'macroSnp');
+            setVal(MACRO_START_FORM_ELEMENT_ID, 'macroStart');
+            setVal(MACRO_END_FORM_ELEMENT_ID, 'macroEnd');
+            setCheck(GROUP_MACRO_CHECKBOX_ELEMENT_ID, 'groupMacro');
+        }
+        else if (action === 'Filtering') {
+            setVal(SEARCH_FILTERING_FORM_ELEMENT_ID, 'filterSnp');
+            setVal(START_FORM_ELEMENT_ID, 'fStart');
+            setVal(END_FORM_ELEMENT_ID, 'fEnd');
+            setVal('filteringModeSelect', 'modeSelect');
+            setCheck(GROUP_FILTERING_CHECKBOX_ELEMENT_ID, 'groupFilter');
+        }
+    }
+    return {
+        lat: params.has('lat') ? parseFloat(params.get('lat')) : null,
+        lng: params.has('lng') ? parseFloat(params.get('lng')) : null,
+        zoom: params.has('z') ? parseInt(params.get('z')) : null,
+        action: action
+    };
+}

@@ -3,9 +3,10 @@ async function main() {
     controls.forEach(el => el.disabled = true);
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
 
-    let lat = 53.2582;
-    let lng = 34.2850;
-    let zoom = 4;
+    const savedSettings = restoreParamsFromUrl();
+    let lat = (savedSettings && savedSettings.lat) ? savedSettings.lat : 53.2582;
+    let lng = (savedSettings && savedSettings.lng) ? savedSettings.lng : 34.2850;
+    let zoom = (savedSettings && savedSettings.zoom) ? savedSettings.zoom : 4;
 
     let baseLayer = L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -23,6 +24,8 @@ async function main() {
     setsGroup.addTo(map);
     pointsGroup.addTo(map);
     map.addEventListener("moveend", getLatLng);
+    map.addEventListener("moveend", () => updateUrlParams());
+    map.addEventListener("zoomend", () => updateUrlParams());
     map.on('click', function(e) {
         if (isIncludeToSetAMode) {
             includeToSet(e.latlng.lat, e.latlng.lng, 'A');
@@ -50,6 +53,11 @@ async function main() {
         attachDropDownPrompt(snps, MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID);
         attachDropDownPrompt(snps, SEARCH_FILTERING_FORM_ELEMENT_ID);
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
+        if (savedSettings && savedSettings.action) {
+            controls.forEach(el => el.disabled = false);
+            await show(savedSettings.action);
+            return;
+        }
     } catch (error) {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
     } finally {
@@ -108,6 +116,7 @@ async function show(action) {
         const caption = isGrouped ? 'level' : 'snps';
         drawLayers(dataList, action, caption, isGrouped);
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
+        updateUrlParams(action);
     } catch (error) {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
     } finally {
