@@ -93,3 +93,5 @@ let uncheckedSnpsList = [];
 
 let includedToSetACentroids = [];
 let includedToSetBCentroids = [];
+
+let isUiVisible = true;

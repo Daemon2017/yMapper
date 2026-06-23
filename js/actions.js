@@ -4,6 +4,9 @@ async function main() {
     document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
 
     const savedSettings = restoreParamsFromUrl();
+    if (savedSettings && savedSettings.hideUi) {
+        toggleUI(false);
+    }
     let lat = (savedSettings && savedSettings.lat) ? savedSettings.lat : 53.2582;
     let lng = (savedSettings && savedSettings.lng) ? savedSettings.lng : 34.2850;
     let zoom = (savedSettings && savedSettings.zoom) ? savedSettings.zoom : 4;

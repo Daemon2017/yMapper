@@ -45,6 +45,7 @@ function clearPoints() {
 
 function updateUrlParams(currentAction) {
     const params = new URLSearchParams();
+    params.set('ui', isUiVisible ? '1' : '0');
     if (map) {
         const center = map.getCenter();
         params.set('lat', center.lat.toFixed(4));
@@ -121,10 +122,12 @@ function restoreParamsFromUrl() {
             setCheck(GROUP_FILTERING_CHECKBOX_ELEMENT_ID, 'groupFilter');
         }
     }
+    const uiParam = params.get('ui');
     return {
         lat: params.has('lat') ? parseFloat(params.get('lat')) : null,
         lng: params.has('lng') ? parseFloat(params.get('lng')) : null,
         zoom: params.has('z') ? parseInt(params.get('z')) : null,
-        action: action
+        action: action,
+        hideUi: uiParam === '0'
     };
 }
