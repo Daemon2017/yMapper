@@ -7,6 +7,7 @@ const CONFIG = {
         PARENT: '/parent',
         CENTROIDS_GEOGRAPHY: '/centroids/geography',
         CENTROIDS_DISPERSION: '/centroids/dispersion',
+        CENTROIDS_DEPTH: '/centroids/depth',
         CENTROIDS_HOMELAND: '/centroids/homeland',
         CENTROIDS_UNION: '/centroids/union',
         CENTROIDS_SUBTRACTION: '/centroids/subtraction',

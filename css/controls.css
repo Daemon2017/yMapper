@@ -48,7 +48,8 @@ body * {
 #clearMacroButton,
 #searchStartForm,
 #searchEndForm,
-#correlationButton {
+#correlationButton,
+#depthButton {
     pointer-events: auto;
 }
 

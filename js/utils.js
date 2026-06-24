@@ -60,9 +60,9 @@ function updateUrlParams(currentAction) {
     }
     if (action) {
         params.set('action', action);
-        if (['Geography', 'Dispersion', 'Homeland', 'Correlation'].includes(action)) {
+        if (['Geography', 'Dispersion', 'Depth', 'Homeland', 'Correlation'].includes(action)) {
             params.set('snp', document.getElementById(SEARCH_FORM_ELEMENT_ID).value);
-            if (action === 'Dispersion' || action === 'Correlation') {
+            if (action === 'Dispersion' || action === 'Depth' || action === 'Correlation') {
                 params.set('groupDisp', document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked ? '1' : '0');
             }
             if (action === 'Correlation') {
@@ -102,7 +102,7 @@ function restoreParamsFromUrl() {
     setVal(GRID_SIZE_SELECT_ELEMENT_ID, 'grid');
     const action = params.get('action');
     if (action) {
-        if (['Geography', 'Dispersion', 'Homeland', 'Correlation'].includes(action)) {
+        if (['Geography', 'Dispersion', 'Depth', 'Homeland', 'Correlation'].includes(action)) {
             setVal(SEARCH_FORM_ELEMENT_ID, 'snp');
             setCheck(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID, 'groupDisp');
             setVal('searchStartForm', 'sStart');

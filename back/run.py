@@ -163,6 +163,20 @@ def get_centroids_correlation_route():
     return jsonify(utils.process_correlation_centroids(response, group))
 
 
+@app.route('/centroids/depth', methods=['GET'])
+def get_centroids_depth():
+    snp = request.args.get('snp')
+    size = request.args.get('size')
+    group = request.args.get('group', 'false').lower() == 'true'
+    if not all([snp, size]):
+        return jsonify({"error": "Missing parameters"}), 400
+    print(f'Processing GET /centroids/depth for snp={snp} and size={size} and group={group}...')
+    response = db.select_centroids_depth(snp, size)
+    if not response:
+        return jsonify([]), 200
+    return jsonify(utils.process_centroids(response, group))
+
+
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db.Session.remove()

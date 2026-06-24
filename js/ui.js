@@ -47,7 +47,7 @@ function updateUncheckedList(i, action) {
         uncheckedSnpsList.push(i);
     }
     let isGrouped = false;
-    if (action === 'Dispersion') {
+    if (action === 'Dispersion' || action === 'Depth') {
         isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
     } else if (action === 'Filtering') {
         const start = document.getElementById(START_FORM_ELEMENT_ID).value;

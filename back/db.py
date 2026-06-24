@@ -393,3 +393,36 @@ def select_centroids_correlation(snp, size, start, end):
             "end": int(end)
         })
         return [dict(row._mapping) for row in result]
+
+
+def select_centroids_depth(snp, size):
+    with Session() as session:
+        query = text(
+            """
+            WITH RECURSIVE 
+            start_node AS (
+                SELECT snp AS node_name 
+                FROM synonyms 
+                WHERE :snp = ANY(synonyms)
+                ORDER BY (snp = :snp) DESC
+                LIMIT 1
+            ),
+            descendants AS (
+                SELECT node_name FROM start_node
+                UNION ALL
+                SELECT unnest(c.childs) 
+                FROM childs c 
+                JOIN descendants d ON c.snp = d.node_name
+            )
+            SELECT s.snp,
+                   s.centroids
+            FROM   snps3 AS s
+            WHERE  s.size = :size
+                   AND s.snp IN (SELECT node_name FROM descendants);
+            """
+        )
+        result = session.execute(query, {
+            "snp": snp,
+            "size": str(size)
+        })
+        return [dict(row._mapping) for row in result]

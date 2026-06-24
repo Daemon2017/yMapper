@@ -220,3 +220,25 @@ async function getCentroidsCorrelation(snp, size, start, end, isGrouped) {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
     }
 }
+
+async function getCentroidsDepth(snp, size, isGrouped) {
+    try {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
+        const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_DEPTH}`;
+        const params = new URLSearchParams({
+            snp: snp,
+            size: size,
+            group: isGrouped
+        });
+        const response = await fetch(`${url}?${params}`);
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
+            return data;
+        } else {
+            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+        }
+    } catch (error) {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+    }
+}

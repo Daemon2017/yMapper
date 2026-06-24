@@ -29,7 +29,9 @@
 <body>
 <div id="mapLayer"></div>
 <div id="controlsLayer">
-    <button type="button" id="screenshotModeButton" class="ignore-disabling" onclick="toggleUI(); updateUrlParams();">UI</button>
+    <button type="button" id="screenshotModeButton" class="ignore-disabling" onclick="toggleUI(); updateUrlParams();">
+        UI
+    </button>
     <label>
         Lat:
         <input type="number" step="any" id="latForm"/>
@@ -76,6 +78,9 @@
     </button>
     <button type="button" id="homelandButton" onclick="show('Homeland')">
         Homeland
+    </button>
+    <button type="button" id="depthButton" onclick="show('Depth')">
+        Depth
     </button>
     <label> TMRCA:
         <input type="number" style="width: 50px;" id="searchStartForm" value="-500"/>
