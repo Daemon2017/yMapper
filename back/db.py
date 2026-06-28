@@ -23,7 +23,7 @@ def select_list():
         query = text(
             """
             SELECT DISTINCT snp 
-            FROM snps3
+            FROM grid
             """
         )
         result = session.execute(query)
@@ -57,7 +57,7 @@ def select_centroids_geography(snp, size):
         query = text("""
             SELECT snp, 
                    centroids 
-            FROM snps3 
+            FROM grid 
             WHERE size = :size 
             AND snp IN (
                 SELECT snp FROM synonyms 
@@ -79,7 +79,7 @@ def select_centroids_dispersion(snp, size):
             """
             SELECT snp,
                    centroids
-            FROM   snps3
+            FROM   grid
             WHERE  size = :size
                    AND snp IN (SELECT Unnest(childs)
                                FROM   childs
@@ -117,7 +117,7 @@ def select_homeland(parent_snp, size):
                 SELECT 
                     s.centroids, 
                     ABS(p.p_tmrca - t.tmrca) AS dt
-                FROM snps3 s
+                FROM grid s
                 JOIN tmrcas t ON s.snp = t.snp
                 JOIN target_sons ts ON s.snp = ts.son_name
                 CROSS JOIN target_parent p
@@ -142,7 +142,7 @@ def select_centroids_union(a_points, b_points, size, start, end, filter_snp):
             """
             SELECT     s.snp,
                        s.centroids
-            FROM       snps3  AS s
+            FROM       grid  AS s
             INNER JOIN tmrcas AS t
             ON s.snp = t.snp
             WHERE      s.size = :size
@@ -180,7 +180,7 @@ def select_centroids_subtraction(a_points, b_points, size, start, end, filter_sn
             """
             SELECT     s.snp,
                        s.centroids
-            FROM       snps3  AS s
+            FROM       grid  AS s
             INNER JOIN tmrcas AS t
             ON s.snp = t.snp
             WHERE      s.size = :size
@@ -218,7 +218,7 @@ def select_centroids_intersection(a_points, b_points, size, start, end, filter_s
             """
             SELECT     s.snp,
                        s.centroids
-            FROM       snps3  AS s
+            FROM       grid  AS s
             INNER JOIN tmrcas AS t
             ON s.snp = t.snp
             WHERE      s.size = :size
@@ -257,7 +257,7 @@ def select_centroids_xor(a_points, b_points, size, start, end, filter_snp):
             """
             SELECT     s.snp,
                        s.centroids
-            FROM       snps3  AS s
+            FROM       grid  AS s
             INNER JOIN tmrcas AS t
             ON s.snp = t.snp
             WHERE      s.size = :size
@@ -295,7 +295,7 @@ def select_max(start, end, size, filter_snp=None):
             """
             WITH local_data AS (
                 SELECT s.snp, unnest(s.centroids) as h3_index
-                FROM snps3 s
+                FROM grid s
                 JOIN tmrcas t ON s.snp = t.snp
                 WHERE s.size = :size AND t.tmrca BETWEEN :start AND :end
             ),
@@ -341,7 +341,7 @@ def select_centroids_correlation(snp, size, start, end):
         query = text("""
             WITH RECURSIVE target_snp AS (
                 SELECT snp AS target_name, centroids 
-                FROM snps3 
+                FROM grid 
                 WHERE size = :size 
                 AND snp IN (
                     SELECT snp FROM synonyms 
@@ -365,7 +365,7 @@ def select_centroids_correlation(snp, size, start, end):
                     s.snp,
                     s.centroids,
                     t.tmrca
-                FROM snps3 s
+                FROM grid s
                 INNER JOIN tmrcas t ON s.snp = t.snp
                 CROSS JOIN target_snp ts
                 WHERE s.size = :size 
@@ -416,7 +416,7 @@ def select_centroids_depth(snp, size):
             )
             SELECT s.snp,
                    s.centroids
-            FROM   snps3 AS s
+            FROM   grid AS s
             WHERE  s.size = :size
                    AND s.snp IN (SELECT node_name FROM descendants);
             """
