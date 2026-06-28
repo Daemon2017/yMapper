@@ -52,6 +52,92 @@ def select_parent(snp):
         return result[0] if result else None
 
 
+def select_homeland(parent_snp, size):
+    with Session() as session:
+        query = text("""
+            WITH target_parent AS (
+                SELECT sy.snp AS p_name, t.tmrca AS p_tmrca 
+                FROM synonyms sy
+                JOIN tmrcas t ON sy.snp = t.snp
+                WHERE :parent_snp = ANY(sy.synonyms)
+                ORDER BY (sy.snp = :parent_snp) DESC
+                LIMIT 1
+            ),
+            target_sons AS (
+                SELECT unnest(c.childs) AS son_name
+                FROM childs c
+                JOIN target_parent p ON c.snp = p.p_name
+            ),
+            son_metrics AS (
+                SELECT 
+                    s.centroids, 
+                    ABS(p.p_tmrca - t.tmrca) AS dt
+                FROM grid s
+                JOIN tmrcas t ON s.snp = t.snp
+                JOIN target_sons ts ON s.snp = ts.son_name
+                CROSS JOIN target_parent p
+                WHERE s.size = :size
+            )
+            SELECT 
+                h3_index,
+                json_agg(json_build_object('dt', m.dt)) AS sons_info
+            FROM son_metrics m, unnest(m.centroids) AS h3_index
+            GROUP BY h3_index
+        """)
+        result = session.execute(query, {
+            "parent_snp": parent_snp,
+            "size": str(size)
+        })
+        return [dict(row._mapping) for row in result]
+
+
+def select_max(start, end, size, filter_snp=None):
+    with Session() as session:
+        query = \
+            """
+            WITH local_data AS (
+                SELECT s.snp, unnest(s.centroids) as h3_index
+                FROM grid s
+                JOIN tmrcas t ON s.snp = t.snp
+                WHERE s.size = :size AND t.tmrca BETWEEN :start AND :end
+            ),
+            filtered_parents AS (
+                SELECT ld.snp, ld.h3_index
+                FROM local_data ld
+            """
+        if filter_snp and filter_snp.strip() != '':
+            query += """
+            WHERE ld.snp IN (
+                WITH RECURSIVE descendants AS (
+                    SELECT snp as node_name FROM synonyms WHERE :filter_snp = ANY(synonyms)
+                    UNION ALL
+                    SELECT unnest(c.childs) FROM childs c JOIN descendants d ON c.snp = d.node_name
+                )
+                SELECT node_name FROM descendants
+            )
+            """
+        query += """
+        )
+        SELECT 
+            p.snp, 
+            p.h3_index, 
+            COUNT(DISTINCT s_son.snp) as sons_count
+        FROM filtered_parents p
+        JOIN childs ch ON p.snp = ch.snp
+        JOIN local_data s_son ON s_son.snp = ANY(ch.childs) AND s_son.h3_index = p.h3_index
+        GROUP BY p.snp, p.h3_index
+        HAVING COUNT(DISTINCT s_son.snp) > 0
+        """
+        params = {
+            "start": start,
+            "end": end,
+            "size": str(size),
+            "filter_snp": filter_snp
+        }
+        result = session.execute(text(query), params)
+        return [dict(row._mapping) for row in result]
+
+
 def select_centroids_geography(snp, size):
     with Session() as session:
         query = text("""
@@ -93,45 +179,6 @@ def select_centroids_dispersion(snp, size):
         result = session.execute(query, {
             "snp": snp,
             "size": size
-        })
-        return [dict(row._mapping) for row in result]
-
-
-def select_homeland(parent_snp, size):
-    with Session() as session:
-        query = text("""
-            WITH target_parent AS (
-                SELECT sy.snp AS p_name, t.tmrca AS p_tmrca 
-                FROM synonyms sy
-                JOIN tmrcas t ON sy.snp = t.snp
-                WHERE :parent_snp = ANY(sy.synonyms)
-                ORDER BY (sy.snp = :parent_snp) DESC
-                LIMIT 1
-            ),
-            target_sons AS (
-                SELECT unnest(c.childs) AS son_name
-                FROM childs c
-                JOIN target_parent p ON c.snp = p.p_name
-            ),
-            son_metrics AS (
-                SELECT 
-                    s.centroids, 
-                    ABS(p.p_tmrca - t.tmrca) AS dt
-                FROM grid s
-                JOIN tmrcas t ON s.snp = t.snp
-                JOIN target_sons ts ON s.snp = ts.son_name
-                CROSS JOIN target_parent p
-                WHERE s.size = :size
-            )
-            SELECT 
-                h3_index,
-                json_agg(json_build_object('dt', m.dt)) AS sons_info
-            FROM son_metrics m, unnest(m.centroids) AS h3_index
-            GROUP BY h3_index
-        """)
-        result = session.execute(query, {
-            "parent_snp": parent_snp,
-            "size": str(size)
         })
         return [dict(row._mapping) for row in result]
 
@@ -285,53 +332,6 @@ def select_centroids_xor(a_points, b_points, size, start, end, filter_snp):
                 SELECT node_name FROM descendants
             )
             """
-        result = session.execute(text(query), params)
-        return [dict(row._mapping) for row in result]
-
-
-def select_max(start, end, size, filter_snp=None):
-    with Session() as session:
-        query = \
-            """
-            WITH local_data AS (
-                SELECT s.snp, unnest(s.centroids) as h3_index
-                FROM grid s
-                JOIN tmrcas t ON s.snp = t.snp
-                WHERE s.size = :size AND t.tmrca BETWEEN :start AND :end
-            ),
-            filtered_parents AS (
-                SELECT ld.snp, ld.h3_index
-                FROM local_data ld
-            """
-        if filter_snp and filter_snp.strip() != '':
-            query += """
-            WHERE ld.snp IN (
-                WITH RECURSIVE descendants AS (
-                    SELECT snp as node_name FROM synonyms WHERE :filter_snp = ANY(synonyms)
-                    UNION ALL
-                    SELECT unnest(c.childs) FROM childs c JOIN descendants d ON c.snp = d.node_name
-                )
-                SELECT node_name FROM descendants
-            )
-            """
-        query += """
-        )
-        SELECT 
-            p.snp, 
-            p.h3_index, 
-            COUNT(DISTINCT s_son.snp) as sons_count
-        FROM filtered_parents p
-        JOIN childs ch ON p.snp = ch.snp
-        JOIN local_data s_son ON s_son.snp = ANY(ch.childs) AND s_son.h3_index = p.h3_index
-        GROUP BY p.snp, p.h3_index
-        HAVING COUNT(DISTINCT s_son.snp) > 0
-        """
-        params = {
-            "start": start,
-            "end": end,
-            "size": str(size),
-            "filter_snp": filter_snp
-        }
         result = session.execute(text(query), params)
         return [dict(row._mapping) for row in result]
 
