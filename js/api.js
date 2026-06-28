@@ -26,7 +26,9 @@ async function getParentFiltering() {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const parentUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.PARENT}`;
-        const params = new URLSearchParams({ snp: snp });
+        const params = new URLSearchParams({
+            snp: snp
+        });
         const response = await fetch(`${parentUrl}?${params}`);
         if (response.ok) {
             const data = await response.json();
@@ -47,7 +49,9 @@ async function getParentMacro() {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const parentUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.PARENT}`;
-        const params = new URLSearchParams({ snp: snp });
+        const params = new URLSearchParams({
+            snp: snp
+        });
         const response = await fetch(`${parentUrl}?${params}`);
         if (response.ok) {
             const data = await response.json();
@@ -78,13 +82,14 @@ async function getDbSnpsList() {
     }
 }
 
-async function getCentroidsGeography(snp, size) {
+async function getCentroidsGeography(snp, size, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_GEOGRAPHY}`;
         const params = new URLSearchParams({
             snp: snp,
-            size: size
+            size: size,
+            is_confirmed: isConfirmed
         });
         const response = await fetch(`${url}?${params}`);
         if (response.ok) {
@@ -98,16 +103,17 @@ async function getCentroidsGeography(snp, size) {
     }
 }
 
-async function getCentroidsDispersion(snp, size, isGrouped) {
+async function getCentroidsDispersion(snp, size, isGrouped, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-        const centroidsDispersionUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_DISPERSION}`;
+        const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_DISPERSION}`;
         const params = new URLSearchParams({
             snp: snp,
             size: size,
-            group: isGrouped
+            group: isGrouped,
+            is_confirmed: isConfirmed
         });
-        const response = await fetch(`${centroidsDispersionUrl}?${params}`);
+        const response = await fetch(`${url}?${params}`);
         if (response.ok) {
             const data = await response.json();
             document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
@@ -120,15 +126,16 @@ async function getCentroidsDispersion(snp, size, isGrouped) {
     }
 }
 
-async function getCentroidsHomeland(snp, size, group) {
+async function getCentroidsHomeland(snp, size, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-        const centroidsHomelandUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_HOMELAND}`;
+        const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_HOMELAND}`;
         const params = new URLSearchParams({
             snp: snp,
             size: size,
+            is_confirmed: isConfirmed
         });
-        const response = await fetch(`${centroidsHomelandUrl}?${params}`);
+        const response = await fetch(`${url}?${params}`);
         if (response.ok) {
             const data = await response.json();
             document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
@@ -141,11 +148,11 @@ async function getCentroidsHomeland(snp, size, group) {
     }
 }
 
-async function getCentroidsFiltering(start, end, size, isGrouped, snp) {
+async function getCentroidsFiltering(start, end, size, isGrouped, snp, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const mode = document.getElementById("filteringModeSelect").value;
-        let centroidsFilteringUrl='';
+        let centroidsFilteringUrl = '';
         switch (mode) {
           case 'union':
             centroidsFilteringUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_UNION}`;
@@ -169,13 +176,12 @@ async function getCentroidsFiltering(start, end, size, isGrouped, snp) {
             start: start,
             end: end,
             group: isGrouped,
-            snp: snp
+            snp: snp,
+            is_confirmed: isConfirmed
         });
         const response = await fetch(`${centroidsFilteringUrl}?${params}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
         });
         if (response.ok) {
@@ -190,23 +196,17 @@ async function getCentroidsFiltering(start, end, size, isGrouped, snp) {
     }
 }
 
-async function getCentroidsMax(start, end, size, isGrouped, snp) {
-    const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_MAX}`;
-    const params = new URLSearchParams({ start, end, size, group: isGrouped, snp: snp });
-    const response = await fetch(`${url}?${params}`);
-    return await response.json();
-}
-
-async function getCentroidsCorrelation(snp, size, start, end, isGrouped) {
+async function getCentroidsMax(start, end, size, isGrouped, snp, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-        const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_CORRELATION}`;
+        const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_MAX}`;
         const params = new URLSearchParams({
+            start,
+            end,
+            size,
+            group: isGrouped,
             snp: snp,
-            size: size,
-            start: start,
-            end: end,
-            group: isGrouped
+            is_confirmed: isConfirmed
         });
         const response = await fetch(`${url}?${params}`);
         if (response.ok) {
@@ -221,14 +221,40 @@ async function getCentroidsCorrelation(snp, size, start, end, isGrouped) {
     }
 }
 
-async function getCentroidsDepth(snp, size, isGrouped) {
+async function getCentroidsCorrelation(snp, size, start, end, isGrouped, isConfirmed) {
+    try {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
+        const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_CORRELATION}`;
+        const params = new URLSearchParams({
+            snp: snp,
+            size: size,
+            start: start,
+            end: end,
+            group: isGrouped,
+            is_confirmed: isConfirmed
+        });
+        const response = await fetch(`${url}?${params}`);
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
+            return data;
+        } else {
+            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+        }
+    } catch (error) {
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
+    }
+}
+
+async function getCentroidsDepth(snp, size, isGrouped, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_DEPTH}`;
         const params = new URLSearchParams({
             snp: snp,
             size: size,
-            group: isGrouped
+            group: isGrouped,
+            is_confirmed: isConfirmed
         });
         const response = await fetch(`${url}?${params}`);
         if (response.ok) {

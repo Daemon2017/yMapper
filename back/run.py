@@ -9,6 +9,10 @@ app = Flask(__name__)
 cors = CORS(app)
 
 
+def get_bool_arg(arg_name, default='true'):
+    return request.args.get(arg_name, default).lower() == 'true'
+
+
 @app.route('/list', methods=['GET'])
 def get_list():
     print(f'Processing GET /list...')
@@ -34,11 +38,11 @@ def get_parent():
 def get_centroids_geography_route():
     snp = request.args.get('snp')
     size = request.args.get('size')
+    is_confirmed = get_bool_arg('is_confirmed')
     if not all([snp, size]):
         return jsonify({"error": "Missing parameters"}), 400
-
-    print(f'Processing GET /centroids/geography for snp={snp} and size={size}...')
-    response = db.select_centroids_geography(snp, size)
+    print(f'Processing GET /centroids/geography for snp={snp}, size={size}, confirmed={is_confirmed}...')
+    response = db.select_centroids_geography(snp, size, is_confirmed)
     if not response:
         return jsonify([]), 200
 
@@ -50,10 +54,12 @@ def get_centroids_dispersion():
     snp = request.args.get('snp')
     size = request.args.get('size')
     group = request.args.get('group', 'false').lower() == 'true'
+    is_confirmed = get_bool_arg('is_confirmed')
     if not all([snp, size]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(f'Processing GET /centroids/dispersion for snp={snp} and size={size} and group={group}...')
-    response = db.select_centroids_dispersion(snp, size)
+    print(
+        f'Processing GET /centroids/dispersion for snp={snp}, size={size}, group={group}, confirmed={is_confirmed}...')
+    response = db.select_centroids_dispersion(snp, size, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
@@ -63,10 +69,11 @@ def get_centroids_dispersion():
 def get_centroids_homeland():
     snp = request.args.get('snp')
     size = request.args.get('size')
+    is_confirmed = get_bool_arg('is_confirmed')
     if not all([snp, size]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(f'Processing GET /centroids/homeland for snp={snp} and size={size}...')
-    response = db.select_homeland(snp, size)
+    print(f'Processing GET /centroids/homeland for snp={snp}, size={size}, confirmed={is_confirmed}...')
+    response = db.select_homeland(snp, size, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.calculate_homeland(response))
@@ -77,11 +84,11 @@ def get_centroids_union():
     body = request.get_json()
     args = request.args
     a_points, b_points, start, end, group, size, snp = utils.get_input(args, body)
+    is_confirmed = get_bool_arg('is_confirmed')
     if not all([a_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(
-        f'Processing POST /centroids/union for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
-    response = db.select_centroids_union(a_points, b_points, size, start, end, snp)
+    print(f'Processing POST /centroids/union for size={size}, group={group}, confirmed={is_confirmed}...')
+    response = db.select_centroids_union(a_points, b_points, size, start, end, snp, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
@@ -92,11 +99,11 @@ def get_centroids_subtraction():
     body = request.get_json()
     args = request.args
     a_points, b_points, start, end, group, size, snp = utils.get_input(args, body)
+    is_confirmed = get_bool_arg('is_confirmed')
     if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(
-        f'Processing POST /centroids/subtraction for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
-    response = db.select_centroids_subtraction(a_points, b_points, size, start, end, snp)
+    print(f'Processing POST /centroids/subtraction for size={size}, group={group}, confirmed={is_confirmed}...')
+    response = db.select_centroids_subtraction(a_points, b_points, size, start, end, snp, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
@@ -107,11 +114,11 @@ def get_centroids_intersection():
     body = request.get_json()
     args = request.args
     a_points, b_points, start, end, group, size, snp = utils.get_input(args, body)
+    is_confirmed = get_bool_arg('is_confirmed')
     if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(
-        f'Processing POST /centroids/intersection for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
-    response = db.select_centroids_intersection(a_points, b_points, size, start, end, snp)
+    print(f'Processing POST /centroids/intersection for size={size}, group={group}, confirmed={is_confirmed}...')
+    response = db.select_centroids_intersection(a_points, b_points, size, start, end, snp, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
@@ -122,11 +129,11 @@ def get_centroids_xor():
     body = request.get_json()
     args = request.args
     a_points, b_points, start, end, group, size, snp = utils.get_input(args, body)
+    is_confirmed = get_bool_arg('is_confirmed')
     if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(
-        f'Processing POST /centroids/xor for a_points={a_points} and b_points={b_points} and size={size} and start={start} and end={end} and group={group}...')
-    response = db.select_centroids_xor(a_points, b_points, size, start, end, snp)
+    print(f'Processing POST /centroids/xor for size={size}, group={group}, confirmed={is_confirmed}...')
+    response = db.select_centroids_xor(a_points, b_points, size, start, end, snp, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
@@ -139,11 +146,11 @@ def get_centroids_max():
     size = request.args.get('size')
     group = request.args.get('group', 'false').lower() == 'true'
     snp = request.args.get('snp', '')
+    is_confirmed = get_bool_arg('is_confirmed')
     if not all([start, end, size]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(
-        f'Processing POST /centroids/max for size={size} and start={start} and end={end} and group={group}...')
-    response = db.select_max(start, end, size, snp)
+    print(f'Processing GET /centroids/max for size={size}, group={group}, confirmed={is_confirmed}...')
+    response = db.select_max(start, end, size, snp, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_max_centroids(response, group))
@@ -156,10 +163,12 @@ def get_centroids_correlation_route():
     start = request.args.get('start')
     end = request.args.get('end')
     group = request.args.get('group', 'false').lower() == 'true'
+    is_confirmed = get_bool_arg('is_confirmed')
     if not all([snp, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(f'Processing GET /centroids/correlation for snp={snp}, size={size}, group={group}...')
-    response = db.select_centroids_correlation(snp, size, start, end)
+    print(
+        f'Processing GET /centroids/correlation for snp={snp}, size={size}, group={group}, confirmed={is_confirmed}...')
+    response = db.select_centroids_correlation(snp, size, start, end, is_confirmed)
     return jsonify(utils.process_correlation_centroids(response, group))
 
 
@@ -168,10 +177,11 @@ def get_centroids_depth():
     snp = request.args.get('snp')
     size = request.args.get('size')
     group = request.args.get('group', 'false').lower() == 'true'
+    is_confirmed = get_bool_arg('is_confirmed')
     if not all([snp, size]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(f'Processing GET /centroids/depth for snp={snp} and size={size} and group={group}...')
-    response = db.select_centroids_depth(snp, size)
+    print(f'Processing GET /centroids/depth for snp={snp}, size={size}, group={group}, confirmed={is_confirmed}...')
+    response = db.select_centroids_depth(snp, size, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))

@@ -46,6 +46,13 @@
 
     <br/>
     <label>
+        Datasource:
+        <select id="datasourceSelect" onchange="clearAll()">
+            <option value="true" selected>Confirmed</option>
+            <option value="false">Confirmed + Predicted</option>
+        </select>
+    </label>
+    <label>
         Grid size:
         <select id="gridSizeSelect" onchange="clearAll()">
             <option value="0">0</option>

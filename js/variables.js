@@ -35,6 +35,7 @@ const MACRO_START_FORM_ELEMENT_ID = "macroStartForm";
 const MACRO_END_FORM_ELEMENT_ID = "macroEndForm";
 const SCREENSHOT_MODE_BUTTON_ELEMENT_ID = "screenshotModeButton";
 const CONTROLS_LAYER_ELEMENT_ID = "controlsLayer";
+const DATASOURCE_SELECT_ELEMENT_ID = "datasourceSelect";
 
 const BUSY_STATE_TEXT = "Busy...";
 const OK_STATE_TEXT = "OK.";

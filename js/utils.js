@@ -46,6 +46,7 @@ function clearPoints() {
 function updateUrlParams(currentAction) {
     const params = new URLSearchParams();
     params.set('ui', isUiVisible ? '1' : '0');
+    params.set('conf', document.getElementById(DATASOURCE_SELECT_ELEMENT_ID).value);
     if (map) {
         const center = map.getCenter();
         params.set('lat', center.lat.toFixed(4));
@@ -100,6 +101,7 @@ function restoreParamsFromUrl() {
         if (el && params.has(key)) el.checked = params.get(key) === '1';
     };
     setVal(GRID_SIZE_SELECT_ELEMENT_ID, 'grid');
+    setVal(DATASOURCE_SELECT_ELEMENT_ID, 'conf');
     const action = params.get('action');
     if (action) {
         if (['Geography', 'Dispersion', 'Depth', 'Homeland', 'Correlation'].includes(action)) {
