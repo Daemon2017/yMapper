@@ -46,7 +46,10 @@ body * {
 #correlationButton,
 #depthButton,
 #globalGroupSelect,
-#globalClearButton {
+#globalClearButton,
+#snpSearchButton,
+#macroViewButton,
+#geoSearchButton {
     pointer-events: auto;
 }
 
@@ -136,3 +139,38 @@ body * {
     max-height: 70%;
     margin: 4px;
   }
+
+.tabs-nav {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+}
+.tab-btn {
+    padding: 6px 12px;
+    cursor: pointer;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px 4px 0 0;
+}
+.tab-btn.active {
+    background: #fff;
+    border-bottom-color: transparent;
+    font-weight: bold;
+}
+.tab-btn {
+    pointer-events: auto;
+}
+.mode-block {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 5px;
+}
+.mode-block p {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    gap: 5px;
+}

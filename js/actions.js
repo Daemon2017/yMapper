@@ -57,6 +57,20 @@ async function main() {
         attachDropDownPrompt(snps, SEARCH_FILTERING_FORM_ELEMENT_ID);
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
         if (savedSettings && savedSettings.action) {
+            let targetMode = 'snp-search';
+            if (savedSettings.action === 'Max') {
+                targetMode = 'macro-view';
+            } else if (savedSettings.action === 'Filtering') {
+                targetMode = 'geo-search';
+            }
+            document.querySelectorAll('.mode-block').forEach(block => block.style.setProperty('display', 'none', 'important'));
+            const activeBlock = document.getElementById(`block-${targetMode}`);
+            if (activeBlock) activeBlock.style.removeProperty('display');
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            const clickedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn =>
+                btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(targetMode)
+            );
+            if (clickedBtn) clickedBtn.classList.add('active');
             controls.forEach(el => el.disabled = false);
             await show(savedSettings.action);
             return;
@@ -184,6 +198,28 @@ function swapSets() {
     } else {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = HEXAGONS_SETTING_NOT_FINISHED_ERROR_TEXT;
     }
+}
+
+function switchMode(modeId) {
+    document.querySelectorAll('.mode-block').forEach(block => {
+        block.style.setProperty('display', 'none', 'important');
+    });
+    const activeBlock = document.getElementById(`block-${modeId}`);
+    if (activeBlock) {
+        activeBlock.style.removeProperty('display');
+    }
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    const clickedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn =>
+        btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(modeId)
+    );
+    if (clickedBtn) clickedBtn.classList.add('active');
+    clearAll();
+    let defaultAction = 'Geography';
+    if (modeId === 'macro-view') defaultAction = 'Max';
+    if (modeId === 'geo-search') defaultAction = 'Filtering';
+    updateUrlParams(defaultAction);
 }
 
 document.addEventListener('DOMContentLoaded', main);

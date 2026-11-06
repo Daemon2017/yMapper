@@ -57,8 +57,12 @@ function updateUrlParams(currentAction) {
     params.set('group', document.getElementById(GLOBAL_GROUP_SELECT_ELEMENT_ID).value);
     let action = currentAction;
     if (!action) {
-        const currentHashParams = new URLSearchParams(window.location.hash.substring(1));
-        action = currentHashParams.get('action');
+        const activeTab = document.querySelector('.tab-btn.active');
+        if (activeTab) {
+            if (activeTab.getAttribute('onclick').includes('macro-view')) action = 'Max';
+            else if (activeTab.getAttribute('onclick').includes('geo-search')) action = 'Filtering';
+            else action = 'Geography';
+        }
     }
     if (action) {
         params.set('action', action);

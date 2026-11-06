@@ -149,6 +149,7 @@ function toggleUI(forceState) {
     const controls = document.getElementById(CONTROLS_LAYER_ELEMENT_ID);
     const btn = document.getElementById(SCREENSHOT_MODE_BUTTON_ELEMENT_ID);
     const leafletControls = document.querySelectorAll('.leaflet-control');
+    const tabsNav = document.querySelector('.tabs-nav');
     const hiddenOpacity = 0.33;
     if (!controls || !btn) return;
     if (typeof forceState === 'boolean') {
@@ -159,13 +160,29 @@ function toggleUI(forceState) {
     const children = controls.children;
     if (isUiVisible) {
         leafletControls.forEach(el => el.style.setProperty('display', 'block', 'important'));
+        if (tabsNav) tabsNav.style.removeProperty('display');
+        let activeModeId = 'snp-search';
+        const activeTabBtn = document.querySelector('.tab-btn.active');
+        if (activeTabBtn && activeTabBtn.getAttribute('onclick')) {
+            const match = activeTabBtn.getAttribute('onclick').match(/'([^']+)'/);
+            if (match) activeModeId = match[1];
+        }
         for (let el of children) {
-            el.style.removeProperty('display');
+            if (el.classList.contains('mode-block')) {
+                if (el.id === `block-${activeModeId}`) {
+                    el.style.removeProperty('display');
+                } else {
+                    el.style.setProperty('display', 'none', 'important');
+                }
+            } else {
+                el.style.removeProperty('display');
+            }
         }
         btn.style.opacity = '1';
         btn.style.color = '#000';
     } else {
         leafletControls.forEach(el => el.style.setProperty('display', 'none', 'important'));
+        if (tabsNav) tabsNav.style.setProperty('display', 'none', 'important');
         for (let el of children) {
             if (el.id !== SCREENSHOT_MODE_BUTTON_ELEMENT_ID) {
                 el.style.setProperty('display', 'none', 'important');
