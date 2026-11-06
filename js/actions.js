@@ -97,8 +97,8 @@ async function show(action) {
             isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
             dataList = await getCentroidsDispersion(snp, size, isGrouped, isConfirmed);
         } else if (action === 'Depth') {
-            isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
-            dataList = await getCentroidsDepth(snp, size, isGrouped, isConfirmed);
+            isGrouped = true;
+            dataList = await getCentroidsDepth(snp, size, isConfirmed);
         } else if (action === 'Filtering') {
             const start = document.getElementById(START_FORM_ELEMENT_ID).value;
             const end = document.getElementById(END_FORM_ELEMENT_ID).value;

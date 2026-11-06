@@ -246,14 +246,13 @@ async function getCentroidsCorrelation(snp, size, start, end, isGrouped, isConfi
     }
 }
 
-async function getCentroidsDepth(snp, size, isGrouped, isConfirmed) {
+async function getCentroidsDepth(snp, size, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_DEPTH}`;
         const params = new URLSearchParams({
             snp: snp,
             size: size,
-            group: isGrouped,
             is_confirmed: isConfirmed
         });
         const response = await fetch(`${url}?${params}`);
