@@ -8,28 +8,34 @@ def get_input(args, body):
     size = args.get('size')
     start = args.get('start')
     end = args.get('end')
-    group = args.get('group', 'false').lower() == 'true'
+    group_mode = args.get('group', 'combined').lower()
     snp = args.get('snp')
-    return a_points, b_points, start, end, group, size, snp
+    return a_points, b_points, start, end, group_mode, size, snp
 
 
-def process_centroids(response, group):
+def process_centroids(response, group_mode):
     df = pd.DataFrame.from_records(response)
     if 'centroids' not in df.columns or 'snp' not in df.columns:
         return []
     df = df.explode('centroids').rename(columns={'centroids': 'centroid'})
-    if group:
+    if group_mode == 'grouped':
         df = df.groupby('centroid')['snp'].nunique().reset_index() \
             .groupby('snp')['centroid'].agg(list).reset_index() \
             .rename(columns={'snp': 'level', 'centroid': 'centroids'}) \
             .sort_values(by='level', ascending=False)
-    else:
+    elif group_mode == 'combined':
         df = df.groupby('centroid')['snp'].apply(lambda x: tuple(sorted(set(x)))).reset_index() \
             .groupby('snp')['centroid'].agg(list).reset_index() \
             .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
         df = df.assign(snps_len=df['snps'].str.len()) \
             .sort_values(by='snps_len', ascending=False) \
             .drop(columns=['snps_len'])
+        df['snps'] = df['snps'].apply(lambda x: ", ".join(x))
+    else:
+        df = df.groupby('snp')['centroid'].agg(list).reset_index() \
+            .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
+        df['count'] = df['centroids'].str.len()
+        df = df.sort_values(by='count', ascending=False).drop(columns=['count'])
     return df.head(100).to_dict(orient='records')
 
 
@@ -83,7 +89,7 @@ def calculate_homeland(response):
     return df.head(100).to_dict(orient='records')
 
 
-def process_correlation_centroids(response, group):
+def process_correlation_centroids(response, group_mode):
     if not response:
         return []
     df = pd.DataFrame(response)
@@ -94,17 +100,12 @@ def process_correlation_centroids(response, group):
     if df.empty:
         return []
     df_top_100 = df.sort_values(by='correlation', ascending=False).head(100)
-    if group:
+    if group_mode == 'grouped':
         df_exploded = df_top_100.explode('centroids')
-        counts = df_exploded.groupby('centroids') \
-            .size().reset_index(name='frequency')
+        counts = df_exploded.groupby('centroids').size().reset_index(name='frequency')
         max_freq = counts['frequency'].max()
-        if max_freq > 0:
-            counts['level'] = ((counts['frequency'] / max_freq) * 100).round(2)
-        else:
-            counts['level'] = 0.0
-        final_groups = counts.groupby('level')['centroids'] \
-            .agg(list).reset_index()
+        counts['level'] = ((counts['frequency'] / max_freq) * 100).round(2) if max_freq > 0 else 0.0
+        final_groups = counts.groupby('level')['centroids'].agg(list).reset_index()
         result = []
         for _, row in final_groups.iterrows():
             lvl = float(row['level'])
@@ -114,6 +115,17 @@ def process_correlation_centroids(response, group):
                 'snps': f"Correlation Intensity: {lvl}%"
             })
         return sorted(result, key=lambda x: x['level'], reverse=True)
+    elif group_mode == 'combined':
+        records = []
+        for _, row in df_top_100.iterrows():
+            for c in row['centroids']:
+                records.append({'snp': f"{row['snp']} (r={row['correlation']})", 'centroid': c})
+        if not records: return []
+        comb_df = pd.DataFrame(records)
+        comb_df = comb_df.groupby('centroid')['snp'].apply(lambda x: ", ".join(sorted(set(x)))).reset_index()
+        comb_df = comb_df.groupby('snp')['centroid'].agg(list).reset_index() \
+            .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
+        return comb_df.to_dict(orient='records')
     else:
         result = []
         for _, row in df_top_100.iterrows():

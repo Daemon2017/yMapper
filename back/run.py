@@ -46,23 +46,23 @@ def get_centroids_geography_route():
     if not response:
         return jsonify([]), 200
 
-    return jsonify(utils.process_centroids(response, group=False))
+    return jsonify(utils.process_centroids(response, group_mode=False))
 
 
 @app.route('/centroids/dispersion', methods=['GET'])
 def get_centroids_dispersion():
     snp = request.args.get('snp')
     size = request.args.get('size')
-    group = request.args.get('group', 'false').lower() == 'true'
+    group_mode = request.args.get('group', 'combined').lower()
     is_confirmed = get_bool_arg('is_confirmed')
     if not all([snp, size]):
         return jsonify({"error": "Missing parameters"}), 400
     print(
-        f'Processing GET /centroids/dispersion for snp={snp}, size={size}, group={group}, confirmed={is_confirmed}...')
+        f'Processing GET /centroids/dispersion for snp={snp}, size={size}, group_mode={group_mode}, confirmed={is_confirmed}...')
     response = db.select_centroids_dispersion(snp, size, is_confirmed)
     if not response:
         return jsonify([]), 200
-    return jsonify(utils.process_centroids(response, group))
+    return jsonify(utils.process_centroids(response, group_mode))
 
 
 @app.route('/centroids/homeland', methods=['GET'])
@@ -144,16 +144,16 @@ def get_centroids_max():
     start = request.args.get('start')
     end = request.args.get('end')
     size = request.args.get('size')
-    group = request.args.get('group', 'false').lower() == 'true'
+    group_mode = request.args.get('group', 'combined').lower()
     snp = request.args.get('snp', '')
     is_confirmed = get_bool_arg('is_confirmed')
     if not all([start, end, size]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(f'Processing GET /centroids/max for size={size}, group={group}, confirmed={is_confirmed}...')
+    print(f'Processing GET /centroids/max for size={size}, group_mode={group_mode}, confirmed={is_confirmed}...')
     response = db.select_max(start, end, size, snp, is_confirmed)
     if not response:
         return jsonify([]), 200
-    return jsonify(utils.process_max_centroids(response, group))
+    return jsonify(utils.process_max_centroids(response, group_mode))
 
 
 @app.route('/centroids/correlation', methods=['GET'])
@@ -162,14 +162,14 @@ def get_centroids_correlation_route():
     size = request.args.get('size')
     start = request.args.get('start')
     end = request.args.get('end')
-    group = request.args.get('group', 'false').lower() == 'true'
+    group_mode = request.args.get('group', 'combined').lower()
     is_confirmed = get_bool_arg('is_confirmed')
     if not all([snp, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(
-        f'Processing GET /centroids/correlation for snp={snp}, size={size}, group={group}, confirmed={is_confirmed}...')
+        f'Processing GET /centroids/correlation for snp={snp}, size={size}, group_mode={group_mode}, confirmed={is_confirmed}...')
     response = db.select_centroids_correlation(snp, size, start, end, is_confirmed)
-    return jsonify(utils.process_correlation_centroids(response, group))
+    return jsonify(utils.process_correlation_centroids(response, group_mode))
 
 
 @app.route('/centroids/depth', methods=['GET'])
@@ -183,7 +183,7 @@ def get_centroids_depth():
     response = db.select_centroids_depth(snp, size, is_confirmed)
     if not response:
         return jsonify([]), 200
-    return jsonify(utils.process_centroids(response, group=True))
+    return jsonify(utils.process_centroids(response, group_mode='grouped'))
 
 
 @app.teardown_appcontext

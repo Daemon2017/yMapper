@@ -65,8 +65,12 @@
         </select>
     </label>
     <label>
-        <label for="globalGroupCheckbox">Group:</label>
-        <input type="checkbox" id="globalGroupCheckbox" />
+        <label for="globalGroupSelect">Group:</label>
+        <select id="globalGroupSelect">
+            <option value="ungrouped">Ungrouped</option>
+            <option value="combined" selected>Combined</option>
+            <option value="grouped">Grouped</option>
+        </select>
         <button id="globalClearButton" onclick="clearAll()">Clear</button>
     </label>
 

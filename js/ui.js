@@ -46,7 +46,8 @@ function updateUncheckedList(i, action) {
     } else {
         uncheckedSnpsList.push(i);
     }
-    let isGrouped = document.getElementById(GLOBAL_GROUP_CHECKBOX_ELEMENT_ID).checked;
+    let groupMode = document.getElementById(GLOBAL_GROUP_SELECT_ELEMENT_ID).value;
+    let isGrouped = (groupMode === 'grouped');
     if (action === 'Homeland' || action === 'Depth') {
         isGrouped = true;
     } else if (action === 'Geography') {

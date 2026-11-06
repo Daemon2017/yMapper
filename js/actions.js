@@ -89,12 +89,13 @@ async function show(action) {
         const snp = searchForm.value;
         const size = document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value;
         const isConfirmed = document.getElementById(DATASOURCE_SELECT_ELEMENT_ID).value;
-        var isGrouped = document.getElementById(GLOBAL_GROUP_CHECKBOX_ELEMENT_ID).checked;
+        const groupMode = document.getElementById(GLOBAL_GROUP_SELECT_ELEMENT_ID).value;
+        let isGrouped = (groupMode === 'grouped');
         if (action === 'Geography') {
             isGrouped = false;
             dataList = await getCentroidsGeography(snp, size, isConfirmed);
         } else if (action === 'Dispersion') {
-            dataList = await getCentroidsDispersion(snp, size, isGrouped, isConfirmed);
+            dataList = await getCentroidsDispersion(snp, size, groupMode, isConfirmed);
         } else if (action === 'Depth') {
             isGrouped = true;
             dataList = await getCentroidsDepth(snp, size, isConfirmed);
@@ -102,7 +103,7 @@ async function show(action) {
             const start = document.getElementById(START_FORM_ELEMENT_ID).value;
             const end = document.getElementById(END_FORM_ELEMENT_ID).value;
             const snpFilter = document.getElementById(SEARCH_FILTERING_FORM_ELEMENT_ID).value.replace(/\s+/g, '');
-            dataList = await getCentroidsFiltering(start, end, size, isGrouped, snpFilter, isConfirmed);
+            dataList = await getCentroidsFiltering(start, end, size, groupMode, snpFilter, isConfirmed);
         } else if (action === 'Homeland') {
             isGrouped = true;
             dataList = await getCentroidsHomeland(snp, size, isConfirmed);
@@ -110,11 +111,11 @@ async function show(action) {
             const start = document.getElementById(MACRO_START_FORM_ELEMENT_ID).value;
             const end = document.getElementById(MACRO_END_FORM_ELEMENT_ID).value;
             const snpFilter = document.getElementById(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID).value.replace(/\s+/g, '');
-            dataList = await getCentroidsMax(start, end, size, isGrouped, snpFilter, isConfirmed);
+            dataList = await getCentroidsMax(start, end, size, groupMode, snpFilter, isConfirmed);
         } else if (action === 'Correlation') {
             const start = document.getElementById("searchStartForm").value;
             const end = document.getElementById("searchEndForm").value;
-            dataList = await getCentroidsCorrelation(snp, size, start, end, isGrouped, isConfirmed);
+            dataList = await getCentroidsCorrelation(snp, size, start, end, groupMode, isConfirmed);
         }
         const caption = isGrouped ? 'level' : 'snps';
         drawLayers(dataList, action, caption, isGrouped);

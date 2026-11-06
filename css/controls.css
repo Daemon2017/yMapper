@@ -45,7 +45,7 @@ body * {
 #searchEndForm,
 #correlationButton,
 #depthButton,
-#globalGroupCheckbox,
+#globalGroupSelect,
 #globalClearButton {
     pointer-events: auto;
 }

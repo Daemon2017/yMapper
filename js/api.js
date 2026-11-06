@@ -103,14 +103,14 @@ async function getCentroidsGeography(snp, size, isConfirmed) {
     }
 }
 
-async function getCentroidsDispersion(snp, size, isGrouped, isConfirmed) {
+async function getCentroidsDispersion(snp, size, groupMode, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_DISPERSION}`;
         const params = new URLSearchParams({
             snp: snp,
             size: size,
-            group: isGrouped,
+            group: groupMode,
             is_confirmed: isConfirmed
         });
         const response = await fetch(`${url}?${params}`);
@@ -148,7 +148,7 @@ async function getCentroidsHomeland(snp, size, isConfirmed) {
     }
 }
 
-async function getCentroidsFiltering(start, end, size, isGrouped, snp, isConfirmed) {
+async function getCentroidsFiltering(start, end, size, groupMode, snp, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const mode = document.getElementById("filteringModeSelect").value;
@@ -175,7 +175,7 @@ async function getCentroidsFiltering(start, end, size, isGrouped, snp, isConfirm
             size: size,
             start: start,
             end: end,
-            group: isGrouped,
+            group: groupMode,
             snp: snp,
             is_confirmed: isConfirmed
         });
@@ -196,7 +196,7 @@ async function getCentroidsFiltering(start, end, size, isGrouped, snp, isConfirm
     }
 }
 
-async function getCentroidsMax(start, end, size, isGrouped, snp, isConfirmed) {
+async function getCentroidsMax(start, end, size, groupMode, snp, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_MAX}`;
@@ -204,7 +204,7 @@ async function getCentroidsMax(start, end, size, isGrouped, snp, isConfirmed) {
             start,
             end,
             size,
-            group: isGrouped,
+            group: groupMode,
             snp: snp,
             is_confirmed: isConfirmed
         });
@@ -221,7 +221,7 @@ async function getCentroidsMax(start, end, size, isGrouped, snp, isConfirmed) {
     }
 }
 
-async function getCentroidsCorrelation(snp, size, start, end, isGrouped, isConfirmed) {
+async function getCentroidsCorrelation(snp, size, start, end, groupMode, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_CORRELATION}`;
@@ -230,7 +230,7 @@ async function getCentroidsCorrelation(snp, size, start, end, isGrouped, isConfi
             size: size,
             start: start,
             end: end,
-            group: isGrouped,
+            group: groupMode,
             is_confirmed: isConfirmed
         });
         const response = await fetch(`${url}?${params}`);

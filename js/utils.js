@@ -54,7 +54,7 @@ function updateUrlParams(currentAction) {
         params.set('z', map.getZoom());
     }
     params.set('grid', document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
-    params.set('group', document.getElementById(GLOBAL_GROUP_CHECKBOX_ELEMENT_ID).checked ? '1' : '0');
+    params.set('group', document.getElementById(GLOBAL_GROUP_SELECT_ELEMENT_ID).value);
     let action = currentAction;
     if (!action) {
         const currentHashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -98,7 +98,13 @@ function restoreParamsFromUrl() {
     };
     setVal(GRID_SIZE_SELECT_ELEMENT_ID, 'grid');
     setVal(DATASOURCE_SELECT_ELEMENT_ID, 'conf');
-    setCheck(GLOBAL_GROUP_CHECKBOX_ELEMENT_ID, 'group');
+    const groupParam = params.get('group');
+    const groupEl = document.getElementById(GLOBAL_GROUP_SELECT_ELEMENT_ID);
+    if (groupEl && groupParam) {
+        if (groupParam === '1') groupEl.value = 'grouped';
+        else if (groupParam === '0') groupEl.value = 'combined';
+        else groupEl.value = groupParam;
+    }
     const action = params.get('action');
     if (action) {
         if (['Geography', 'Dispersion', 'Depth', 'Homeland', 'Correlation'].includes(action)) {
