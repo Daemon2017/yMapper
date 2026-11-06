@@ -64,6 +64,11 @@
             <option value="6">6</option>
         </select>
     </label>
+    <label>
+        <label for="globalGroupCheckbox">Group:</label>
+        <input type="checkbox" id="globalGroupCheckbox" />
+        <button id="globalClearButton" onclick="clearAll()">Clear</button>
+    </label>
 
     <br/>
     <label>
@@ -72,10 +77,6 @@
             ↰
         </button>
         <input type="search" id="searchForm" placeholder="R-CTS1211"/>
-    </label>
-    <label>
-        Group:
-        <input type="checkbox" id="groupDispersionCheckbox"/>
     </label>
     <button type="button" id="geographyButton" onclick="show('Geography')">
         Show
@@ -97,9 +98,6 @@
     <button type="button" id="correlationButton" onclick="show('Correlation')">
         Correlation
     </button>
-    <button type="button" id="clearDispersionButton" onclick="clearAll()">
-        Clear
-    </button>
 
     <br/>
     <label> [Macro-View]
@@ -114,15 +112,8 @@
         -
         <input type="number" style="width: 50px;" id="macroEndForm" value="500"/>
     </label>
-    <label>
-        Group:
-        <input type="checkbox" id="groupMacroCheckbox" checked/>
-    </label>
     <button type="button" id="macroMaxButton" onclick="show('Max')">
         MAX
-    </button>
-    <button type="button" id="clearMacroButton" onclick="clearAll()">
-        Clear
     </button>
 
     <br/>
@@ -153,15 +144,8 @@
     <button type="button" id="addToSetBButton" onclick="addHexagonsToSet('B')">
         B
     </button>
-    <label for="groupFilteringCheckbox">
-        Group:
-        <input type="checkbox" id="groupFilteringCheckbox" checked/>
-    </label>
     <button type="button" id="filteringButton" onclick="show('Filtering')">
         Filter
-    </button>
-    <button type="button" id="clearFilteringButton" onclick="clearAll()">
-        Clear
     </button>
 
     <br/>

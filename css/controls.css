@@ -23,10 +23,6 @@ body * {
 #filteringModeSelect,
 #homelandModeSelect,
 #datasourceSelect,
-#clearDispersionButton,
-#clearFilteringButton,
-#groupDispersionCheckbox,
-#groupFilteringCheckbox,
 #intersectionCheckbox,
 #setLatLngButton,
 #addToSetAButton,
@@ -42,15 +38,15 @@ body * {
 #macroStartForm,
 #macroEndForm,
 #macroMaxButton,
-#groupMacroCheckbox,
 #parentMacroButton,
 #macroSearchFilteringForm,
 #screenshotModeButton,
-#clearMacroButton,
 #searchStartForm,
 #searchEndForm,
 #correlationButton,
-#depthButton {
+#depthButton,
+#globalGroupCheckbox,
+#globalClearButton {
     pointer-events: auto;
 }
 

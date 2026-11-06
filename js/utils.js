@@ -54,6 +54,7 @@ function updateUrlParams(currentAction) {
         params.set('z', map.getZoom());
     }
     params.set('grid', document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value);
+    params.set('group', document.getElementById(GLOBAL_GROUP_CHECKBOX_ELEMENT_ID).checked ? '1' : '0');
     let action = currentAction;
     if (!action) {
         const currentHashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -63,9 +64,6 @@ function updateUrlParams(currentAction) {
         params.set('action', action);
         if (['Geography', 'Dispersion', 'Depth', 'Homeland', 'Correlation'].includes(action)) {
             params.set('snp', document.getElementById(SEARCH_FORM_ELEMENT_ID).value);
-            if (action === 'Dispersion' || action === 'Depth' || action === 'Correlation') {
-                params.set('groupDisp', document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked ? '1' : '0');
-            }
             if (action === 'Correlation') {
                 params.set('sStart', document.getElementById('searchStartForm').value);
                 params.set('sEnd', document.getElementById('searchEndForm').value);
@@ -75,14 +73,12 @@ function updateUrlParams(currentAction) {
             params.set('macroSnp', document.getElementById(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID).value);
             params.set('macroStart', document.getElementById(MACRO_START_FORM_ELEMENT_ID).value);
             params.set('macroEnd', document.getElementById(MACRO_END_FORM_ELEMENT_ID).value);
-            params.set('groupMacro', document.getElementById(GROUP_MACRO_CHECKBOX_ELEMENT_ID).checked ? '1' : '0');
         }
         else if (action === 'Filtering') {
             params.set('filterSnp', document.getElementById(SEARCH_FILTERING_FORM_ELEMENT_ID).value);
             params.set('fStart', document.getElementById(START_FORM_ELEMENT_ID).value);
             params.set('fEnd', document.getElementById(END_FORM_ELEMENT_ID).value);
             params.set('modeSelect', document.getElementById('filteringModeSelect').value);
-            params.set('groupFilter', document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked ? '1' : '0');
         }
     }
     window.location.hash = params.toString();
@@ -102,11 +98,11 @@ function restoreParamsFromUrl() {
     };
     setVal(GRID_SIZE_SELECT_ELEMENT_ID, 'grid');
     setVal(DATASOURCE_SELECT_ELEMENT_ID, 'conf');
+    setCheck(GLOBAL_GROUP_CHECKBOX_ELEMENT_ID, 'group');
     const action = params.get('action');
     if (action) {
         if (['Geography', 'Dispersion', 'Depth', 'Homeland', 'Correlation'].includes(action)) {
             setVal(SEARCH_FORM_ELEMENT_ID, 'snp');
-            setCheck(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID, 'groupDisp');
             setVal('searchStartForm', 'sStart');
             setVal('searchEndForm', 'sEnd');
         }
@@ -114,14 +110,12 @@ function restoreParamsFromUrl() {
             setVal(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID, 'macroSnp');
             setVal(MACRO_START_FORM_ELEMENT_ID, 'macroStart');
             setVal(MACRO_END_FORM_ELEMENT_ID, 'macroEnd');
-            setCheck(GROUP_MACRO_CHECKBOX_ELEMENT_ID, 'groupMacro');
         }
         else if (action === 'Filtering') {
             setVal(SEARCH_FILTERING_FORM_ELEMENT_ID, 'filterSnp');
             setVal(START_FORM_ELEMENT_ID, 'fStart');
             setVal(END_FORM_ELEMENT_ID, 'fEnd');
             setVal('filteringModeSelect', 'modeSelect');
-            setCheck(GROUP_FILTERING_CHECKBOX_ELEMENT_ID, 'groupFilter');
         }
     }
     const uiParam = params.get('ui');

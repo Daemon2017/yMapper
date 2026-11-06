@@ -46,17 +46,11 @@ function updateUncheckedList(i, action) {
     } else {
         uncheckedSnpsList.push(i);
     }
-    let isGrouped = false;
-    if (action === 'Dispersion' || action === 'Depth') {
-        isGrouped = document.getElementById(GROUP_DISPERSION_CHECKBOX_ELEMENT_ID).checked;
-    } else if (action === 'Filtering') {
-        const start = document.getElementById(START_FORM_ELEMENT_ID).value;
-        const end = document.getElementById(END_FORM_ELEMENT_ID).value;
-        isGrouped = document.getElementById(GROUP_FILTERING_CHECKBOX_ELEMENT_ID).checked;
-    } else if (action === 'Max') {
-        isGrouped = document.getElementById(GROUP_MACRO_CHECKBOX_ELEMENT_ID).checked;
-    } else if (action === 'Homeland') {
+    let isGrouped = document.getElementById(GLOBAL_GROUP_CHECKBOX_ELEMENT_ID).checked;
+    if (action === 'Homeland' || action === 'Depth') {
         isGrouped = true;
+    } else if (action === 'Geography') {
+        isGrouped = false;
     }
     const caption = isGrouped ? 'level' : 'snps';
     drawLayers(dataList, action, caption, isGrouped);
