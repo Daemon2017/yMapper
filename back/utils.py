@@ -36,7 +36,10 @@ def process_centroids(response, group_mode):
             .rename(columns={'snp': 'snps', 'centroid': 'centroids'})
         df['count'] = df['centroids'].str.len()
         df = df.sort_values(by='count', ascending=False).drop(columns=['count'])
-    return df.head(100).to_dict(orient='records')
+    records = df.to_dict(orient='records')
+    if group_mode == 'grouped':
+        return _collapse_overflow_to_others(records, label_key='level')
+    return records[:100]
 
 
 def process_max_centroids(response, group):
@@ -55,7 +58,8 @@ def process_max_centroids(response, group):
                 'centroids': row['h3_index'],
                 'snps': f"Max Sons: {lvl}"
             })
-        return sorted(result, key=lambda x: x['level'], reverse=True)[:100]
+        sorted_res = sorted(result, key=lambda x: x['level'], reverse=True)
+        return _collapse_overflow_to_others(sorted_res, label_key='level')
     else:
         df = df.sample(frac=1).reset_index(drop=True)
         idx_winners = df.sort_values(by='sons_count', ascending=False) \
@@ -86,7 +90,8 @@ def calculate_homeland(response):
         .agg({'h3_index': list, 'vavilov_score': 'mean', 'tmrca_score': 'mean'}).reset_index() \
         .rename(columns={'h3_index': 'centroids'}) \
         .sort_values(by='level', ascending=False)
-    return df.head(100).to_dict(orient='records')
+    records = df.to_dict(orient='records')
+    return _collapse_overflow_to_others(records, label_key='level')
 
 
 def process_correlation_centroids(response, group_mode):
@@ -114,7 +119,8 @@ def process_correlation_centroids(response, group_mode):
                 'centroids': row['centroids'],
                 'snps': f"Correlation Intensity: {lvl}%"
             })
-        return sorted(result, key=lambda x: x['level'], reverse=True)
+        sorted_res = sorted(result, key=lambda x: x['level'], reverse=True)
+        return _collapse_overflow_to_others(sorted_res, label_key='level')
     elif group_mode == 'combined':
         records = []
         for _, row in df_top_100.iterrows():
@@ -134,3 +140,25 @@ def process_correlation_centroids(response, group_mode):
                 'centroids': row['centroids']
             })
         return result
+
+
+def _collapse_overflow_to_others(records, label_key='level', other_label='Others'):
+    if len(records) <= 100:
+        return records
+    top_99 = records[:99]
+    overflow = records[99:]
+    other_centroids = []
+    seen = set()
+    for item in overflow:
+        for c in item.get('centroids', []):
+            if c not in seen:
+                seen.add(c)
+                other_centroids.append(c)
+    other_entry = {
+        label_key: other_label,
+        'centroids': other_centroids
+    }
+    if 'vavilov_score' in overflow[0]:
+        other_entry['vavilov_score'] = float(np.mean([x['vavilov_score'] for x in overflow]))
+        other_entry['tmrca_score'] = float(np.mean([x['tmrca_score'] for x in overflow]))
+    return top_99 + [other_entry]

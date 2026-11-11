@@ -101,8 +101,11 @@ function drawLayers(dataList, action, caption, isGrouped) {
             data['centroids'].forEach(h3Index => {
                 let tooltipText = '';
                 if (action === 'Homeland') {
+                    const levelDisplay = typeof data.level === 'number'
+                        ? `${data.level.toFixed(2)}%`
+                        : data.level;
                     tooltipText = `
-                        <b>Level:</b> ${data.level.toFixed(2)}%<br/>
+                        <b>Level:</b> ${levelDisplay}<br/>
                         <b>Vavilov Score:</b> ${data.vavilov_score.toFixed(2)}<br/>
                         <b>TMRCA Score:</b> ${data.tmrca_score.toFixed(2)}<br/>
                     `;
