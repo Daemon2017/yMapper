@@ -55,6 +55,7 @@ async function main() {
         attachDropDownPrompt(snps, SEARCH_FORM_ELEMENT_ID);
         attachDropDownPrompt(snps, MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID);
         attachDropDownPrompt(snps, SEARCH_FILTERING_FORM_ELEMENT_ID);
+        attachDropDownPrompt(snps, SEARCH_FILTERING_EXCLUDE_FORM_ELEMENT_ID, true);
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
         if (savedSettings && savedSettings.action) {
             let targetMode = 'snp-search';
@@ -117,7 +118,8 @@ async function show(action) {
             const start = document.getElementById(START_FORM_ELEMENT_ID).value;
             const end = document.getElementById(END_FORM_ELEMENT_ID).value;
             const snpFilter = document.getElementById(SEARCH_FILTERING_FORM_ELEMENT_ID).value.replace(/\s+/g, '');
-            dataList = await getCentroidsFiltering(start, end, size, groupMode, snpFilter, isConfirmed);
+            const excludeSnps = document.getElementById(SEARCH_FILTERING_EXCLUDE_FORM_ELEMENT_ID).value.trim();
+            dataList = await getCentroidsFiltering(start, end, size, groupMode, snpFilter, excludeSnps, isConfirmed);
         } else if (action === 'Homeland') {
             isGrouped = true;
             dataList = await getCentroidsHomeland(snp, size, isConfirmed);

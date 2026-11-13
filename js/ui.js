@@ -4,7 +4,11 @@ function getLatLng() {
     document.getElementById(LNG_FORM_ELEMENT_ID).value = center.lng;
 }
 
-function attachDropDownPrompt(dbSnpsList, elementId) {
+function attachDropDownPrompt(dbSnpsList, elementId, isMulti = false) {
+    const getLastTerm = (val) => {
+        const raw = isMulti ? val.split(',').pop() : val;
+        return raw.replace(/\s+/g, '');
+    };
     $(function () {
         const $input = $(`#${elementId}`);
         $input.on("keydown", function (event) {
@@ -13,32 +17,47 @@ function attachDropDownPrompt(dbSnpsList, elementId) {
             }
         }).autocomplete({
             source: function (request, response) {
-                let term = request.term.replace(/\s+/g, '').toLowerCase();
-                let filteredSnpsList = dbSnpsList.filter(snp =>
+                const term = getLastTerm(request.term).toLowerCase();
+                const filteredSnpsList = dbSnpsList.filter(snp =>
                     snp.replace(/\s+/g, '').toLowerCase().startsWith(term)
                 );
-                let limitedSnpsList = filteredSnpsList.slice(0, 10);
-                response(limitedSnpsList);
+                response(filteredSnpsList.slice(0, 10));
             },
-            search: function (_event, _ui) {
-                if (this.value.replace(/\s+/g, '').length <= 2) {
+            search: function () {
+                if (getLastTerm(this.value).length <= 2) {
                     return false;
                 }
             },
-            focus: function (_event, _ui) {
+            focus: function () {
                 return false;
             },
             select: function (_event, ui) {
-                this.value = ui.item.value.replace(/\s+/g, '');
+                const selected = ui.item.value.replace(/\s+/g, '');
+                if (isMulti) {
+                    const parts = this.value.split(',');
+                    parts.pop();
+                    parts.push(selected);
+                    this.value = parts.map(p => p.trim()).filter(Boolean).join(', ') + ', ';
+                } else {
+                    this.value = selected;
+                }
                 return false;
             }
         });
-
-        $input.on("change blur", function() {
-            this.value = this.value.replace(/\s+/g, '');
+        $input.on("change blur", function () {
+            if (isMulti) {
+                this.value = this.value
+                    .split(',')
+                    .map(p => p.replace(/\s+/g, ''))
+                    .filter(Boolean)
+                    .join(', ');
+            } else {
+                this.value = this.value.replace(/\s+/g, '');
+            }
         });
     });
 }
+
 
 function updateUncheckedList(i, action) {
     if (document.getElementById(`checkBox${i}`).checked) {

@@ -83,6 +83,7 @@ function updateUrlParams(currentAction) {
             params.set('fStart', document.getElementById(START_FORM_ELEMENT_ID).value);
             params.set('fEnd', document.getElementById(END_FORM_ELEMENT_ID).value);
             params.set('modeSelect', document.getElementById('filteringModeSelect').value);
+            params.set('excludeSnp', document.getElementById(SEARCH_FILTERING_EXCLUDE_FORM_ELEMENT_ID).value);
         }
     }
     window.location.hash = params.toString();
@@ -126,6 +127,7 @@ function restoreParamsFromUrl() {
             setVal(START_FORM_ELEMENT_ID, 'fStart');
             setVal(END_FORM_ELEMENT_ID, 'fEnd');
             setVal('filteringModeSelect', 'modeSelect');
+            setVal(SEARCH_FILTERING_EXCLUDE_FORM_ELEMENT_ID, 'excludeSnp');
         }
     }
     const uiParam = params.get('ui');

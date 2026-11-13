@@ -1,3 +1,5 @@
+import re
+
 import numpy as np
 import pandas as pd
 
@@ -10,7 +12,9 @@ def get_input(args, body):
     end = args.get('end')
     group_mode = args.get('group', 'combined').lower()
     snp = args.get('snp')
-    return a_points, b_points, start, end, group_mode, size, snp
+    raw_exclude = args.get('exclude_snps', '')
+    exclude_snps = [s.strip() for s in re.split(r'[,\s]+', raw_exclude) if s.strip()]
+    return a_points, b_points, start, end, group_mode, size, snp, exclude_snps
 
 
 def process_centroids(response, group_mode):

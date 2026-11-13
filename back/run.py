@@ -83,12 +83,12 @@ def get_centroids_homeland():
 def get_centroids_union():
     body = request.get_json()
     args = request.args
-    a_points, b_points, start, end, group, size, snp = utils.get_input(args, body)
+    a_points, b_points, start, end, group, size, snp, exclude_snps = utils.get_input(args, body)
     is_confirmed = get_bool_arg('is_confirmed')
     if not all([a_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(f'Processing POST /centroids/union for size={size}, group={group}, confirmed={is_confirmed}...')
-    response = db.select_centroids_union(a_points, b_points, size, start, end, snp, is_confirmed)
+    response = db.select_centroids_union(a_points, b_points, size, start, end, snp, exclude_snps, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
@@ -98,12 +98,12 @@ def get_centroids_union():
 def get_centroids_subtraction():
     body = request.get_json()
     args = request.args
-    a_points, b_points, start, end, group, size, snp = utils.get_input(args, body)
+    a_points, b_points, start, end, group, size, snp, exclude_snps = utils.get_input(args, body)
     is_confirmed = get_bool_arg('is_confirmed')
     if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(f'Processing POST /centroids/subtraction for size={size}, group={group}, confirmed={is_confirmed}...')
-    response = db.select_centroids_subtraction(a_points, b_points, size, start, end, snp, is_confirmed)
+    response = db.select_centroids_subtraction(a_points, b_points, size, start, end, snp, exclude_snps, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
@@ -113,12 +113,12 @@ def get_centroids_subtraction():
 def get_centroids_intersection():
     body = request.get_json()
     args = request.args
-    a_points, b_points, start, end, group, size, snp = utils.get_input(args, body)
+    a_points, b_points, start, end, group, size, snp, exclude_snps = utils.get_input(args, body)
     is_confirmed = get_bool_arg('is_confirmed')
     if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(f'Processing POST /centroids/intersection for size={size}, group={group}, confirmed={is_confirmed}...')
-    response = db.select_centroids_intersection(a_points, b_points, size, start, end, snp, is_confirmed)
+    response = db.select_centroids_intersection(a_points, b_points, size, start, end, snp, exclude_snps, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))
@@ -128,12 +128,12 @@ def get_centroids_intersection():
 def get_centroids_xor():
     body = request.get_json()
     args = request.args
-    a_points, b_points, start, end, group, size, snp = utils.get_input(args, body)
+    a_points, b_points, start, end, group, size, snp, exclude_snps = utils.get_input(args, body)
     is_confirmed = get_bool_arg('is_confirmed')
     if not all([a_points, b_points, size, start, end]):
         return jsonify({"error": "Missing parameters"}), 400
     print(f'Processing POST /centroids/xor for size={size}, group={group}, confirmed={is_confirmed}...')
-    response = db.select_centroids_xor(a_points, b_points, size, start, end, snp, is_confirmed)
+    response = db.select_centroids_xor(a_points, b_points, size, start, end, snp, exclude_snps, is_confirmed)
     if not response:
         return jsonify([]), 200
     return jsonify(utils.process_centroids(response, group))

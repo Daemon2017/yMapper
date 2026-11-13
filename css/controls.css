@@ -49,7 +49,9 @@ body * {
 #globalClearButton,
 #snpSearchButton,
 #macroViewButton,
-#geoSearchButton {
+#geoSearchButton,
+#parentFilteringExcludeButton,
+#searchFilteringExcludeForm {
     pointer-events: auto;
 }
 
@@ -164,8 +166,8 @@ body * {
 }
 .mode-block {
     display: inline-flex !important;
-    align-items: center;
-    gap: 5px;
+    flex-direction: column;
+    align-items: flex-start;
 }
 .mode-block p {
     display: inline-flex;

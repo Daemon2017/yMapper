@@ -83,84 +83,98 @@
     </div>
 
     <div id="block-snp-search" class="mode-block">
-        <label>
-            SNP:
-            <button type="button" id="parentButton" onclick="getParent()">
-                ↰
+        <p>
+            <label>
+                SNP:
+                <button type="button" id="parentButton" onclick="getParent()">
+                    ↰
+                </button>
+                <input type="search" id="searchForm" placeholder="R-CTS1211"/>
+            </label>
+            <button type="button" id="geographyButton" onclick="show('Geography')">
+                Show
             </button>
-            <input type="search" id="searchForm" placeholder="R-CTS1211"/>
-        </label>
-        <button type="button" id="geographyButton" onclick="show('Geography')">
-            Show
-        </button>
-        <button type="button" id="dispersionButton" onclick="show('Dispersion')">
-            Sons
-        </button>
-        <button type="button" id="homelandButton" onclick="show('Homeland')">
-            Homeland
-        </button>
-        <button type="button" id="depthButton" onclick="show('Depth')">
-            DepthWidth
-        </button>
-        <label> TMRCA:
-            <input type="number" style="width: 50px;" id="searchStartForm" value="-500"/>
-            -
-            <input type="number" style="width: 50px;" id="searchEndForm" value="500"/>
-        </label>
-        <button type="button" id="correlationButton" onclick="show('Correlation')">
-            Correlation
-        </button>
+            <button type="button" id="dispersionButton" onclick="show('Dispersion')">
+                Sons
+            </button>
+            <button type="button" id="homelandButton" onclick="show('Homeland')">
+                Homeland
+            </button>
+            <button type="button" id="depthButton" onclick="show('Depth')">
+                DepthWidth
+            </button>
+        </p>
+        <p>
+            <label> TMRCA:
+                <input type="number" style="width: 50px;" id="searchStartForm" value="-500"/>
+                -
+                <input type="number" style="width: 50px;" id="searchEndForm" value="500"/>
+            </label>
+            <button type="button" id="correlationButton" onclick="show('Correlation')">
+                Correlation
+            </button>
+        </p>
     </div>
 
     <div id="block-macro-view" class="mode-block" style="display: none !important;">
-        <label>
-            SNPs within:
-            <button type="button" id="parentMacroButton" onclick="getParentMacro()">
-                ↰
+        <p>
+            <label>
+                Childs of SNP:
+                <button type="button" id="parentMacroButton" onclick="getParentMacro()">
+                    ↰
+                </button>
+                <input type="search" id="macroSearchFilteringForm" placeholder="R-CTS1211"/>
+            </label>
+        </p>
+        <p>
+            <label> TMRCA:
+                <input type="number" style="width: 50px;" id="macroStartForm" value="0"/>
+                -
+                <input type="number" style="width: 50px;" id="macroEndForm" value="500"/>
+            </label>
+            <button type="button" id="macroMaxButton" onclick="show('Max')">
+                MAX
             </button>
-            <input type="search" id="macroSearchFilteringForm" placeholder="R-CTS1211"/>
-        </label>
-        <label> TMRCA:
-            <input type="number" style="width: 50px;" id="macroStartForm" value="0"/>
-            -
-            <input type="number" style="width: 50px;" id="macroEndForm" value="500"/>
-        </label>
-        <button type="button" id="macroMaxButton" onclick="show('Max')">
-            MAX
-        </button>
+        </p>
     </div>
 
     <div id="block-geo-search" class="mode-block" style="display: none !important;">
-        <label>
-            SNPs within:
-            <button type="button" id="parentFilteringButton" onclick="getParentFiltering()">
-                ↰
-            </button>
-            <input type="search" id="searchFilteringForm" placeholder="R-CTS1211"/>
+        <p>
+            <label>
+                Childs of SNP:
+                <button type="button" id="parentFilteringButton" onclick="getParentFiltering()">
+                    ↰
+                </button>
+                <input type="search" id="searchFilteringForm" placeholder="R-CTS1211"/>
+                Without childs of SNPs:
+                <input type="search" id="searchFilteringExcludeForm" placeholder="R-CTS1211, R-Z92"/>
+            </label>
+        </p>
+        <p>
             <label> TMRCA:
                 <input type="number" style="width: 50px;" id="startForm" value="-2000"/>
                 -
                 <input type="number" style="width: 50px;" id="endForm" value="2000"/>
             </label>
-        </label>
-        <button type="button" id="addToSetAButton" onclick="addHexagonsToSet('A')">
-            A
-        </button>
-        <button type="button" id="swapSetsButton" onclick="swapSets()">
-            ⇄
-        </button>
-        <select id="filteringModeSelect">
-            <option value="union" selected>Union (∪)</option>
-            <option value="subtraction">Subtraction (\)</option>
-            <option value="intersection">Intersection (∩)</option>
-            <option value="xor">Exclusive OR (Δ)</option>
-        </select>
-        <button type="button" id="addToSetBButton" onclick="addHexagonsToSet('B')">
-            B
-        </button>
-        <button type="button" id="filteringButton" onclick="show('Filtering')">
-            Filter
-        </button>
+            <button type="button" id="addToSetAButton" onclick="addHexagonsToSet('A')">
+                A
+            </button>
+            <button type="button" id="swapSetsButton" onclick="swapSets()">
+                ⇄
+            </button>
+            <select id="filteringModeSelect">
+                <option value="union" selected>Union (∪)</option>
+                <option value="subtraction">Subtraction (\)</option>
+                <option value="intersection">Intersection (∩)</option>
+                <option value="xor">Exclusive OR (Δ)</option>
+            </select>
+            <button type="button" id="addToSetBButton" onclick="addHexagonsToSet('B')">
+                B
+            </button>
+            <button type="button" id="filteringButton" onclick="show('Filtering')">
+                Filter
+            </button>
+        </p>
     </div>
 
     <br/>

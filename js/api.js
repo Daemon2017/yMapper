@@ -148,7 +148,7 @@ async function getCentroidsHomeland(snp, size, isConfirmed) {
     }
 }
 
-async function getCentroidsFiltering(start, end, size, groupMode, snp, isConfirmed) {
+async function getCentroidsFiltering(start, end, size, groupMode, snp, excludeSnps, isConfirmed) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const mode = document.getElementById("filteringModeSelect").value;
@@ -177,6 +177,7 @@ async function getCentroidsFiltering(start, end, size, groupMode, snp, isConfirm
             end: end,
             group: groupMode,
             snp: snp,
+            exclude_snps: excludeSnps,
             is_confirmed: isConfirmed
         });
         const response = await fetch(`${centroidsFilteringUrl}?${params}`, {

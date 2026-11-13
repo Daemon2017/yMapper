@@ -287,7 +287,7 @@ def select_centroids_depth(snp, size, is_confirmed):
         return [dict(row._mapping) for row in result]
 
 
-def select_centroids_union(a_points, b_points, size, start, end, filter_snp, is_confirmed):
+def select_centroids_union(a_points, b_points, size, start, end, filter_snp, exclude_snps, is_confirmed):
     with Session() as session:
         query = \
             """
@@ -310,24 +310,12 @@ def select_centroids_union(a_points, b_points, size, start, end, filter_snp, is_
             "filter_snp": filter_snp,
             "is_confirmed": is_confirmed
         }
-        if filter_snp and filter_snp.strip() != '':
-            query += """
-            AND s.snp IN (
-                WITH RECURSIVE descendants AS (
-                    SELECT snp as node_name FROM synonyms 
-                    WHERE :filter_snp = ANY(synonyms)
-                    UNION ALL
-                    SELECT unnest(c.childs) FROM childs c 
-                    JOIN descendants d ON c.snp = d.node_name
-                )
-                SELECT node_name FROM descendants
-            )
-            """
+        query = _append_snp_filters(query, params, filter_snp, exclude_snps)
         result = session.execute(text(query), params)
         return [dict(row._mapping) for row in result]
 
 
-def select_centroids_subtraction(a_points, b_points, size, start, end, filter_snp, is_confirmed):
+def select_centroids_subtraction(a_points, b_points, size, start, end, filter_snp, exclude_snps, is_confirmed):
     with Session() as session:
         query = \
             """
@@ -350,24 +338,12 @@ def select_centroids_subtraction(a_points, b_points, size, start, end, filter_sn
             "filter_snp": filter_snp,
             "is_confirmed": is_confirmed
         }
-        if filter_snp and filter_snp.strip() != '':
-            query += """
-            AND s.snp IN (
-                WITH RECURSIVE descendants AS (
-                    SELECT snp as node_name FROM synonyms 
-                    WHERE :filter_snp = ANY(synonyms)
-                    UNION ALL
-                    SELECT unnest(c.childs) FROM childs c 
-                    JOIN descendants d ON c.snp = d.node_name
-                )
-                SELECT node_name FROM descendants
-            )
-            """
+        query = _append_snp_filters(query, params, filter_snp, exclude_snps)
         result = session.execute(text(query), params)
         return [dict(row._mapping) for row in result]
 
 
-def select_centroids_intersection(a_points, b_points, size, start, end, filter_snp, is_confirmed):
+def select_centroids_intersection(a_points, b_points, size, start, end, filter_snp, exclude_snps, is_confirmed):
     with Session() as session:
         query = \
             """
@@ -391,24 +367,12 @@ def select_centroids_intersection(a_points, b_points, size, start, end, filter_s
             "filter_snp": filter_snp,
             "is_confirmed": is_confirmed
         }
-        if filter_snp and filter_snp.strip() != '':
-            query += """
-            AND s.snp IN (
-                WITH RECURSIVE descendants AS (
-                    SELECT snp as node_name FROM synonyms 
-                    WHERE :filter_snp = ANY(synonyms)
-                    UNION ALL
-                    SELECT unnest(c.childs) FROM childs c 
-                    JOIN descendants d ON c.snp = d.node_name
-                )
-                SELECT node_name FROM descendants
-            )
-            """
+        query = _append_snp_filters(query, params, filter_snp, exclude_snps)
         result = session.execute(text(query), params)
         return [dict(row._mapping) for row in result]
 
 
-def select_centroids_xor(a_points, b_points, size, start, end, filter_snp, is_confirmed):
+def select_centroids_xor(a_points, b_points, size, start, end, filter_snp, exclude_snps, is_confirmed):
     with Session() as session:
         query = \
             """
@@ -431,18 +395,38 @@ def select_centroids_xor(a_points, b_points, size, start, end, filter_snp, is_co
             "filter_snp": filter_snp,
             "is_confirmed": is_confirmed
         }
-        if filter_snp and filter_snp.strip() != '':
-            query += """
-            AND s.snp IN (
-                WITH RECURSIVE descendants AS (
-                    SELECT snp as node_name FROM synonyms 
-                    WHERE :filter_snp = ANY(synonyms)
-                    UNION ALL
-                    SELECT unnest(c.childs) FROM childs c 
-                    JOIN descendants d ON c.snp = d.node_name
-                )
-                SELECT node_name FROM descendants
-            )
-            """
+        query = _append_snp_filters(query, params, filter_snp, exclude_snps)
         result = session.execute(text(query), params)
         return [dict(row._mapping) for row in result]
+
+
+def _append_snp_filters(query, params, filter_snp, exclude_snps):
+    if filter_snp and filter_snp.strip() != '':
+        params["filter_snp"] = filter_snp
+        query += """
+        AND s.snp IN (
+            WITH RECURSIVE descendants AS (
+                SELECT snp as node_name FROM synonyms 
+                WHERE :filter_snp = ANY(synonyms)
+                UNION ALL
+                SELECT unnest(c.childs) FROM childs c 
+                JOIN descendants d ON c.snp = d.node_name
+            )
+            SELECT node_name FROM descendants
+        )
+        """
+    if exclude_snps:
+        params["exclude_snps"] = exclude_snps
+        query += """
+        AND s.snp NOT IN (
+            WITH RECURSIVE excluded_descendants AS (
+                SELECT snp as node_name FROM synonyms 
+                WHERE synonyms && CAST(:exclude_snps AS text[])
+                UNION ALL
+                SELECT unnest(c.childs) FROM childs c 
+                JOIN excluded_descendants d ON c.snp = d.node_name
+            )
+            SELECT node_name FROM excluded_descendants
+        )
+        """
+    return query
