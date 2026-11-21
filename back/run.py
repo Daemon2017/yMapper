@@ -70,13 +70,14 @@ def get_centroids_homeland():
     snp = request.args.get('snp')
     size = request.args.get('size')
     is_confirmed = get_bool_arg('is_confirmed')
+    use_stats = get_bool_arg('use_stats', default='false')
     if not all([snp, size]):
         return jsonify({"error": "Missing parameters"}), 400
-    print(f'Processing GET /centroids/homeland for snp={snp}, size={size}, confirmed={is_confirmed}...')
+    print(f'Processing GET /centroids/homeland for snp={snp}, size={size}, confirmed={is_confirmed}, use_stats={use_stats}...')
     response = db.select_homeland(snp, size, is_confirmed)
     if not response:
         return jsonify([]), 200
-    return jsonify(utils.calculate_homeland(response))
+    return jsonify(utils.calculate_homeland(response, use_stats=use_stats))
 
 
 @app.route('/centroids/union', methods=['POST'])

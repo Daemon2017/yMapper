@@ -51,7 +51,8 @@ body * {
 #macroViewButton,
 #geoSearchButton,
 #parentFilteringExcludeButton,
-#searchFilteringExcludeForm {
+#searchFilteringExcludeForm,
+#statsCheckbox {
     pointer-events: auto;
 }
 

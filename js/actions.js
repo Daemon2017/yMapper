@@ -122,7 +122,8 @@ async function show(action) {
             dataList = await getCentroidsFiltering(start, end, size, groupMode, snpFilter, excludeSnps, isConfirmed);
         } else if (action === 'Homeland') {
             isGrouped = true;
-            dataList = await getCentroidsHomeland(snp, size, isConfirmed);
+            const useStats = document.getElementById(STATS_CHECKBOX_ELEMENT_ID)?.checked || false;
+            dataList = await getCentroidsHomeland(snp, size, isConfirmed, useStats);
         } else if (action === 'Max') {
             const start = document.getElementById(MACRO_START_FORM_ELEMENT_ID).value;
             const end = document.getElementById(MACRO_END_FORM_ELEMENT_ID).value;

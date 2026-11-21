@@ -48,20 +48,16 @@
     <label>
         Datasource:
         <select id="datasourceSelect" onchange="clearAll()">
-            <option value="true" selected>Confirmed</option>
-            <option value="false">Confirmed + Predicted</option>
+            <option value="true">Confirmed</option>
+            <option value="false" selected>Confirmed + Predicted</option>
         </select>
     </label>
     <label>
         Grid size:
         <select id="gridSizeSelect" onchange="clearAll()">
-            <option value="0">0</option>
-            <option value="1">1</option>
             <option value="2">2</option>
             <option value="3" selected>3</option>
             <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
         </select>
     </label>
     <label>
@@ -97,11 +93,15 @@
             <button type="button" id="dispersionButton" onclick="show('Dispersion')">
                 Sons
             </button>
-            <button type="button" id="homelandButton" onclick="show('Homeland')">
-                Homeland
-            </button>
             <button type="button" id="depthButton" onclick="show('Depth')">
                 DepthWidth
+            </button>
+            <label>
+                Stats
+                <input type="checkbox" id="statsCheckbox">
+            </label>
+            <button type="button" id="homelandButton" onclick="show('Homeland')">
+                Homeland
             </button>
         </p>
         <p>

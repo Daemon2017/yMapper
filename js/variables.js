@@ -35,6 +35,7 @@ const SCREENSHOT_MODE_BUTTON_ELEMENT_ID = "screenshotModeButton";
 const CONTROLS_LAYER_ELEMENT_ID = "controlsLayer";
 const DATASOURCE_SELECT_ELEMENT_ID = "datasourceSelect";
 const SEARCH_FILTERING_EXCLUDE_FORM_ELEMENT_ID = "searchFilteringExcludeForm";
+const STATS_CHECKBOX_ELEMENT_ID = "statsCheckbox";
 
 const BUSY_STATE_TEXT = "Busy...";
 const OK_STATE_TEXT = "OK.";

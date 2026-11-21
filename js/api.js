@@ -126,14 +126,15 @@ async function getCentroidsDispersion(snp, size, groupMode, isConfirmed) {
     }
 }
 
-async function getCentroidsHomeland(snp, size, isConfirmed) {
+async function getCentroidsHomeland(snp, size, isConfirmed, useStats) {
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const url = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CENTROIDS_HOMELAND}`;
         const params = new URLSearchParams({
             snp: snp,
             size: size,
-            is_confirmed: isConfirmed
+            is_confirmed: isConfirmed,
+            use_stats: useStats
         });
         const response = await fetch(`${url}?${params}`);
         if (response.ok) {
@@ -147,6 +148,7 @@ async function getCentroidsHomeland(snp, size, isConfirmed) {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
     }
 }
+
 
 async function getCentroidsFiltering(start, end, size, groupMode, snp, excludeSnps, isConfirmed) {
     try {

@@ -78,12 +78,23 @@ def select_homeland(parent_snp, size, is_confirmed):
                 CROSS JOIN target_parent p
                 WHERE s.size = :size
                 AND s.is_confirmed = :is_confirmed
+            ),
+            grouped_hexes AS (
+                SELECT 
+                    h3_index,
+                    json_agg(json_build_object('dt', m.dt)) AS sons_info
+                FROM son_metrics m, unnest(m.centroids) AS h3_index
+                GROUP BY h3_index
             )
             SELECT 
-                h3_index,
-                json_agg(json_build_object('dt', m.dt)) AS sons_info
-            FROM son_metrics m, unnest(m.centroids) AS h3_index
-            GROUP BY h3_index
+                gh.h3_index,
+                gh.sons_info,
+                COALESCE(st.count, 0) AS total_tested
+            FROM grouped_hexes gh
+            LEFT JOIN stats st 
+                ON gh.h3_index = st.centroid 
+                AND st.size = :size 
+                AND st.is_confirmed = :is_confirmed
         """)
         result = session.execute(query, {
             "parent_snp": parent_snp,

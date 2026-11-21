@@ -72,6 +72,12 @@ function updateUrlParams(currentAction) {
                 params.set('sStart', document.getElementById('searchStartForm').value);
                 params.set('sEnd', document.getElementById('searchEndForm').value);
             }
+            if (action === 'Homeland') {
+                const statsEl = document.getElementById(STATS_CHECKBOX_ELEMENT_ID);
+                if (statsEl) {
+                    params.set('stats', statsEl.checked ? '1' : '0');
+                }
+            }
         }
         else if (action === 'Max') {
             params.set('macroSnp', document.getElementById(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID).value);
@@ -116,6 +122,7 @@ function restoreParamsFromUrl() {
             setVal(SEARCH_FORM_ELEMENT_ID, 'snp');
             setVal('searchStartForm', 'sStart');
             setVal('searchEndForm', 'sEnd');
+            setCheck(STATS_CHECKBOX_ELEMENT_ID, 'stats');
         }
         else if (action === 'Max') {
             setVal(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID, 'macroSnp');

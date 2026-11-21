@@ -77,7 +77,7 @@ def process_max_centroids(response, group):
             .head(100).to_dict(orient='records')
 
 
-def calculate_homeland(response):
+def calculate_homeland(response, use_stats=False):
     if not response:
         return []
     df = pd.DataFrame(response)
@@ -85,13 +85,30 @@ def calculate_homeland(response):
     df['min_dt'] = df['sons_info'].apply(lambda x: min(s['dt'] for s in x) if x else 0)
     df['vavilov_score'] = np.log1p(df['diversity'])
     df['tmrca_score'] = 1 / np.log1p(df['min_dt'] + 1)
-    df['total_score'] = df['vavilov_score'] * df['tmrca_score']
+    if use_stats and 'total_tested' in df.columns:
+        max_tested = df['total_tested'].max()
+        if max_tested > 0:
+            log_density = np.log1p(df['total_tested']) / np.log1p(max_tested)
+            df['stats_score'] = 1.0 - 0.5 * log_density
+        else:
+            df['stats_score'] = 1.0
+        df['total_score'] = df['vavilov_score'] * df['tmrca_score'] * df['stats_score']
+    else:
+        df['stats_score'] = None
+        df['total_score'] = df['vavilov_score'] * df['tmrca_score']
     max_score = df['total_score'].max()
     if max_score == 0:
         return []
     df['level'] = ((df['total_score'] / max_score) * 100).round(2)
+    agg_dict = {
+        'h3_index': list,
+        'vavilov_score': 'mean',
+        'tmrca_score': 'mean'
+    }
+    if use_stats:
+        agg_dict['stats_score'] = 'mean'
     df = df.groupby('level') \
-        .agg({'h3_index': list, 'vavilov_score': 'mean', 'tmrca_score': 'mean'}).reset_index() \
+        .agg(agg_dict).reset_index() \
         .rename(columns={'h3_index': 'centroids'}) \
         .sort_values(by='level', ascending=False)
     records = df.to_dict(orient='records')
@@ -165,4 +182,6 @@ def _collapse_overflow_to_others(records, label_key='level', other_label='Others
     if 'vavilov_score' in overflow[0]:
         other_entry['vavilov_score'] = float(np.mean([x['vavilov_score'] for x in overflow]))
         other_entry['tmrca_score'] = float(np.mean([x['tmrca_score'] for x in overflow]))
+    if 'stats_score' in overflow[0] and overflow[0]['stats_score'] is not None:
+        other_entry['stats_score'] = float(np.mean([x['stats_score'] for x in overflow]))
     return top_99 + [other_entry]
