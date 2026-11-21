@@ -70,6 +70,7 @@ def select_homeland(parent_snp, size, is_confirmed):
             ),
             son_metrics AS (
                 SELECT 
+                    s.snp AS son_name,
                     s.centroids, 
                     ABS(p.p_tmrca - t.tmrca) AS dt
                 FROM grid s
@@ -78,23 +79,23 @@ def select_homeland(parent_snp, size, is_confirmed):
                 CROSS JOIN target_parent p
                 WHERE s.size = :size
                 AND s.is_confirmed = :is_confirmed
-            ),
-            grouped_hexes AS (
-                SELECT 
-                    h3_index,
-                    json_agg(json_build_object('dt', m.dt)) AS sons_info
-                FROM son_metrics m, unnest(m.centroids) AS h3_index
-                GROUP BY h3_index
             )
             SELECT 
-                gh.h3_index,
-                gh.sons_info,
-                COALESCE(st.count, 0) AS total_tested
-            FROM grouped_hexes gh
-            LEFT JOIN stats st 
-                ON gh.h3_index = st.centroid 
-                AND st.size = :size 
-                AND st.is_confirmed = :is_confirmed
+                h3_index,
+                json_agg(
+                    json_build_object(
+                        'dt', m.dt,
+                        'count', COALESCE(sc.count, 1)
+                    )
+                ) AS sons_info
+            FROM son_metrics m
+            CROSS JOIN LATERAL unnest(m.centroids) AS h3_index
+            LEFT JOIN snp_counts sc
+                ON sc.snp = m.son_name
+                AND sc.centroid = h3_index
+                AND sc.size = :size
+                AND sc.is_confirmed = :is_confirmed
+            GROUP BY h3_index
         """)
         result = session.execute(query, {
             "parent_snp": parent_snp,

@@ -1,3 +1,4 @@
+import math
 import re
 
 import numpy as np
@@ -77,36 +78,70 @@ def process_max_centroids(response, group):
             .head(100).to_dict(orient='records')
 
 
+def _rarefied_richness(counts, n_sub):
+    N = sum(counts)
+    if N < n_sub:
+        return None
+    if n_sub <= 1:
+        return 1.0
+    log_denom = math.lgamma(N + 1) - math.lgamma(N - n_sub + 1)
+    expected_s = 0.0
+    for n_i in counts:
+        if N - n_i < n_sub:
+            prob_absent = 0.0
+        else:
+            log_num = math.lgamma(N - n_i + 1) - math.lgamma(N - n_i - n_sub + 1)
+            prob_absent = math.exp(log_num - log_denom)
+        expected_s += (1.0 - prob_absent)
+    return expected_s
+
+
 def calculate_homeland(response, use_stats=False):
     if not response:
         return []
     df = pd.DataFrame(response)
-    df['diversity'] = df['sons_info'].str.len()
+    df['actual_branches'] = df['sons_info'].str.len()
     df['min_dt'] = df['sons_info'].apply(lambda x: min(s['dt'] for s in x) if x else 0)
-    df['vavilov_score'] = np.log1p(df['diversity'])
     df['tmrca_score'] = 1 / np.log1p(df['min_dt'] + 1)
-    if use_stats and 'total_tested' in df.columns:
-        max_tested = df['total_tested'].max()
-        if max_tested > 0:
-            log_density = np.log1p(df['total_tested']) / np.log1p(max_tested)
-            df['stats_score'] = 1.0 - 0.5 * log_density
+
+    if use_stats:
+        df['counts_list'] = df['sons_info'].apply(lambda x: [s.get('count', 1) for s in x])
+        df['total_n'] = df['counts_list'].apply(sum)
+
+        multi_n = df['total_n'][df['total_n'] >= 2]
+        if len(multi_n) > 0:
+            n_sub = max(2, int(np.floor(np.percentile(multi_n, 34))))
         else:
-            df['stats_score'] = 1.0
-        df['total_score'] = df['vavilov_score'] * df['tmrca_score'] * df['stats_score']
+            n_sub = 1
+
+        df = df[df['total_n'] >= n_sub].copy()
+        if df.empty:
+            return []
+
+        df['expected_s'] = df['counts_list'].apply(lambda c: _rarefied_richness(c, n_sub))
+        df['vavilov_score'] = np.log1p(df['expected_s'])
+        df['rarefaction_n'] = n_sub
     else:
-        df['stats_score'] = None
-        df['total_score'] = df['vavilov_score'] * df['tmrca_score']
+        df['vavilov_score'] = np.log1p(df['actual_branches'])
+        df['rarefaction_n'] = None
+
+    df['total_score'] = df['vavilov_score'] * df['tmrca_score']
+
     max_score = df['total_score'].max()
     if max_score == 0:
         return []
     df['level'] = ((df['total_score'] / max_score) * 100).round(2)
+
     agg_dict = {
         'h3_index': list,
         'vavilov_score': 'mean',
-        'tmrca_score': 'mean'
+        'tmrca_score': 'mean',
+        'actual_branches': 'mean'
     }
     if use_stats:
-        agg_dict['stats_score'] = 'mean'
+        agg_dict['rarefaction_n'] = 'first'
+        agg_dict['expected_s'] = 'mean'
+
     df = df.groupby('level') \
         .agg(agg_dict).reset_index() \
         .rename(columns={'h3_index': 'centroids'}) \
@@ -182,6 +217,10 @@ def _collapse_overflow_to_others(records, label_key='level', other_label='Others
     if 'vavilov_score' in overflow[0]:
         other_entry['vavilov_score'] = float(np.mean([x['vavilov_score'] for x in overflow]))
         other_entry['tmrca_score'] = float(np.mean([x['tmrca_score'] for x in overflow]))
-    if 'stats_score' in overflow[0] and overflow[0]['stats_score'] is not None:
-        other_entry['stats_score'] = float(np.mean([x['stats_score'] for x in overflow]))
+    if 'actual_branches' in overflow and overflow['actual_branches'] is not None:
+        other_entry['actual_branches'] = float(np.mean([x['actual_branches'] for x in overflow]))
+    if 'rarefaction_n' in overflow and overflow['rarefaction_n'] is not None:
+        other_entry['rarefaction_n'] = overflow['rarefaction_n']
+    if 'expected_s' in overflow and overflow['expected_s'] is not None:
+        other_entry['expected_s'] = float(np.mean([x['expected_s'] for x in overflow]))
     return top_99 + [other_entry]

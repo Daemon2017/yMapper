@@ -121,12 +121,16 @@ function drawLayers(dataList, action, caption, isGrouped) {
                 let tooltipText = '';
                 if (action === 'Homeland') {
                     const levelDisplay = typeof data.level === 'number' ? `${data.level.toFixed(2)}%` : data.level;
-                    const statsLine = (data.stats_score !== undefined && data.stats_score !== null) ? `<b>Stats Score:</b> ${data.stats_score.toFixed(2)}<br/>` : '';
+                    const factDisplay = Number.isInteger(data.actual_branches) ? data.actual_branches : data.actual_branches.toFixed(1);
+                    const rarefactionLine = (data.rarefaction_n !== undefined && data.rarefaction_n !== null) ? `<b>Rarefaction (n):</b> ${data.rarefaction_n}<br/>` : '';
+                    const expectedLine = (data.expected_s !== undefined && data.expected_s !== null) ? `<b>Branches (Expected):</b> ${data.expected_s.toFixed(2)}<br/>` : '';
                     tooltipText = `
                         <b>Level:</b> ${levelDisplay}<br/>
                         <b>Vavilov Score:</b> ${data.vavilov_score.toFixed(2)}<br/>
                         <b>TMRCA Score:</b> ${data.tmrca_score.toFixed(2)}<br/>
-                        ${statsLine}
+                        ${rarefactionLine}
+                        ${expectedLine}
+                        <b>Branches (Fact):</b> ${factDisplay}<br/>
                     `;
                 } else {
                     tooltipText = `<b>${caption}:</b> ${data[caption]}`;
