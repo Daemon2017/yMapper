@@ -5,6 +5,12 @@ import numpy as np
 import pandas as pd
 
 
+def parse_snps_list(raw_snp):
+    if not raw_snp:
+        return []
+    return [s.strip() for s in re.split(r'[,\s]+', str(raw_snp)) if s.strip()]
+
+
 def get_input(args, body):
     a_points = body.get('a_points')
     b_points = body.get('b_points')
@@ -12,10 +18,9 @@ def get_input(args, body):
     start = args.get('start')
     end = args.get('end')
     group_mode = args.get('group', 'combined').lower()
-    snp = args.get('snp')
-    raw_exclude = args.get('exclude_snps', '')
-    exclude_snps = [s.strip() for s in re.split(r'[,\s]+', raw_exclude) if s.strip()]
-    return a_points, b_points, start, end, group_mode, size, snp, exclude_snps
+    include_snps = parse_snps_list(args.get('snp', ''))
+    exclude_snps = parse_snps_list(args.get('exclude_snps', ''))
+    return a_points, b_points, start, end, group_mode, size, include_snps, exclude_snps
 
 
 def process_centroids(response, group_mode):
@@ -217,10 +222,10 @@ def _collapse_overflow_to_others(records, label_key='level', other_label='Others
     if 'vavilov_score' in overflow[0]:
         other_entry['vavilov_score'] = float(np.mean([x['vavilov_score'] for x in overflow]))
         other_entry['tmrca_score'] = float(np.mean([x['tmrca_score'] for x in overflow]))
-    if 'actual_branches' in overflow and overflow['actual_branches'] is not None:
+    if 'actual_branches' in overflow[0] and overflow[0]['actual_branches'] is not None:
         other_entry['actual_branches'] = float(np.mean([x['actual_branches'] for x in overflow]))
-    if 'rarefaction_n' in overflow and overflow['rarefaction_n'] is not None:
-        other_entry['rarefaction_n'] = overflow['rarefaction_n']
-    if 'expected_s' in overflow and overflow['expected_s'] is not None:
+    if 'rarefaction_n' in overflow[0] and overflow[0]['rarefaction_n'] is not None:
+        other_entry['rarefaction_n'] = overflow[0]['rarefaction_n']
+    if 'expected_s' in overflow[0] and overflow[0]['expected_s'] is not None:
         other_entry['expected_s'] = float(np.mean([x['expected_s'] for x in overflow]))
     return top_99 + [other_entry]

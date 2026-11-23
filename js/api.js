@@ -1,68 +1,33 @@
-async function getParent() {
+async function _resolveParentsForInput(elementId) {
+    const input = document.getElementById(elementId);
+    const snps = input.value.split(',').map(s => s.replace(/\s+/g, '')).filter(Boolean);
+    if (snps.length === 0) return;
     try {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
         const parentUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.PARENT}`;
-        const params = new URLSearchParams({
-            snp: document.getElementById(SEARCH_FORM_ELEMENT_ID).value
-        });
-        const response = await fetch(`${parentUrl}?${params}`);
-        if (response.ok) {
+        const parents = await Promise.all(snps.map(async (snp) => {
+            const response = await fetch(`${parentUrl}?${new URLSearchParams({ snp })}`);
+            if (!response.ok) throw new Error('Server error');
             const data = await response.json();
-            let parentSnp = data;
-            document.getElementById(SEARCH_FORM_ELEMENT_ID).value = parentSnp;
-            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
-        } else {
-            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
-        }
+            return (typeof data === 'string' && data) ? data : snp;
+        }));
+        input.value = [...new Set(parents)].join(', ');
+        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
     } catch (error) {
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
     }
 }
 
-async function getParentFiltering() {
-    const input = document.getElementById(SEARCH_FILTERING_FORM_ELEMENT_ID);
-    const snp = input.value.replace(/\s+/g, '');
-    if (!snp) return;
-    try {
-        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-        const parentUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.PARENT}`;
-        const params = new URLSearchParams({
-            snp: snp
-        });
-        const response = await fetch(`${parentUrl}?${params}`);
-        if (response.ok) {
-            const data = await response.json();
-            input.value = data;
-            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
-        } else {
-            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
-        }
-    } catch (error) {
-        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
-    }
+function getParent() {
+    return _resolveParentsForInput(SEARCH_FORM_ELEMENT_ID);
 }
 
-async function getParentMacro() {
-    const input = document.getElementById(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID);
-    const snp = input.value.replace(/\s+/g, '');
-    if (!snp) return;
-    try {
-        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = BUSY_STATE_TEXT;
-        const parentUrl = `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.PARENT}`;
-        const params = new URLSearchParams({
-            snp: snp
-        });
-        const response = await fetch(`${parentUrl}?${params}`);
-        if (response.ok) {
-            const data = await response.json();
-            input.value = data;
-            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
-        } else {
-            document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
-        }
-    } catch (error) {
-        document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = SERVER_ERROR_TEXT;
-    }
+function getParentFiltering() {
+    return _resolveParentsForInput(SEARCH_FILTERING_FORM_ELEMENT_ID);
+}
+
+function getParentMacro() {
+    return _resolveParentsForInput(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID);
 }
 
 async function getDbSnpsList() {

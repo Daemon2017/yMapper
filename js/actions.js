@@ -52,9 +52,9 @@ async function main() {
 
     try {
         const snps = await getDbSnpsList();
-        attachDropDownPrompt(snps, SEARCH_FORM_ELEMENT_ID);
-        attachDropDownPrompt(snps, MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID);
-        attachDropDownPrompt(snps, SEARCH_FILTERING_FORM_ELEMENT_ID);
+        attachDropDownPrompt(snps, SEARCH_FORM_ELEMENT_ID, true);
+        attachDropDownPrompt(snps, MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID, true);
+        attachDropDownPrompt(snps, SEARCH_FILTERING_FORM_ELEMENT_ID, true);
         attachDropDownPrompt(snps, SEARCH_FILTERING_EXCLUDE_FORM_ELEMENT_ID, true);
         document.getElementById(STATE_LABEL_ELEMENT_ID).innerText = OK_STATE_TEXT;
         if (savedSettings && savedSettings.action) {
@@ -100,7 +100,7 @@ async function show(action) {
         uncheckedSnpsList = [];
 
         const searchForm = document.getElementById(SEARCH_FORM_ELEMENT_ID);
-        searchForm.value = searchForm.value.replace(/\s+/g, '');
+        searchForm.value = searchForm.value.trim();
         const snp = searchForm.value;
         const size = document.getElementById(GRID_SIZE_SELECT_ELEMENT_ID).value;
         const isConfirmed = document.getElementById(DATASOURCE_SELECT_ELEMENT_ID).value;
@@ -117,9 +117,9 @@ async function show(action) {
         } else if (action === 'Filtering') {
             const start = document.getElementById(START_FORM_ELEMENT_ID).value;
             const end = document.getElementById(END_FORM_ELEMENT_ID).value;
-            const snpFilter = document.getElementById(SEARCH_FILTERING_FORM_ELEMENT_ID).value.replace(/\s+/g, '');
+            const includeSnps = document.getElementById(SEARCH_FILTERING_FORM_ELEMENT_ID).value.trim();
             const excludeSnps = document.getElementById(SEARCH_FILTERING_EXCLUDE_FORM_ELEMENT_ID).value.trim();
-            dataList = await getCentroidsFiltering(start, end, size, groupMode, snpFilter, excludeSnps, isConfirmed);
+            dataList = await getCentroidsFiltering(start, end, size, groupMode, includeSnps, excludeSnps, isConfirmed);
         } else if (action === 'Homeland') {
             isGrouped = true;
             const useStats = document.getElementById(STATS_CHECKBOX_ELEMENT_ID)?.checked || false;
@@ -127,8 +127,8 @@ async function show(action) {
         } else if (action === 'Max') {
             const start = document.getElementById(MACRO_START_FORM_ELEMENT_ID).value;
             const end = document.getElementById(MACRO_END_FORM_ELEMENT_ID).value;
-            const snpFilter = document.getElementById(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID).value.replace(/\s+/g, '');
-            dataList = await getCentroidsMax(start, end, size, groupMode, snpFilter, isConfirmed);
+            const includeSnps = document.getElementById(MACRO_SEARCH_FILTERING_FORM_ELEMENT_ID).value.trim();
+            dataList = await getCentroidsMax(start, end, size, groupMode, includeSnps, isConfirmed);
         } else if (action === 'Correlation') {
             const start = document.getElementById("searchStartForm").value;
             const end = document.getElementById("searchEndForm").value;
